@@ -24,7 +24,8 @@ create table blog_campaign_sends(status text,created_at timestamptz,is_test bool
 create table sms_message_log_v2(id uuid default gen_random_uuid(),template_id text,recipient_phone_e164 text,failure_reason text,send_status text,delivery_status text,created_at timestamptz default now());
 create table sms_send_log(status text,created_at timestamptz,metadata jsonb);
 create table sms_inbound_messages(id uuid,body text,action_taken text,created_at timestamptz,matched_user_id uuid);`);
-await db.exec(readFileSync('supabase/migrations/20261022200000_operations_console.sql','utf8'));
+await db.exec(readFileSync('drizzle/migrations/0023_operations_console.sql','utf8'));
+await db.exec("insert into public.operations_settings(id) values('post_publish_feedback') on conflict do nothing");
 const q=async(sql,args=[]) => (await db.query(sql,args)).rows;
 await assert.rejects(()=>q('select admin_operations_snapshot(30)'),/Admin required/);
 await q("select set_config('test.uid','00000000-0000-0000-0000-000000000001',false)");

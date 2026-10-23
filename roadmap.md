@@ -1,6 +1,8 @@
 # Roadmap
 
-- [open] Roll out operations console commit 65df452a2: schema, six services, authenticated checks and publication after security gates; city/SEO pages untouched.
+- [done] Operations console rollout schema and five services deployed; 23 focused tests, applied SQL checks and automatic build pass; unsigned and host access denied; city/SEO pages untouched.
+- [open] Operations admin snapshot/participant delivery and public-landmark route verification — needs authorized admin/participant session; available owner session has host role only.
+- [open] Publish operations frontend — held by 12 preexisting critical security findings and incomplete deep scan; SMS delivery reports also await TWILIO_AUTH_TOKEN; GA4 owner setup.
 
 - [done] Meta Muse admin lead matching, provenance/consent, draft approval and no-send workflow; 58 focused tests pass, migrations applied and drafting endpoint deployed.
 - [open] Meta Muse inference and live admin workflow verification — blocked by rotated META_MODEL_API_KEY and authorized admin session; Facebook Page setup/sending is a separate unconnected phase.
