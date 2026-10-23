@@ -7,7 +7,7 @@ import type { OperationsSnapshot } from '@/lib/operations/types';
 import SEO from '@/components/SEO';
 export default function AdminOperations(){
  const {user,isLoading}=useAuth();const [days,setDays]=useState(30);
- const permission=useQuery({queryKey:['operations-admin',user?.id],enabled:!!user,queryFn:async()=>{const {data,error}=await supabase.rpc('is_admin',{user_id:user!.id});if(error)throw error;return data===true;}});
+ const permission=useQuery({queryKey:['operations-admin',user?.id],enabled:!!user,queryFn:async()=>{if(!user)return false;const {data,error}=await supabase.rpc('is_admin',{user_id:user.id});if(error)throw error;return data===true;}});
  const snapshot=useQuery({queryKey:['operations-snapshot',user?.id,days],enabled:permission.data===true,staleTime:60000,refetchInterval:60000,queryFn:async()=>{const {data,error}=await (supabase.rpc as any)('admin_operations_snapshot',{p_days:days});if(error)throw error;return data as OperationsSnapshot;}});
  const connections=useQuery({queryKey:['operations-connections',user?.id],enabled:permission.data===true,staleTime:300000,queryFn:async()=>{const {data,error}=await supabase.functions.invoke('admin-operations',{body:{action:'connections'}});if(error)throw error;return data;}});
  if(isLoading||permission.isLoading)return <main className="ops-load"><h1>Opening operations…</h1></main>;
