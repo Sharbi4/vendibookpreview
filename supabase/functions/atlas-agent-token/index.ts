@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { checkRateLimit, clientIp } from "../_shared/rateLimit.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkAtlasLimits, trustedClientIp } from "./limits.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,10 +28,22 @@ serve(async (req) => {
   const agentId = Deno.env.get("ATLAS_AGENT_ID") || "agent_1501m4rhvkz9fsbs5ce89zvk2k7b";
   if (!key || !agentId) return json({ error: "atlas_unavailable" }, 503);
 
-  const ip = clientIp(req);
-  const allowed = await checkRateLimit("atlas_agent_ip_min", ip, 6, 1)
-    && await checkRateLimit("atlas_agent_ip_day", ip, 40, 1440);
-  if (!allowed) return json({ error: "rate_limited", message: "Too many conversations. Try again shortly." }, 429);
+  const ip = trustedClientIp(req);
+  if (!ip) return json({ error: "atlas_unavailable" }, 503);
+  const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const limit = await checkAtlasLimits({
+    count: async (scope, k, since) => {
+      const { count, error } = await admin.from("rate_limit_events")
+        .select("id", { count: "exact", head: true }).eq("scope", scope).eq("key", k).gte("created_at", since);
+      return error ? null : (count ?? 0);
+    },
+    insert: async (scope, k) => !(await admin.from("rate_limit_events").insert({ scope, key: k })).error,
+  }, ip, [
+    { scope: "atlas_agent_ip_min", limit: 6, minutes: 1 },
+    { scope: "atlas_agent_ip_day", limit: 40, minutes: 1440 },
+  ]);
+  if (limit === "unavailable") return json({ error: "atlas_unavailable" }, 503);
+  if (limit === "limited") return json({ error: "rate_limited", message: "Too many conversations. Try again shortly." }, 429);
 
   try {
     const body = await req.json().catch(() => ({}));
