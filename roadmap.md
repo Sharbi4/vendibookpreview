@@ -1,5 +1,7 @@
 # Roadmap
 
+- [open] Roll out operations console commit 65df452a2: schema, six services, authenticated checks and publication after security gates; city/SEO pages untouched.
+
 - [done] Meta Muse admin lead matching, provenance/consent, draft approval and no-send workflow; 58 focused tests pass, migrations applied and drafting endpoint deployed.
 - [open] Meta Muse inference and live admin workflow verification — blocked by rotated META_MODEL_API_KEY and authorized admin session; Facebook Page setup/sending is a separate unconnected phase.
 
