@@ -223,7 +223,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
     (async () => {
       const changedPage = previousPath.current !== config.path;
       previousPath.current = config.path;
-      setLoading(!market || changedPage);
+      setLoading(!market || changedPage || primary.length === 0);
       setLoadError(false);
       if (!market || changedPage) setPrimary([]);
       setStateFallback([]);
@@ -415,7 +415,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
     categories,
     mode: config.mode,
     specialty: config.specialty,
-    enabled: isLowInventory,
+    enabled: isLowInventory || (!!market && !loading && !loadError && localCount === 0),
   });
 
 
