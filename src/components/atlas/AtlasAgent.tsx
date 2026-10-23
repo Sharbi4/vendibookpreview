@@ -42,8 +42,8 @@ type Mode = 'voice' | 'text';
  * listings Atlas pulls up while he moves the buyer between pages. "Type
  * instead" is there for accessibility (and when the mic is blocked). A buyer
  * who leaves can pick the call back up within 30 minutes or start over.
- * ElevenLabs Conversational AI. App.tsx mounts it only when the Atlas flag is
- * on or the visitor opened the /atlas page. Page buttons start a call with
+ * ElevenLabs Conversational AI. App.tsx mounts it when the Atlas flag is
+ * on (the public default). Page buttons start a call with
  * startAtlas() (src/lib/atlas/atlasFlag.ts).
  */
 export default function AtlasAgent() {

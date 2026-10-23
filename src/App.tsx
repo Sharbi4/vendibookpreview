@@ -792,14 +792,8 @@ const useGlobalErrorHandler = () => {
 const AppContent = () => {
   const { pathname } = useLocation();
   const isBuildStudio = pathname.startsWith('/build-studio');
-  // Opening the Atlas page turns Atlas on for the rest of the visit, so a call
-  // started there keeps going while he moves the visitor between pages.
-  const [atlasVisited, setAtlasVisited] = useState(false);
-  const onAtlasPage = pathname === '/atlas' || pathname.startsWith('/atlas/');
-  useEffect(() => {
-    if (onAtlasPage) setAtlasVisited(true);
-  }, [onAtlasPage]);
-  const showAtlas = atlasOn || onAtlasPage || atlasVisited;
+  // Keep the same Atlas instance mounted while it helps a visitor navigate.
+  const showAtlas = atlasOn;
   useGlobalErrorHandler();
   useOfflineQueueSync();
   useListingsLiveSync();
