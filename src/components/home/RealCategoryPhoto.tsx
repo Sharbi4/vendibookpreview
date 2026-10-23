@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { applyDiscoveryListingFilter } from '@/lib/listings/publicVisibility';
 import { excludeTestListings } from '@/lib/excludeTestListings';
 import { categoryPhotos, type CategoryPhoto, type CategoryPhotoListing, type HomePhotoGroup } from '@/lib/listings/homeCategoryPhotos';
 
@@ -10,9 +9,13 @@ export function useHomeCategoryPhotos() {
     queryKey: ['home-category-listing-photos'],
     staleTime: 60_000,
     queryFn: async () => {
-      const query = supabase.from('listings').select('*');
-      const visibleQuery = applyDiscoveryListingFilter(query);
-      const { data, error } = await excludeTestListings(visibleQuery)
+      // Mirror the canonical discovery filters without nesting the generated
+      // query type in generic wrappers (which exceeds TypeScript's depth).
+      const query = supabase.from('listings')
+        .select('id,title,mode,category,cover_image_url,image_urls,subcategory,description,status,published_at,deleted_at,moderation_status,unlisted')
+        .eq('status', 'published').not('published_at', 'is', null)
+        .is('deleted_at', null).eq('moderation_status', 'clear').eq('unlisted', false);
+      const { data, error } = await excludeTestListings(query)
         .order('published_at', { ascending: false }).limit(500);
       if (error) throw error;
       return data as CategoryPhotoListing[];
