@@ -566,11 +566,11 @@ Deno.serve(async (req) => {
       filteredListings = filteredListings.filter(
         (l) => (l.distance_miles !== null && l.distance_miles <= effectiveRadius) || l.location_text_match
       );
-    } else if (hasCoords) {
-      filteredListings = filteredListings.filter(
-        (l) => l.distance_miles === null || l.distance_miles <= effectiveRadius || l.location_text_match
-      );
     }
+    // A state pick ("California, USA") arrives with the state's centroid as
+    // coordinates; the state filter above is the whole geography, so no radius
+    // applies — otherwise every California listing farther than 25 mi from the
+    // middle of the state was dropped and the search came back empty.
     const radiusWasExpanded = effectiveRadius > requestedRadius;
     const usedTextFallback = textFallbackUsed && filteredListings.some((l) => l.location_text_match);
 
