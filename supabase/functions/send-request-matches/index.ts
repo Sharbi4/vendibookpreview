@@ -15,7 +15,7 @@
 // listing set, so a repeated call never double-sends.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 import { isAdminOrInternalCaller } from "../_shared/internalAuth.ts";
 import { isMailableAddress } from "../_shared/marketingAudience.ts";
 import { invokeTransactionalEmail } from "../_shared/invokeTransactionalEmail.ts";
