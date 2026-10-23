@@ -1,13 +1,13 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Phone } from 'lucide-react';
-import { isAtlasEnabled, startAtlas } from '@/lib/atlas/atlasFlag';
+import { isAtlasEnabled, startAtlas, type AtlasTopic } from '@/lib/atlas/atlasFlag';
 import '@/components/atlas/atlas.css';
 
-const CAN_DO = [
-  'Finds trucks and trailers that fit your menu, budget and tow vehicle',
-  'Walks you through listings on screen and checks delivery to your ZIP',
-  'Reaches out to sellers and negotiates for you, with your OK',
-  'Helps you list yours, and coaches your launch after you buy',
+const CAN_DO: { title: string; text: string; topic: AtlasTopic; cta: string }[] = [
+  { title: 'Find the right equipment', text: 'Compare actual listings around your menu, location and budget.', topic: 'buy', cta: 'Find my match' },
+  { title: 'Make a stronger offer', text: 'Choose your terms and review a seller message before Atlas sends it.', topic: 'negotiate', cta: 'How negotiation works' },
+  { title: 'Picture your menu', text: 'See dish ideas based on the equipment a listing actually describes.', topic: 'menu', cta: 'Explore menu ideas' },
+  { title: 'Talk through the purchase', text: 'Ask Atlas to check meeting times with our customer-success team.', topic: 'meeting', cta: 'Ask about a meeting' },
 ];
 
 /** Homepage band: a short intro to Atlas with a call button (or a link to /atlas when Atlas is off). */
@@ -16,26 +16,27 @@ export default function HomeAtlasBand() {
   return (
     <section className="hb-section hb-section-tight" aria-labelledby="home-atlas-title">
       <div className="hb-wrap">
-        <div className="flex flex-col gap-6 rounded-[24px] border border-border bg-card p-6 shadow-sm sm:p-8 lg:flex-row lg:items-center lg:gap-10">
-          <div className="flex items-start gap-4 lg:w-[40%]">
+        <div className="flex flex-col gap-6 rounded-[28px] border border-border bg-card p-6 shadow-[0_15px_60px_-35px_rgba(30,35,40,.3)] sm:p-8">
+          <div className="flex items-start gap-4">
             <span className="atlas-orb flex-none" style={{ width: 56, height: 56 }} aria-hidden="true" />
             <div className="min-w-0">
               <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-primary">Vendibook AI sales assistant</p>
               <h2 id="home-atlas-title" className="mt-1 text-2xl font-bold tracking-tight text-foreground sm:text-[28px]">
-                Speak to Atlas
+                Your next move, with Atlas
               </h2>
-              <p className="mt-1 text-[15px] text-muted-foreground">Talk it through and Atlas works the site with you. Free, by voice or chat.</p>
+              <p className="mt-1 text-[15px] text-muted-foreground">A buying assistant that browses with you, helps you negotiate, and turns equipment into possibilities.</p>
             </div>
           </div>
-          <ul className="grid flex-1 gap-2 text-[14.5px] leading-snug text-foreground/80 sm:grid-cols-2">
-            {CAN_DO.map((t) => (
-              <li key={t} className="flex gap-2">
-                <span className="mt-[7px] h-1.5 w-1.5 flex-none rounded-full bg-primary" aria-hidden="true" />
-                {t}
+          <ul className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+            {CAN_DO.map((item) => (
+              <li key={item.topic} className="flex flex-col rounded-2xl border border-border/70 bg-background/60 p-5">
+                <h3 className="font-semibold text-foreground">{item.title}</h3>
+                <p className="mt-2 flex-1 leading-relaxed text-muted-foreground">{item.text}</p>
+                {live && <button className="mt-4 text-left text-sm font-semibold text-primary underline-offset-4 hover:underline" onClick={() => startAtlas({ mode: 'voice', topic: item.topic })}>{item.cta} <span aria-hidden="true">↗</span></button>}
               </li>
             ))}
           </ul>
-          <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
+          <div className="flex flex-col gap-2 sm:flex-row">
             {live ? (
               <button
                 type="button"

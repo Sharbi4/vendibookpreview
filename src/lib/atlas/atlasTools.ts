@@ -8,6 +8,7 @@ import { pageAction, pickOption, scanPage } from './atlasPage';
 import { GUIDE_FAQ, type GuideFaq } from './atlasGuideFaq';
 import { cookingIntent, matchCookingEquipment, normalizeAtlasState, STATE_NAMES } from './atlasEquipment';
 import { getPermitRequirements } from './atlasPermitKnowledge';
+import { menuIdeasForListing, type AtlasMenuConcept } from './atlasMenu';
 
 const FAQ_STOP = new Set(['a', 'an', 'the', 'i', 'my', 'me', 'do', 'does', 'is', 'are', 'can', 'to', 'of', 'for', 'and', 'or', 'on', 'in', 'it', 'what', 'how', 'if', 'you', 'your', 'with', 'be', 'get', 'will', 'there', 'this']);
 const faqWords = (s: string) => s.toLowerCase().replace(/[^a-z0-9%$ ]+/g, ' ').split(/\s+/).filter((w) => w.length > 1 && !FAQ_STOP.has(w));
@@ -71,6 +72,8 @@ export interface AtlasToolDeps {
   openOffer?: (d: AtlasOfferDraft) => void;
   /** Signed-in buyer's user id, or null for guests. */
   currentUserId?: () => string | null;
+  openBuyerFollowUp?: (draft: { topic: string; summary: string }) => boolean;
+  showMenuConcept?: (concept: AtlasMenuConcept) => void;
   /**
    * Sends a draft the buyer approved out loud, through normal Vendibook
    * messaging (risk scan + phone/ID gate apply). Resolves to the conversation id.
@@ -301,6 +304,26 @@ export function createAtlasTools(deps: AtlasToolDeps) {
   return {
     get_permit_requirements: async (p: Row = {}) => JSON.stringify(getPermitRequirements(p)),
 
+    show_menu_concept: async (p: Row = {}) => {
+      const result = await listingFor(p);
+      if (result.why) return result.why;
+      const listing = result.l!;
+      const items = menuIdeasForListing(listing);
+      if (!items.length) return 'The listing does not confirm enough cooking equipment to build a supported menu. Ask the seller about equipment before showing dish ideas; do not infer appliances from the title or photos.';
+      const concept: AtlasMenuConcept = { listingId: String(listing.id), listingTitle: String(listing.title), photo: toCard(listing).photo, items,
+        note: 'Concept ideas, not an approved operating menu or earnings forecast. Confirm equipment condition, refrigeration, sinks, water, utilities, ventilation, food safety and local approval. Set prices only after checking your own ingredient, labor and operating costs.' };
+      if (!deps.showMenuConcept) return 'Menu display is unavailable. Do not say it is on screen.';
+      deps.showMenuConcept(concept);
+      return JSON.stringify({ ...concept, next_question: 'Which of these menu directions fits what you want to cook?', status: 'concept_displayed' });
+    },
+
+    offer_buyer_follow_up: async (p: Row = {}) => {
+      if (!deps.openBuyerFollowUp) return 'Follow-up form unavailable. Offer the contact page; do not claim a request was saved.';
+      const opened = deps.openBuyerFollowUp({ topic: String(p.topic || 'Buying shortlist').slice(0, 120), summary: String(p.summary || 'Buyer would like help continuing their search.').slice(0, 1500) });
+      if (!opened) return 'This optional follow-up was already offered in this session. Do not repeat it; continue helping the buyer.';
+      return 'Opened an optional email follow-up form. The buyer enters their name/email and consents themselves. Nothing is saved or sent until they submit. Do not say an email or booking has been sent. Respect dismissal and keep helping.';
+    },
+
     search_listings: async (p: Row = {}) => {
       const state = normalizeAtlasState(p.state);
       const city = String(p.city ?? '').trim().slice(0,80).toLowerCase();
@@ -313,7 +336,8 @@ export function createAtlasTools(deps: AtlasToolDeps) {
       const found = new Map<string,Row>();
       let incomplete = false;
       for (let page=0; page<10; page++) {
-        let q: LooseQuery = excludeTestListings(applyDiscoveryListingFilter(supabase.from('listings').select(CARD_COLUMNS)));
+        const inventoryQuery: LooseQuery = supabase.from('listings').select(CARD_COLUMNS);
+        let q: LooseQuery = excludeTestListings(applyDiscoveryListingFilter(inventoryQuery));
         if (shipsOnly) q=q.eq('mode','sale').eq('vendibook_freight_enabled',true);
         else if (p.mode==='sale' || p.mode==='rent') q=q.eq('mode',p.mode);
         if (['food_truck','food_trailer','ghost_kitchen','vendor_space','vendor_lot'].includes(p.category)) q=q.eq('category',p.category);

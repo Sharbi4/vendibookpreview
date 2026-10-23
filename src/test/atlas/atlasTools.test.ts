@@ -46,6 +46,15 @@ describe('Atlas helpers', () => {
 });
 
 describe('Atlas tools', () => {
+  it('opens the buyer-owned follow-up form without sending a message', async () => {
+    const open = vi.fn().mockReturnValue(true);
+    const tools = createAtlasTools({ ...deps(), openBuyerFollowUp: open });
+    expect(await tools.offer_buyer_follow_up({ topic: 'Offer help', summary: 'Buyer is considering a local trailer.' })).toContain('Nothing is saved');
+    expect(open).toHaveBeenCalledOnce();
+    expect(invoke).not.toHaveBeenCalled();
+    open.mockReturnValue(false);
+    expect(await tools.offer_buyer_follow_up({})).toContain('Do not repeat');
+  });
   it('search shows result cards and returns compact listings', async () => {
     rows.push({ id: ID, title: 'Ice Cream Trailer', mode: 'sale', price_sale: 39000, city: 'North Port', state: 'FL', description: 'x'.repeat(400) });
     const d = deps();

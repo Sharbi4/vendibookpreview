@@ -249,6 +249,49 @@
   },
   {
     "type": "client",
+    "name": "show_menu_concept",
+    "description": "Display a visual menu concept from a real public listing and its explicitly listed cooking equipment. No invented appliances, dish photos, prices or earnings. Ask which menu direction the buyer likes.",
+    "expects_response": true,
+    "response_timeout_secs": 20,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "listing_id": {
+          "type": "string",
+          "description": "Current listing, a result number, or a listing id from the search."
+        }
+      },
+      "required": [
+        "listing_id"
+      ]
+    }
+  },
+  {
+    "type": "client",
+    "name": "offer_buyer_follow_up",
+    "description": "Open an optional buyer email follow-up form after they agree to be contacted about their shortlist or buying questions. The buyer submits name/email and consent. Does not itself save a lead, send an email, or book a meeting.",
+    "expects_response": true,
+    "response_timeout_secs": 20,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "topic": {
+          "type": "string",
+          "description": "Short topic, such as shortlist or offer help."
+        },
+        "summary": {
+          "type": "string",
+          "description": "Factual buyer needs, city, budget and unanswered questions; no sensitive financial data or invented promises."
+        }
+      },
+      "required": [
+        "topic",
+        "summary"
+      ]
+    }
+  },
+  {
+    "type": "client",
     "name": "get_permit_requirements",
     "description": "Look up curated government-source mobile food requirements before answering permit, health, commissary, fire or zoning questions. Returns jurisdiction scope, source links, review date and coverage gaps. Not a live agency approval.",
     "expects_response": true,

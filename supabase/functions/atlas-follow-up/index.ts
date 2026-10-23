@@ -10,6 +10,7 @@ import { getCaller } from "../_shared/callerGuard.ts";
 import { checkRateLimit, clientIp } from "../_shared/rateLimit.ts";
 import { invokeTransactionalEmail } from "../_shared/invokeTransactionalEmail.ts";
 import { followUpDueAt, formatEt, inFollowUpHours } from "../_shared/followUpWindow.ts";
+import { buyerFollowUpConsent } from "../_shared/atlasBuyerFollowUp.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,14 +18,12 @@ const corsHeaders = {
 };
 
 const SUPPORT_TO = "support@vendibook.com";
-const FROM = "Vendibook Atlas <atlas@updates.vendibook.com>";
+
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
 const text = (v: unknown, max: number) => (typeof v === "string" ? v.replace(/\s+/g, " ").trim().slice(0, max) : "");
-const esc = (s: string) =>
-  s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -34,6 +33,8 @@ serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
+    const consent = buyerFollowUpConsent(body, new Date());
+    if (consent.error) return json({ error: consent.error }, 400);
     const caller = await getCaller(req);
 
     const name = text(body.name, 80);
@@ -80,6 +81,7 @@ serve(async (req) => {
       `Follow up by ${dueLabel} (2 business hours, Mon–Fri 8 AM–8 PM ET).`,
       "",
       summary || "(No summary given.)",
+      ...consent.lines,
       "",
       ...contactLines,
       listingId && `Listing: https://vendibook.com/listing/${listingId}`,
@@ -129,69 +131,25 @@ serve(async (req) => {
     const rows = [
       ["Follow up by", dueLabel],
       ["Topic", topic],
+      ...(consent.lines.length ? [["Requested follow-up", consent.lines.join("\n")]] : []),
       ...contactLines.map((l) => l.split(/: (.*)/s).slice(0, 2) as [string, string]),
       listingId ? ["Listing", `https://vendibook.com/listing/${listingId}`] : null,
       pageUrl ? ["Page", pageUrl] : null,
     ].filter(Boolean) as [string, string][];
-    const html = `<div style="font-family:Arial,sans-serif;font-size:15px;color:#1f1d1b">
-<p style="margin:0 0 4px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#FF5124">Atlas · speak with a person</p>
-<h2 style="margin:0 0 12px">Follow up by ${esc(dueLabel)}</h2>
-<p style="white-space:pre-wrap;margin:0 0 16px">${esc(summary || "(No summary given.)")}</p>
-<table cellpadding="6" style="border-collapse:collapse">${rows.map(([k, v]) => `<tr><td style="color:#6b6560">${esc(k)}</td><td><b>${esc(v ?? "")}</b></td></tr>`).join("")}</table>
-<p style="margin:20px 0 0"><a href="https://vendibook.com${adminLink}" style="background:#FF5124;color:#fff;padding:10px 18px;border-radius:999px;text-decoration:none;font-weight:bold">Open ticket ${esc(ticket.reference_code)}</a></p>
-</div>`;
-    const plain = `Follow up by ${dueLabel}\n\n${summary || "(No summary given.)"}\n\n${rows.map(([k, v]) => `${k}: ${v}`).join("\n")}\n\nhttps://vendibook.com${adminLink}`;
-
     let emailed = false;
-    const resendKey = Deno.env.get("RESEND_API_KEY");
-    if (resendKey) {
-      try {
-        const res = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${resendKey}`,
-            "Content-Type": "application/json",
-            "Idempotency-Key": `atlas-follow-up-${ticket.id}`,
-          },
-          body: JSON.stringify({
-            from: FROM,
-            to: [SUPPORT_TO],
-            subject,
-            html,
-            text: plain,
-            ...(email ? { reply_to: email } : {}),
-            tags: [{ name: "type", value: "atlas_follow_up" }],
-          }),
-        });
-        emailed = res.ok;
-        if (!res.ok) console.error("[atlas-follow-up] Resend", res.status, await res.text());
-      } catch (e) {
-        console.error("[atlas-follow-up] Resend failed", e);
-      }
-    } else {
-      console.error("[atlas-follow-up] RESEND_API_KEY not configured");
-    }
-    if (!emailed) {
-      try {
-        await invokeTransactionalEmail({
-          templateName: "generic-notice",
-          recipientEmail: SUPPORT_TO,
-          idempotencyKey: `atlas-follow-up-admin-${ticket.id}`,
-          templateData: {
-            subject,
-            kicker: "Atlas · speak with a person",
-            heading: `Follow up by ${dueLabel}`,
-            paragraphs: [summary || "(No summary given.)"],
-            details: rows.map(([label, value]) => ({ label, value })),
-            ctaLabel: `Open ticket ${ticket.reference_code}`,
-            ctaUrl: `https://vendibook.com${adminLink}`,
-          },
-        });
-        emailed = true;
-      } catch (e) {
-        console.error("[atlas-follow-up] fallback email failed", e);
-      }
-    }
+    try {
+      await invokeTransactionalEmail({
+        templateName: "generic-notice", recipientEmail: SUPPORT_TO,
+        idempotencyKey: `atlas-follow-up-admin-${ticket.id}`,
+        templateData: {
+          subject, kicker: "Atlas · requested follow-up", heading: `Follow up by ${dueLabel}`,
+          paragraphs: [summary || "(No summary given.)"],
+          details: rows.map(([label, value]) => ({ label, value })),
+          ctaLabel: `Open ticket ${ticket.reference_code}`, ctaUrl: `https://vendibook.com${adminLink}`,
+        },
+      });
+      emailed = true;
+    } catch (e) { console.error("[atlas-follow-up] admin email failed", e); }
 
     return json({
       reference_code: ticket.reference_code,

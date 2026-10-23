@@ -114,10 +114,10 @@ export default function AtlasAgentPage() {
             </div>
             <p className={`${eyebrow} mt-8`}>Atlas · Vendibook AI agent</p>
             <h1 className="mt-3 text-[36px] font-bold leading-[1.05] tracking-tight sm:text-[56px]">
-              Speak to our agent <span className="atlas-page-gradient">Atlas</span>
+              Find your truck. Shape your offer. <span className="atlas-page-gradient">Meet Atlas.</span>
             </h1>
             <p className="mx-auto mt-4 max-w-xl text-[16px] leading-relaxed text-white/65 sm:text-[17px]">
-              Buying, renting or selling a food truck or trailer, or growing the business after you buy: Atlas talks it through with you and works the site on your screen in real time.
+              Browse real listings together, compare equipment for your menu, and get help negotiating. Atlas guides the page while you stay in control of messages, offers and the final purchase.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <button type="button" className={`${orange} h-14 w-full px-9 text-[17px] sm:w-auto`} onClick={() => startAtlas({ mode: 'voice' })}>
@@ -130,27 +130,18 @@ export default function AtlasAgentPage() {
           </div>
         </section>
 
-        <section id="permit-sources" className="relative scroll-mt-24 px-4 py-8" aria-labelledby="permit-sources-heading">
-          <div className="mx-auto max-w-4xl rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-8">
-            <p className={eyebrow}>Government source library</p>
-            <h2 id="permit-sources-heading" className="mt-2 text-2xl font-semibold">Plan for your operating location</h2>
-            <p className="mt-3 text-sm leading-relaxed text-white/65">Reviewed {PERMIT_REVIEWED_ON}. Start with your actual city, county, menu and cooking method. These notes identify agency pathways and coverage gaps; your local authority determines approval. Buying a truck does not approve it for your operation.</p>
-            <div className="mt-5 divide-y divide-white/10">
-              {Object.entries(PERMIT_MARKETS).map(([city, market]) => (
-                <details key={city} className="py-3">
-                  <summary className="cursor-pointer py-1 font-medium capitalize">{city}, {market.state}</summary>
-                  <ul className="mt-3 space-y-4 text-sm text-white/70">
-                    {market.sources.map((source) => <li key={source.url}>
-                      <a className="font-medium text-[#FFAA8E] underline underline-offset-4" href={source.url} target="_blank" rel="noopener noreferrer">{source.authority} ↗</a>
-                      <p className="mt-1">{source.scope}</p>
-                      <ul className="mt-2 list-disc space-y-1 pl-5">{source.guidance.map((line) => <li key={line}>{line}</li>)}</ul>
-                    </li>)}
-                  </ul>
-                  <p className="mt-4 text-sm text-white/55">Still to confirm: {market.gaps.join(' ')}</p>
-                </details>
-              ))}
-            </div>
+        <section className="relative px-4 py-8" aria-label="Explore Atlas buying tools">
+          <div className="mx-auto grid max-w-6xl gap-4 sm:grid-cols-3">
+            {[
+              { topic: 'negotiate' as const, title: 'Negotiate with a plan', text: 'Choose a price and terms together. Review the exact seller message before it goes out. You submit formal offers yourself.', action: 'Show me how negotiation works' },
+              { topic: 'menu' as const, title: 'See what you could serve', text: 'Open a menu concept built from the listing’s stated equipment, then work through costs using your own numbers.', action: 'Explore a menu concept' },
+              { topic: 'meeting' as const, title: 'Bring in a real teammate', text: 'Ask Atlas to find a customer-success meeting time to discuss the listing, buying process or your next step.', action: 'Ask Atlas to schedule a meeting' },
+            ].map(item => <article key={item.topic} className="atlas-page-card flex flex-col p-6">
+              <h2 className="text-xl font-semibold">{item.title}</h2><p className="mt-3 flex-1 text-sm leading-relaxed text-white/65">{item.text}</p>
+              <button className={`${orangeSm} mt-5 min-h-12 px-4 py-3 text-sm`} onClick={() => startAtlas({ mode: 'voice', topic: item.topic })}>{item.action}</button>
+            </article>)}
           </div>
+          <p className="mx-auto mt-6 max-w-3xl text-center text-sm text-white/60">Not ready today? Ask for an email follow-up about your shortlist. Share your details only when you want us to contact you.</p>
         </section>
 
         {/* What can he help with? */}
@@ -224,6 +215,29 @@ export default function AtlasAgentPage() {
             </div>
           </div>
         </section>
+        <section id="permit-sources" className="relative scroll-mt-24 px-4 py-8" aria-labelledby="permit-sources-heading">
+          <div className="mx-auto max-w-4xl rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-8">
+            <p className={eyebrow}>Government source library</p>
+            <h2 id="permit-sources-heading" className="mt-2 text-2xl font-semibold">Plan for your operating location</h2>
+            <p className="mt-3 text-sm leading-relaxed text-white/65">Reviewed {PERMIT_REVIEWED_ON}. Start with your actual city, county, menu and cooking method. These notes identify agency pathways and coverage gaps; your local authority determines approval. Buying a truck does not approve it for your operation.</p>
+            <div className="mt-5 divide-y divide-white/10">
+              {Object.entries(PERMIT_MARKETS).map(([city, market]) => (
+                <details key={city} className="py-3">
+                  <summary className="cursor-pointer py-1 font-medium capitalize">{city}, {market.state}</summary>
+                  <ul className="mt-3 space-y-4 text-sm text-white/70">
+                    {market.sources.map((source) => <li key={source.url}>
+                      <a className="font-medium text-[#FFAA8E] underline underline-offset-4" href={source.url} target="_blank" rel="noopener noreferrer">{source.authority} ↗</a>
+                      <p className="mt-1">{source.scope}</p>
+                      <ul className="mt-2 list-disc space-y-1 pl-5">{source.guidance.map((line) => <li key={line}>{line}</li>)}</ul>
+                    </li>)}
+                  </ul>
+                  <p className="mt-4 text-sm text-white/55">Still to confirm: {market.gaps.join(' ')}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
       </main>
       <Footer />
     </div>

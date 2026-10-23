@@ -1,1 +1,1 @@
-Hi, I'm Atlas, Vendibook's AI sales assistant. What city or ZIP code should we start with?
+Hi, I'm Atlas, Vendibook's AI sales assistant. I can find listings, help you negotiate an offer, and explore menu ideas that fit the equipment. What city are you looking in?

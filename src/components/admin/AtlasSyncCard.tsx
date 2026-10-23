@@ -16,6 +16,16 @@ type SyncResult = { agent_updated?: boolean; tools?: ToolResult[]; error?: strin
 export default function AtlasSyncCard() {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<SyncResult | null>(null);
+  const [liveSetup, setLiveSetup] = useState<string>('');
+
+  const inspect = async () => {
+    setBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('elevenlabs-agent-configure', { body: { action: 'status', agent: 'atlas' } });
+      setLiveSetup(error ? `Inspection failed: ${error.message}` : JSON.stringify(data, null, 2));
+    } catch { setLiveSetup('Could not inspect the live setup.'); }
+    finally { setBusy(false); }
+  };
 
   const sync = async () => {
     setBusy(true);
@@ -50,6 +60,8 @@ export default function AtlasSyncCard() {
           <RefreshCw className={busy ? 'mr-2 h-4 w-4 animate-spin' : 'mr-2 h-4 w-4'} />
           {busy ? 'Syncing…' : 'Sync Atlas to ElevenLabs'}
         </Button>
+        <Button variant="outline" onClick={inspect} disabled={busy} className="ml-2">Inspect live Atlas setup</Button>
+        {liveSetup && <pre className="max-h-80 overflow-auto whitespace-pre-wrap rounded-xl border p-3 text-xs" aria-label="Live Atlas configuration status">{liveSetup}</pre>}
         {result && (
           <div className="flex items-start gap-2 text-sm" role="status">
             {ok ? (

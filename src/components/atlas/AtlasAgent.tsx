@@ -12,6 +12,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { MakeOfferModal } from '@/components/offers/MakeOfferModal';
 import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
 import MessageHostForm from '@/components/messaging/MessageHostForm';
+import AtlasBuyerFollowUp, { type AtlasFollowUpDraft } from './AtlasBuyerFollowUp';
+import AtlasMenuPreview from './AtlasMenuPreview';
+import type { AtlasMenuConcept } from '@/lib/atlas/atlasMenu';
 import { sendBuyerMessage } from '@/lib/atlas/atlasMessaging';
 import { trackHostContacted } from '@/lib/analytics';
 import { toast } from '@/hooks/use-toast';
@@ -38,7 +41,7 @@ type Mode = 'voice' | 'text';
 
 /**
  * Atlas, the Vendibook sales agent. A voice call first: "Talk to Atlas" starts
- * the call, and a small call card shows who's talking, live captions and any
+ * the call, and a small call card shows who's talking and any
  * listings Atlas pulls up while he moves the buyer between pages. "Type
  * instead" is there for accessibility (and when the mic is blocked). A buyer
  * who leaves can pick the call back up within 30 minutes or start over.
@@ -70,6 +73,10 @@ export default function AtlasAgent() {
   };
   // After Atlas points at something, the card shrinks for a few seconds so it doesn't cover it (phones).
   const [peek, setPeek] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [followUpDraft, setFollowUpDraft] = useState<AtlasFollowUpDraft | null>(null);
+  const [menuConcept, setMenuConcept] = useState<AtlasMenuConcept | null>(null);
+  const followUpOffered = useRef(false);
   useEffect(() => {
     let t = 0;
     const onAction = () => {
@@ -133,6 +140,13 @@ export default function AtlasAgent() {
         currentListingId: () => pathRef.current.match(/^\/listing\/([^/]+)/)?.[1] ?? null,
         openMessage: (d) => setMessageDraft(d),
         currentUserId: () => userRef.current?.id ?? null,
+        showMenuConcept: setMenuConcept,
+        openBuyerFollowUp: (draft) => {
+          if (followUpOffered.current) return false;
+          followUpOffered.current = true;
+          setFollowUpDraft(draft);
+          return true;
+        },
         // Sends only after the buyer said yes to the draft on screen (enforced in atlasTools).
         sendSellerMessage: async (d) => {
           const buyerId = userRef.current?.id;
@@ -328,6 +342,14 @@ export default function AtlasAgent() {
   // Drafts Atlas opens for the buyer to review and send themselves.
   const drafts = (
     <>
+      {menuConcept && <AtlasMenuPreview concept={menuConcept} onClose={() => setMenuConcept(null)} onFollowUp={() => {
+        followUpOffered.current = true;
+        setFollowUpDraft({ topic: 'Menu concept and buying help', summary: `Buyer wants to discuss ${menuConcept.listingTitle}. Menu ideas: ${menuConcept.items.map(i => i.name).join(', ')}. Equipment and operating approvals still need verification.` });
+        setMenuConcept(null);
+      }} />}
+      {followUpDraft && <AtlasBuyerFollowUp draft={followUpDraft} cards={cards} onClose={() => setFollowUpDraft(null)} onSaved={(reference) => {
+        if (live) conversation.sendContextualUpdate(`The buyer submitted their own consented email follow-up form. Saved reference ${reference}. A teammate will follow up; this is not a Calendly booking or newsletter enrollment.`);
+      }} />}
       <Dialog open={Boolean(messageDraft)} onOpenChange={(o) => { if (!o) setMessageDraft(null); }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -460,7 +482,7 @@ export default function AtlasAgent() {
 
   return (
     <>{drafts}
-    <section data-atlas-ui className={cn('atlas-call', onListing && 'is-raised', peek && 'is-peek', (messageDraft || offerDraft || offerAuthGate) && 'is-behind')} onPointerDown={() => setPeek(false)} onFocus={() => setPeek(false)} role="dialog" aria-label={`Call with ${ATLAS_NAME}`}>
+    <section data-atlas-ui className={cn('atlas-call', !expanded && 'is-compact', onListing && 'is-raised', peek && 'is-peek', (messageDraft || offerDraft || offerAuthGate || followUpDraft || menuConcept) && 'is-behind')} role="region" aria-label={`Call with ${ATLAS_NAME}`}>
       <div className="atlas-call-top">
         <span ref={ringRef} className={cn('atlas-ring', phase === 'live' && mode === 'voice' && 'is-on', talking && 'is-talking')}>
           <AtlasOrb size={52} active={talking} />
@@ -473,6 +495,7 @@ export default function AtlasAgent() {
             {status}
           </p>
         </div>
+        <button type="button" className="atlas-x" onClick={() => { setExpanded(v => !v); setPeek(false); }} aria-label={expanded ? 'Minimize Atlas panel' : 'Expand Atlas panel'} aria-expanded={expanded}>{expanded ? <Minus className="h-4 w-4" /> : <span aria-hidden="true">↗</span>}</button>
         {phase === 'error' && (
           <button type="button" className="atlas-x" onClick={() => setPhase('idle')} aria-label="Close">
             <X className="h-4 w-4" />
@@ -484,7 +507,7 @@ export default function AtlasAgent() {
         <p role="alert" className="atlas-error">{error.text}</p>
       )}
 
-      {cards.length > 0 && phase !== 'error' && (
+      {expanded && !peek && cards.length > 0 && phase !== 'error' && (
         <div className="atlas-strip" aria-label="Listings Atlas found">
           {cards.map((c) => (
             <Link key={c.id} to={`/listing/${c.id}`} className="atlas-tile">
@@ -548,7 +571,13 @@ export default function AtlasAgent() {
                 <Keyboard className="h-4 w-4" aria-hidden="true" /> Type
               </button>
             )}
-            <button type="button" className="atlas-btn is-end" onClick={hangUp}>
+            <button type="button" className="atlas-btn is-end" onClick={() => {
+              hangUp();
+              if (cards.length && !followUpOffered.current) {
+                followUpOffered.current = true;
+                setFollowUpDraft({ topic: 'Continue my buying shortlist', summary: 'Buyer ended an Atlas conversation after viewing listings and may request an email follow-up using this form.' });
+              }
+            }}>
               <PhoneOff className="h-4 w-4" aria-hidden="true" /> End
             </button>
           </>

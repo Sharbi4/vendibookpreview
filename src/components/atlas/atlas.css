@@ -232,6 +232,18 @@
 }
 
 /* ── /atlas page: dark, techy, same site font ── */
+/* Compact by default: leave the page visible while Atlas scrolls and points. */
+.atlas-call.is-compact, .atlas-call.is-peek { left: auto; width: min(300px, calc(100vw - 24px)); gap: 8px; padding: 10px; }
+.atlas-call.is-compact .atlas-role, .atlas-call.is-compact .atlas-fine,
+.atlas-call.is-peek .atlas-role, .atlas-call.is-peek .atlas-fine,
+.atlas-call.is-peek .atlas-strip { display: none; }
+.atlas-call.is-compact .atlas-ring .atlas-orb, .atlas-call.is-peek .atlas-ring .atlas-orb { width: 34px !important; height: 34px !important; }
+.atlas-call.is-compact .atlas-name, .atlas-call.is-peek .atlas-name { font-size: 14px; }
+.atlas-call.is-compact .atlas-status, .atlas-call.is-peek .atlas-status { font-size: 11px; }
+.atlas-call.is-compact .atlas-call-top, .atlas-call.is-peek .atlas-call-top { gap: 9px; }
+.atlas-call.is-compact .atlas-btn, .atlas-call.is-peek .atlas-btn { padding: 0 8px; font-size: 12px; height: 40px; }
+.atlas-call .atlas-x:focus-visible { outline: 2px solid #FF8A66; outline-offset: 2px; }
+
 .atlas-page-grid {
   position: absolute; inset: 0; pointer-events: none;
   background-image: linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
