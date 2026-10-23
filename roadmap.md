@@ -1,5 +1,7 @@
 # Roadmap
 
+- [open] Clarified Allison clone cleanup: replace inherited sales prompt, verify exactly seven support client attachments and actual scheduling scope; preserve Atlas/shared registry/voice/model/security; continue saved-ID and publication checks without creating agents or subagents.
+
 - [done] Corrected owner-created Allison provider prompt/first message/seven isolated support tools; retained custom guidance, Katie voice, model, security and settings. No Calendly/MCP attachments present. Voice transcript privacy restored; 124 Atlas + 3 component tests and preview build pass; identity guard functions deployed; Contact desktop/mobile and handoff fail-closed fallback verified; no agents/secrets/data deleted or created.
 - [open] Finish corrected Allison activation/publication — owner must update existing ALLISON_AGENT_ID in Project Settings → Secrets to agent_8301m5nh7dq6e1x9wgqk2yx7k4pd (available tools cannot update); then verify live token/text/voice/handoff. Calendly scheduling needs actual authorized customer-success integration. Requested fix/paypal-webhook-config commit needs managed Git branch selection; current checkout is edit/edt-325024bd-5f47-4dee-a148-98d2e48c7d17. Frontend not published.
 

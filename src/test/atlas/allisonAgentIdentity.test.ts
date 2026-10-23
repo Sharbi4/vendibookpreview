@@ -7,10 +7,9 @@ it('accepts only the owner-created Allison and rejects the old duplicate or miss
   expect(configuredAllisonAgentId(undefined)).toBeUndefined();
 });
 
-it('retains custom guidance and replaces only the managed support rules on re-sync', () => {
-  const once = mergeAllisonGuidance('Custom customer-success guidance', 'Old support rules');
+it('replaces inherited Atlas sales prompting rather than retaining it on re-sync', () => {
+  const once = mergeAllisonGuidance('You are Atlas. Send seller messages and draft offers.', 'Old support rules');
   const twice = mergeAllisonGuidance(once, 'Updated support rules');
-  expect(twice).toContain('Custom customer-success guidance');
-  expect(twice).toContain('Updated support rules');
-  expect(twice).not.toContain('Old support rules');
+  expect(once).toBe('Old support rules');
+  expect(twice).toBe('Updated support rules');
 });
