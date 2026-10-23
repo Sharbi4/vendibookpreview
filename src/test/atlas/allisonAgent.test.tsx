@@ -31,3 +31,19 @@ it('pauses page tools when the visitor asks to stop', async () => {
   act(() => mocks.options.onMessage({ source: 'user', message: 'Stop changing pages' }));
   expect(mocks.pause).toHaveBeenCalledWith({ paused: true });
 });
+
+it('does not render agent transcripts in voice mode', async () => {
+  mocks.invoke.mockResolvedValue({ data: { token: 'test-token' } });
+  render(<AllisonAgent />);
+  await act(async () => { window.dispatchEvent(new CustomEvent(ALLISON_START_EVENT, { detail: { mode: 'voice' } })); });
+  act(() => mocks.options.onMessage({ source: 'ai', message: 'A spoken reply' }));
+  expect(screen.queryByRole('log')).toBeNull();
+  expect(screen.queryByText('A spoken reply')).toBeNull();
+});
+
+it('shows replies when the visitor explicitly chooses text', async () => {
+  render(<AllisonAgent />);
+  await act(async () => { window.dispatchEvent(new CustomEvent(ALLISON_START_EVENT, { detail: { mode: 'text' } })); });
+  act(() => mocks.options.onMessage({ source: 'ai', message: 'A readable reply' }));
+  expect(screen.getByRole('log').textContent).toContain('A readable reply');
+});

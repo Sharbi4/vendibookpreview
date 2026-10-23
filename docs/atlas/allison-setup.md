@@ -2,6 +2,12 @@
 
 Allison is a separate ElevenLabs AI agent, not a renamed Atlas or a human. Source configuration: `src/lib/atlas/allisonConfig.ts`. The Contact page launches her voice/text session; Atlas can hand off after consent using `transfer_to_support`. This browser handoff ends Atlas and starts a separate Allison session with a brief issue summary. It is not a seamless provider-side transfer or live human call.
 
+## Current owner-selected agent
+
+The owner cloned Atlas and named the clone Allison: `agent_8301m5nh7dq6e1x9wgqk2yx7k4pd`. This supersedes the automatically created agent below. Preserve the owner-selected voice and settings; detach inherited sales client tools from Allison only. Provider switch verification is pending.
+
+Code changes are made locally and pushed directly to `fix/paypal-webhook-config`. Lovable is used only for edge functions and the ElevenLabs connector.
+
 ## Activation still required
 
 ### October 23 activation check
