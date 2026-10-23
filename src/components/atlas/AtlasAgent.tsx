@@ -366,8 +366,6 @@ export default function AtlasAgent() {
 
   const onListing = /^\/listing\//.test(location.pathname);
   const talking = live && mode === 'voice' && conversation.isSpeaking;
-  const lastAtlas = [...turns].reverse().find((t) => t.from === 'atlas');
-  const lastYou = turns[turns.length - 1]?.from === 'you' ? turns[turns.length - 1] : null;
 
   if (phase === 'idle') {
     // The /atlas page has its own big call buttons; skip the corner widget there.
@@ -482,13 +480,8 @@ export default function AtlasAgent() {
         )}
       </div>
 
-      {phase === 'error' && error ? (
+      {phase === 'error' && error && (
         <p role="alert" className="atlas-error">{error.text}</p>
-      ) : (
-        <div className="atlas-captions" aria-live="polite">
-          {lastAtlas && <p className="atlas-caption"><span className="sr-only">{ATLAS_NAME} said: </span>{lastAtlas.text}</p>}
-          {lastYou && <p className="atlas-caption is-you"><span className="sr-only">You said: </span>{lastYou.text}</p>}
-        </div>
       )}
 
       {cards.length > 0 && phase !== 'error' && (
