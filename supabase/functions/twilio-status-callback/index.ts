@@ -4,14 +4,8 @@
 // messages as failed/delivered.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// Twilio signs webhook requests with the account auth token. Accept the
-// dedicated secret first, falling back to the connector-managed key (which is
-// the same account credential used to authenticate Twilio API calls here).
-const TWILIO_AUTH_TOKEN =
-  Deno.env.get("TWILIO_AUTH_TOKEN") ?? Deno.env.get("TWILIO_API_KEY") ?? "";
-const SKIP_SIG_VERIFY =
-  Deno.env.get("SMS_TEST_MODE") === "true" ||
-  Deno.env.get("TWILIO_SKIP_SIGNATURE_VERIFY") === "true";
+// A gateway connection credential cannot verify a Twilio webhook signature.
+const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") ?? "";
 
 async function hmacSha1Base64(key: string, message: string): Promise<string> {
   const enc = new TextEncoder();
@@ -34,7 +28,6 @@ async function verifyTwilioSignature(
   params: Record<string, string>,
   headerSig: string,
 ): Promise<boolean> {
-  if (SKIP_SIG_VERIFY) return true;
   if (!TWILIO_AUTH_TOKEN || !headerSig) return false;
   const sortedKeys = Object.keys(params).sort();
   const data = url + sortedKeys.map((k) => k + params[k]).join("");
@@ -90,7 +83,15 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log("twilio status callback", { sid, status, to, errorCode });
+    if (['delivered','undelivered','failed'].includes(status)) {
+      const {error}=await supabase.from('sms_message_log_v2').update({
+        delivery_status:status,
+        failure_reason:errorCode?`twilio_${errorCode}`:null,
+        updated_at:new Date().toISOString(),
+      }).eq('provider_message_sid',sid).or('delivery_status.is.null,delivery_status.neq.delivered');
+      if(error)throw error;
+    }
+    console.log("twilio status callback", { sid, status, errorCode });
     return new Response("ok", { headers: { "Content-Type": "text/plain" } });
   } catch (e: any) {
     console.error("twilio-status-callback error:", e);

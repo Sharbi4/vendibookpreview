@@ -368,9 +368,9 @@ serve(async (req) => {
         if (session.tracking_active === false || session.tracking_paused === true) {
           return jsonError(400, "tracking_inactive", "Live tracking is not running for this delivery.");
         }
-        const lat = Number(body.latitude);
-        const lng = Number(body.longitude);
-        if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+        const lat = body.latitude;
+        const lng = body.longitude;
+        if (typeof lat !== 'number' || typeof lng !== 'number' || !Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat)>90 || Math.abs(lng)>180) {
           return jsonError(400, "bad_location", "A valid location is required.");
         }
         const now = new Date();
@@ -401,7 +401,8 @@ serve(async (req) => {
           }
         }
 
-        await db.from("fulfillment_sessions").update(update).eq("id", sessionId);
+        const {error:locationWriteError}=await db.from("fulfillment_sessions").update(update).eq("id", sessionId);
+        if(locationWriteError)return jsonError(503,"location_unavailable","Location could not be saved. Please try again.");
 
         // Minimal retention: the live point lives on the session row. A sparse
         // breadcrumb is kept only every ~2 minutes as delivery evidence.

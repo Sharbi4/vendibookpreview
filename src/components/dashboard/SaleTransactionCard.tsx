@@ -243,20 +243,20 @@ const SaleTransactionCard = ({
       <CardContent className="p-0">
         <div className="flex flex-col sm:flex-row">
           {/* Image */}
-          <div className="w-full sm:w-48 h-32 sm:h-auto flex-shrink-0">
+          <Link to={`/order-tracking/${transaction.id}`} aria-label={`View order: ${transaction.listing?.title || 'Purchase'}`} className="w-full sm:w-48 h-32 sm:h-auto flex-shrink-0 focus-visible:ring-2 focus-visible:ring-primary">
             <img
               src={transaction.listing?.cover_image_url || '/placeholder.svg'}
               alt={transaction.listing?.title}
               className="w-full h-full object-cover"
             />
-          </div>
+          </Link>
           
           {/* Content */}
           <div className="flex-1 p-4">
             <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
               <div>
                 <h3 className="font-semibold text-foreground line-clamp-1">
-                  {transaction.listing?.title || 'Unknown Listing'}
+                  <Link to={`/order-tracking/${transaction.id}`} className="hover:text-primary focus-visible:underline">{transaction.listing?.title || 'Unknown Listing'}</Link>
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   {transaction.listing?.category ? CATEGORY_LABELS[transaction.listing.category as keyof typeof CATEGORY_LABELS] : 'Item'}
@@ -270,6 +270,7 @@ const SaleTransactionCard = ({
             </div>
 
             {/* Next-action banner — single line of guidance */}
+            <Button asChild size="sm" variant="outline" className="mb-3 gap-2"><Link to={`/order-tracking/${transaction.id}`}><Package className="h-4 w-4"/>View order & tracking</Link></Button>
             {(() => {
               const next = getSaleNextAction(transaction.status, role, transaction);
               if (!next) return null;

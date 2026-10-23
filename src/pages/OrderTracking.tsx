@@ -2,6 +2,7 @@ import { isPickupLocationRevealed, PICKUP_LOCKED_MESSAGE } from '@/lib/fulfillme
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import OrderPaymentLink from '@/components/orders/OrderPaymentLink';
+import DeliveryTrackingPanel from '@/components/delivery/DeliveryTrackingPanel';
 import { FreightLink, linkifyFreight } from '@/components/shared/FreightLink';
 import { format } from 'date-fns';
 import { formatDeliveryWindow } from '@/lib/sale/handoff';
@@ -747,11 +748,12 @@ const OrderTracking = () => {
       <SEO 
         title="Order Tracking | VendiBook"
         description="Track your order status and delivery"
+        noindex
       />
       <Header />
       
       <main className="flex-1 container py-8">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           {/* Back Button */}
           <Button 
             variant="ghost" 
@@ -817,6 +819,13 @@ const OrderTracking = () => {
               </CardContent>
             </Card>
           )}
+
+          {!isRefunded && !isCancelled && !isCashTransaction && <div className="mb-6"><DeliveryTrackingPanel saleTransactionId={transaction.id} fulfillmentType={transaction.fulfillment_type} title={transaction.listing?.title} listingImage={transaction.listing?.cover_image_url}/></div>}
+
+          {!isRefunded && !isCancelled && <div className="mb-6 flex flex-wrap gap-3">
+            <Button asChild variant="outline"><Link to={`/handoff/sale/${transaction.id}`}>Handoff & documents</Link></Button>
+            {isSeller && ['delivery','seller_delivery','third_party_driver','vendibook_freight','shipping'].includes(transaction.fulfillment_type||'') && <Button asChild><Link to={`/delivery/sale/${transaction.id}`}>Open delivery mode</Link></Button>}
+          </div>}
 
           {/* Status Card */}
           <Card className="mb-6">

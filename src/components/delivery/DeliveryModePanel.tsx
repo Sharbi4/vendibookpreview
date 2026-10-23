@@ -49,11 +49,13 @@ export default function DeliveryModePanel({
   const [consent, setConsent] = useState(false);
   const [permission, setPermission] = useState<PermissionState>('not-requested');
   const [busy, setBusy] = useState<string | null>(null);
+  const [locationError,setLocationError]=useState(false);
+  const [lastUpload,setLastUpload]=useState<string|null>(null);
   const watchId = useRef<number | null>(null);
   const lastSent = useRef(0);
 
-  const tracking = !!session?.tracking_active && !session?.tracking_paused;
-  const closed = session?.status === 'completed' || session?.status === 'cancelled';
+  const closed = !!session?.delivered_at || ['completed','cancelled','canceled'].includes(session?.status||'');
+  const tracking = !!session?.tracking_active && !session?.tracking_paused && !closed;
 
   const run = useCallback(
     async (key: string, payload: Record<string, unknown>, okMessage?: string) => {
@@ -114,9 +116,7 @@ export default function DeliveryModePanel({
           latitude: pos.coords.latitude,
           longitude: pos.coords.longitude,
           accuracy_m: pos.coords.accuracy,
-        }).catch(() => {
-          /* transient network drops are expected on the road */
-        });
+        }).then(()=>{setLocationError(false);setLastUpload(new Date().toISOString());}).catch(() => setLocationError(true));
       },
       () => setPermission('denied'),
       { enableHighAccuracy: true, maximumAge: 10000, timeout: 30000 },
@@ -143,8 +143,10 @@ export default function DeliveryModePanel({
         <h2 className="flex items-center gap-2 text-base font-semibold">
           <Truck className="h-4 w-4" /> Delivery mode
         </h2>
-        {tracking ? (
+        {tracking && permission==='granted' && !locationError && lastUpload ? (
           <Badge variant="outline" className="border-emerald-500/30 text-emerald-600">Sharing location</Badge>
+        ) : tracking ? (
+          <Badge variant="outline">Waiting for location</Badge>
         ) : session?.tracking_paused ? (
           <Badge variant="outline">Paused</Badge>
         ) : (
@@ -155,7 +157,7 @@ export default function DeliveryModePanel({
       {tracking && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3">
           <p className="text-sm">
-            <strong>Your location is being shared</strong> with this order&rsquo;s buyer, seller, and Vendibook support
+            <strong>Delivery tracking is enabled</strong> for this order&rsquo;s buyer, seller, and Vendibook support
             while the delivery is active.{' '}
             <Link to="/legal/location-tracking" target="_blank" rel="noreferrer" className="underline">
               How this works
@@ -167,6 +169,10 @@ export default function DeliveryModePanel({
           </Button>
         </div>
       )}
+
+      {tracking && permission!=='granted' && <div className="rounded-lg border p-3 text-sm"><p>Reconnect this device to resume sending location updates.</p><Button className="mt-3" size="sm" onClick={()=>void requestPermission()}>Enable location on this device</Button>{permission==='denied'&&<p className="mt-2 text-destructive">Allow location for this site in your browser settings.</p>}</div>}
+      {tracking&&locationError&&<p role="status" className="text-sm text-destructive">Location could not be uploaded. Check your connection; the buyer will see the last reported location.</p>}
+      {tracking&&lastUpload&&!locationError&&<p className="text-xs text-muted-foreground">Last uploaded {new Date(lastUpload).toLocaleTimeString()}</p>}
 
       {!tracking && !closed && (
         <div className="space-y-3 rounded-lg border border-border p-3">

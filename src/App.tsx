@@ -133,6 +133,7 @@ const PaymentReturn = lazy(() => import("./pages/PaymentReturn"));
 const PaymentCancelled = lazy(() => import("./pages/PaymentCancelled"));
 const Messages = lazy(() => import("./pages/Messages"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const AdminOperations = lazy(() => import("./pages/AdminOperations"));
 const AdminMetrics = lazy(() => import("./pages/AdminMetrics"));
 const AdminListings = lazy(() => import("./pages/AdminListings"));
 const AdminMetaMuse = lazy(() => import("./pages/AdminMetaMuse"));
@@ -489,7 +490,9 @@ const AnimatedRoutes = () => {
           <Route path="/messages" element={<PreserveQueryRedirect to="/dashboard/messages" />} />
           <Route path="/messages/classic" element={<PageTransition><Messages /></PageTransition>} />
           <Route path="/messages/:conversationId" element={<LegacyMessageThreadRedirect />} />
-          <Route path="/admin" element={<PageTransition><AdminDashboard /></PageTransition>} />
+          <Route path="/admin" element={<PageTransition><AdminOperations /></PageTransition>} />
+          <Route path="/admin/legacy" element={<PageTransition><AdminDashboard /></PageTransition>} />
+          <Route path="/admin/operations" element={<PageTransition><AdminOperations /></PageTransition>} />
           <Route path="/admin/metrics" element={<PageTransition><AdminMetrics /></PageTransition>} />
           <Route path="/admin/listings" element={<PageTransition><AdminListings /></PageTransition>} />
           <Route path="/admin/meta-muse" element={<PageTransition><AdminMetaMuse /></PageTransition>} />

@@ -12,7 +12,7 @@ const DELIVERY_MODES = ['seller_delivery', 'third_party_driver', 'vendibook_frei
  * enforced server-side (RLS + handoff-ops), never in this hook.
  */
 export function useDeliveryTracking(saleTransactionId?: string | null, bookingId?: string | null) {
-  const { data, isLoading, refresh } = useHandoffContext(saleTransactionId ?? null, bookingId ?? null);
+  const { data, isLoading, refresh, error, dataUpdatedAt } = useHandoffContext(saleTransactionId ?? null, bookingId ?? null);
   const [live, setLive] = useState<FulfillmentSession | null>(null);
 
   const base = useMemo<FulfillmentSession | null>(() => {
@@ -21,6 +21,16 @@ export function useDeliveryTracking(saleTransactionId?: string | null, bookingId
     const open = sessions.find((s) => !['completed', 'cancelled'].includes(s.status));
     return open ?? sessions[0];
   }, [data]);
+
+  useEffect(() => {
+    setLive(null);
+  }, [dataUpdatedAt]);
+
+  useEffect(() => {
+    if (!saleTransactionId && !bookingId) return;
+    const timer = window.setInterval(() => { if (document.visibilityState === 'visible') void refresh(); }, 30000);
+    return () => window.clearInterval(timer);
+  }, [saleTransactionId, bookingId, refresh]);
 
   useEffect(() => {
     setLive(null);
@@ -45,6 +55,7 @@ export function useDeliveryTracking(saleTransactionId?: string | null, bookingId
     viewerRole: data?.viewer_role ?? null,
     isLoading,
     refresh,
+    error,
   };
 }
 

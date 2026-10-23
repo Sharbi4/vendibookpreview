@@ -63,7 +63,7 @@ export const useOrderTracking = (transactionId: string | undefined) => {
   const queryClient = useQueryClient();
 
   const { data: transaction, isLoading, error, refetch } = useQuery({
-    queryKey: ['order-tracking', transactionId],
+    queryKey: ['order-tracking', transactionId, user?.id],
     queryFn: async () => {
       if (!transactionId || !user) return null;
       
@@ -110,12 +110,12 @@ export const useOrderTracking = (transactionId: string | undefined) => {
 
   // Latest payment attempt for this transaction. RLS limits rows to the
   // buyer/seller, so nothing extra is exposed here.
-  const { data: paymentRecord } = useQuery({
-    queryKey: ['order-tracking-payment', transactionId],
+  const { data: paymentRecord, isLoading: paymentLoading, error: paymentError } = useQuery({
+    queryKey: ['order-tracking-payment', transactionId, user?.id],
     enabled: !!transactionId && !!user,
     queryFn: async () => {
       if (!transactionId) return null;
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('payment_records')
         .select(
           'reference, provider, payment_status, payment_intent, last_error, created_at, gross_amount_cents',
@@ -123,6 +123,7 @@ export const useOrderTracking = (transactionId: string | undefined) => {
         .eq('sale_transaction_id', transactionId)
         .order('created_at', { ascending: false })
         .limit(20);
+      if (error) throw error;
       const rows = (data ?? []) as unknown as TrackingPayment[];
       // A settled (or since refunded) payment always wins over a later abandoned attempt.
       return (
@@ -151,15 +152,23 @@ export const useOrderTracking = (transactionId: string | undefined) => {
         },
         (payload) => {
           // Update the cache with new data
-          queryClient.setQueryData(['order-tracking', transactionId], (old: TrackingTransaction | null) => {
+          queryClient.setQueryData(['order-tracking', transactionId, user.id], (old: TrackingTransaction | null) => {
             if (!old) return old;
             return { ...old, ...payload.new };
           });
         }
       )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'payment_records', filter: `sale_transaction_id=eq.${transactionId}` }, () => { void queryClient.invalidateQueries({queryKey:['order-tracking-payment',transactionId,user.id]}); })
       .subscribe();
 
+    const timer = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
+      void queryClient.invalidateQueries({queryKey:['order-tracking',transactionId,user.id]});
+      void queryClient.invalidateQueries({queryKey:['order-tracking-payment',transactionId,user.id]});
+    },30000);
+
     return () => {
+      window.clearInterval(timer);
       supabase.removeChannel(channel);
     };
   }, [transactionId, user, queryClient]);
@@ -167,9 +176,12 @@ export const useOrderTracking = (transactionId: string | undefined) => {
   return {
     transaction,
     paymentRecord: paymentRecord ?? null,
-    isLoading,
-    error,
-    refetch,
+    isLoading: isLoading || paymentLoading,
+    error: error || paymentError,
+    refetch: async () => {
+      await queryClient.invalidateQueries({queryKey:['order-tracking-payment',transactionId,user?.id]});
+      return refetch();
+    },
   };
 };
 

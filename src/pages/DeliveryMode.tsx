@@ -16,7 +16,7 @@ export default function DeliveryMode() {
       <SEO title="Delivery mode | Vendibook" description="Share live delivery location with the buyer on this Vendibook order." noindex />
       <div className="mx-auto max-w-3xl space-y-4 px-4 py-6">
         <Button asChild variant="ghost" size="sm" className="-ml-2">
-          <Link to={`/orders/${id}`}>
+          <Link to={saleId ? `/order-tracking/${saleId}` : `/orders/${bookingId}`}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to order
           </Link>
         </Button>

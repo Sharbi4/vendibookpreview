@@ -417,3 +417,7 @@ verify_jwt = false
 # Public email opt-in, token-based confirmation and verified phone enrollment.
 [functions.marketplace-updates]
 verify_jwt = false
+
+# Authenticated administrator verified inside the handler on every request.
+[functions.admin-operations]
+verify_jwt = false

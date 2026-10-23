@@ -41,15 +41,15 @@ export async function geocodeAddress(address: string): Promise<LatLng | null> {
   try {
     const res = await fetch(
       `${GATEWAY_URL}/maps/api/geocode/json?address=${encodeURIComponent(address)}`,
-      { headers: headers() },
+      { headers: headers(), signal: AbortSignal.timeout(15000) },
     );
     if (!res.ok) {
-      console.error(`Geocode failed [${res.status}]: ${await res.text()}`);
+      console.error(`Geocode failed [${res.status}]`);
       return null;
     }
     const body = await res.json();
     const loc = body?.results?.[0]?.geometry?.location;
-    if (typeof loc?.lat !== "number" || typeof loc?.lng !== "number") return null;
+    if (!Number.isFinite(loc?.lat) || !Number.isFinite(loc?.lng) || Math.abs(loc.lat)>90 || Math.abs(loc.lng)>180) return null;
     return { lat: loc.lat, lng: loc.lng };
   } catch (err) {
     console.error("Geocode error", err);
@@ -65,10 +65,11 @@ export interface RouteResult {
 
 /** Live driving route from the vehicle to the destination via the Routes API. */
 export async function computeRoute(origin: LatLng, destination: LatLng): Promise<RouteResult | null> {
-  if (!isGoogleRoutingConfigured()) return null;
+  if (!isGoogleRoutingConfigured() || [origin,destination].some(p=>!Number.isFinite(p.lat)||!Number.isFinite(p.lng)||Math.abs(p.lat)>90||Math.abs(p.lng)>180)) return null;
   try {
     const res = await fetch(`${GATEWAY_URL}/routes/directions/v2:computeRoutes`, {
       method: "POST",
+      signal: AbortSignal.timeout(15000),
       headers: headers({
         "X-Goog-FieldMask":
           "routes.distanceMeters,routes.duration,routes.polyline.encodedPolyline",
@@ -81,14 +82,15 @@ export async function computeRoute(origin: LatLng, destination: LatLng): Promise
       }),
     });
     if (!res.ok) {
-      console.error(`Route failed [${res.status}]: ${await res.text()}`);
+      console.error(`Route failed [${res.status}]`);
       return null;
     }
     const body = await res.json();
     const route = body?.routes?.[0];
     if (!route) return null;
-    const seconds = Number(String(route.duration ?? "").replace("s", ""));
-    if (!Number.isFinite(route.distanceMeters) || !Number.isFinite(seconds)) return null;
+    if (typeof route.duration !== 'string' || !/^\d+(\.\d+)?s$/.test(route.duration)) return null;
+    const seconds = Number(route.duration.slice(0,-1));
+    if (!Number.isFinite(route.distanceMeters) || route.distanceMeters < 0 || !Number.isFinite(seconds)) return null;
     return {
       distance_meters: Math.round(route.distanceMeters),
       duration_seconds: Math.round(seconds),

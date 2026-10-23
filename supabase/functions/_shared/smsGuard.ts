@@ -33,7 +33,9 @@ export type GuardResult =
 
 const TWILIO_ACCOUNT_SID = Deno.env.get('TWILIO_ACCOUNT_SID') ?? '';
 const TWILIO_AUTH_TOKEN = Deno.env.get('TWILIO_AUTH_TOKEN') ?? '';
-const TWILIO_FROM_NUMBER = Deno.env.get('TWILIO_FROM_NUMBER') ?? '';
+const TWILIO_FROM_NUMBER = Deno.env.get('TWILIO_FROM_NUMBER') || Deno.env.get('TWILIO_PHONE_NUMBER') || '';
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY') ?? '';
+const TWILIO_CONNECTOR_KEY = Deno.env.get('TWILIO_API_KEY') ?? '';
 const IS_TEST_MODE =
   Deno.env.get('SMS_TEST_MODE') === 'true' ||
   Deno.env.get('DENO_ENV') === 'test';
@@ -97,12 +99,13 @@ export async function sendGuardedSms(input: GuardedSendInput): Promise<GuardResu
   }
 
   // 3) Number-level suppression wins over everything else.
-  const { data: suppression } = await db
+  const { data: suppression, error: suppressionError } = await db
     .from('sms_suppressions')
     .select('id')
     .eq('phone_e164', phoneE164)
     .is('released_at', null)
-    .maybeSingle();
+    .limit(1).maybeSingle();
+  if (suppressionError) return { ok: false, reason: 'suppression_check_unavailable', logId: null };
   if (suppression) {
     const logId = await logBlocked(db, input, phoneE164, 'suppressed_number');
     return { ok: false, reason: 'suppressed_number', logId };
@@ -114,7 +117,7 @@ export async function sendGuardedSms(input: GuardedSendInput): Promise<GuardResu
     .select('id,user_id,transactional_status,phone_verified_at')
     .eq('phone_e164', phoneE164)
     .maybeSingle();
-  if (!pref || pref.transactional_status !== 'opted_in') {
+  if (!pref || pref.transactional_status !== 'opted_in' || !pref.phone_verified_at) {
     const logId = await logBlocked(db, input, phoneE164, 'no_active_consent');
     return { ok: false, reason: 'no_active_consent', logId };
   }
@@ -122,7 +125,7 @@ export async function sendGuardedSms(input: GuardedSendInput): Promise<GuardResu
   // 5) Ownership check — the phone must belong to the intended recipient.
   //    Skipped when no userId is supplied (e.g. re-enrollment confirmation
   //    to an unauthenticated verified number).
-  if (input.userId && pref.user_id && pref.user_id !== input.userId) {
+  if (input.userId && pref.user_id !== input.userId) {
     const logId = await logBlocked(db, input, phoneE164, 'phone_owner_mismatch');
     return { ok: false, reason: 'phone_owner_mismatch', logId };
   }
@@ -131,13 +134,15 @@ export async function sendGuardedSms(input: GuardedSendInput): Promise<GuardResu
   if (input.idempotencyKey) {
     const { data: dup } = await db
       .from('sms_message_log_v2')
-      .select('id')
+      .select('id,send_status,provider_message_sid')
       .eq('recipient_phone_e164', phoneE164)
       .eq('template_id', input.templateId)
       .eq('business_purpose', `${input.businessPurpose}#${input.idempotencyKey}`)
       .maybeSingle();
     if (dup) {
-      return { ok: true, providerMessageSid: null, logId: dup.id };
+      return dup.send_status === 'sent' && dup.provider_message_sid
+        ? { ok: true, providerMessageSid: dup.provider_message_sid, logId: dup.id }
+        : { ok: false, reason: 'already_attempted', logId: dup.id };
     }
   }
 
@@ -163,6 +168,7 @@ export async function sendGuardedSms(input: GuardedSendInput): Promise<GuardResu
       consent_basis: consentBasis,
       template_variables: input.templateVariables ?? null,
       send_status: 'queued',
+      dispatch_key: input.idempotencyKey ? `${phoneE164}:${input.templateId}:${input.idempotencyKey}` : null,
     })
     .select('id')
     .single();
@@ -171,12 +177,18 @@ export async function sendGuardedSms(input: GuardedSendInput): Promise<GuardResu
   }
 
   // Test / dry-run mode: never hit Twilio.
-  if (IS_TEST_MODE || !TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_FROM_NUMBER) {
+  if (IS_TEST_MODE) {
     await db
       .from('sms_message_log_v2')
-      .update({ send_status: 'sent', delivery_status: 'test_mode_dry_run' })
+      .update({ send_status: 'blocked', delivery_status: 'test_mode_dry_run', failure_reason: 'test_mode' })
       .eq('id', log.id);
-    return { ok: true, providerMessageSid: null, logId: log.id };
+    return { ok: false, reason: 'test_mode', logId: log.id };
+  }
+
+  const viaGateway = !!LOVABLE_API_KEY && !!TWILIO_CONNECTOR_KEY;
+  if (!TWILIO_FROM_NUMBER || (!viaGateway && (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN))) {
+    await db.from('sms_message_log_v2').update({ send_status: 'failed', failure_reason: 'provider_not_configured' }).eq('id',log.id);
+    return { ok: false, reason: 'provider_not_configured', logId: log.id };
   }
 
   try {
@@ -185,10 +197,13 @@ export async function sendGuardedSms(input: GuardedSendInput): Promise<GuardResu
       To: phoneE164,
       From: TWILIO_FROM_NUMBER,
       Body: input.body,
+      StatusCallback: `${Deno.env.get('SUPABASE_URL')}/functions/v1/twilio-status-callback`,
     });
     const resp = await fetch(
-      `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
-      { method: 'POST', headers: { Authorization: authHeader, 'Content-Type': 'application/x-www-form-urlencoded' }, body },
+      viaGateway ? 'https://connector-gateway.lovable.dev/twilio/Messages.json' : `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
+      { method: 'POST', headers: viaGateway
+        ? { Authorization: `Bearer ${LOVABLE_API_KEY}`, 'X-Connection-Api-Key': TWILIO_CONNECTOR_KEY, 'Content-Type': 'application/x-www-form-urlencoded' }
+        : { Authorization: authHeader, 'Content-Type': 'application/x-www-form-urlencoded' }, body, signal: AbortSignal.timeout(15000) },
     );
     const respBody = await resp.json().catch(() => ({}));
     if (!resp.ok) {
@@ -199,6 +214,7 @@ export async function sendGuardedSms(input: GuardedSendInput): Promise<GuardResu
       return { ok: false, reason: `twilio_${resp.status}`, logId: log.id };
     }
     const sid = (respBody as { sid?: string }).sid ?? null;
+    if (!sid) throw new Error('Provider did not return a message ID; delivery unknown');
     await db
       .from('sms_message_log_v2')
       .update({ send_status: 'sent', provider_message_sid: sid })

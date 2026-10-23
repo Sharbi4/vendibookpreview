@@ -11,11 +11,8 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    // Prefer the project-configured Google API key (billing enabled), then browser/maps keys.
-    const BROWSER_KEY =
-      Deno.env.get("GOOGLE_API_KEY") ||
-      Deno.env.get("GOOGLE_MAPS_BROWSER_KEY") ||
-      Deno.env.get("GOOGLE_MAPS_API_KEY");
+    // This endpoint is public. Never expose a server or connector credential.
+    const BROWSER_KEY = Deno.env.get("GOOGLE_MAPS_BROWSER_KEY");
 
     if (!BROWSER_KEY) {
       return new Response(

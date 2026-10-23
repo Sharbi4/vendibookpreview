@@ -1,95 +1,34 @@
-// Post-publish feedback: finds listings published 24–48h ago and sends a
-// one-time feedback request. Idempotent via feedback_email_sent. Triggered
-// by pg_cron hourly.
+// Existing hourly job. One request per publication, 24h delay, at most one per recipient/day.
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
-import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-function genToken(): string {
-  const b = new Uint8Array(24);
-  crypto.getRandomValues(b);
-  return Array.from(b).map((x) => x.toString(16).padStart(2, '0')).join('');
-}
-
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
-  if (!(await isAdminOrBackendCaller(req))) return forbiddenResponse(corsHeaders);
-  const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
-
-  const now = Date.now();
-  const minAge = new Date(now - 24 * 60 * 60 * 1000).toISOString(); // 24h ago
-  const maxAge = new Date(now - 48 * 60 * 60 * 1000).toISOString(); // 48h ago
-
-  const sent: any[] = [];
-  const errors: any[] = [];
-
-  try {
-    const { data: listings } = await supabase
-      .from('listings')
-      .select('id, title, host_id, published_at, profiles!listings_host_id_fkey(email, full_name, first_name)')
-      .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
-      .lt('published_at', minAge)
-      .gt('published_at', maxAge)
-      .limit(200);
-
-    for (const l of listings || []) {
-      const profile: any = (l as any).profiles;
-      const email = profile?.email;
-      if (!email) continue;
-
-      const { data: already } = await supabase
-        .from('feedback_email_sent')
-        .select('id')
-        .eq('context_type', 'listing_publish')
-        .eq('context_id', l.id)
-        .maybeSingle();
-      if (already) continue;
-
-      const token = genToken();
-      const { error: logErr } = await supabase.from('feedback_email_sent').insert({
-        context_type: 'listing_publish',
-        context_id: l.id,
-        recipient_email: email,
-      });
-      if (logErr) {
-        // unique-constraint race — skip
-        continue;
-      }
-      await supabase.from('feedback_submissions').insert({
-        user_id: l.host_id,
-        context_type: 'listing_publish',
-        context_id: l.id,
-        email,
-        metadata: { token, status: 'pending', listing_title: l.title },
-      });
-
-      const recipientName = profile?.first_name || profile?.full_name?.split(' ')[0];
-
-      const { error } = await invokeTransactionalEmail({
-          templateName: 'feedback-request',
-          recipientEmail: email,
-          idempotencyKey: `feedback-publish-${l.id}`,
-          templateData: {
-            recipientName,
-            contextLabel: l.title ? `publishing "${l.title}"` : 'publishing your listing',
-            contextType: 'listing_publish',
-            feedbackToken: token,
-            aiIntro: `You just published${l.title ? ` "${l.title}"` : ' your listing'} — 30 seconds of honest feedback helps us make publishing dramatically smoother for the next host.`,
-          },
-        });
-      if (error) errors.push({ listing: l.id, error: error.message });
-      else sent.push({ listing: l.id, email });
-    }
-  } catch (e) {
-    errors.push({ stage: 'listings', error: e instanceof Error ? e.message : String(e) });
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts';
+import { isAdminOrBackendCaller, forbiddenResponse } from '../_shared/callerGuard.ts';
+const corsHeaders={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'authorization,x-client-info,apikey,content-type,x-cron-secret'};
+Deno.serve(async req=>{
+ if(req.method==='OPTIONS')return new Response(null,{headers:corsHeaders});
+ if(!await isAdminOrBackendCaller(req))return forbiddenResponse(corsHeaders);
+ const db=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+ const respond=(data:unknown,status=200)=>new Response(JSON.stringify(data),{status,headers:{...corsHeaders,'Content-Type':'application/json'}});
+ try{
+  const {data:setting,error:settingError}=await db.from('operations_settings').select('enabled').eq('id','post_publish_feedback').single();
+  if(settingError)throw settingError;if(!setting.enabled)return respond({ok:true,paused:true,sent:0});
+  const {data:listings,error:queryError}=await db.rpc('claim_post_publish_feedback',{p_limit:50});
+  if(queryError)throw queryError;
+  let sent=0,failed=0,suppressed=0;
+  for(const listing of listings||[]){
+   const profile=listing;const email=listing.email;
+   try{
+    const {data:previous,error:previousError}=await db.from('feedback_submissions').select('metadata').eq('context_type','listing_publish').eq('context_id',listing.id).eq('user_id',listing.host_id).order('created_at',{ascending:false}).limit(1).maybeSingle();
+    if(previousError)throw previousError;
+    let token=previous?.metadata?.token;
+    if(!token){token=crypto.randomUUID()+crypto.randomUUID();const {error}=await db.from('feedback_submissions').insert({user_id:listing.host_id,context_type:'listing_publish',context_id:listing.id,email,metadata:{token,status:'pending',listing_title:listing.title}});if(error)throw error;}
+    const {data,error}=await invokeTransactionalEmail({templateName:'feedback-request',recipientEmail:email,idempotencyKey:`feedback-publish-${listing.id}`,metadata:{context_type:'listing_publish',context_id:listing.id},templateData:{recipientName:profile.first_name||profile.full_name?.split(' ')[0],contextLabel:listing.title?`publishing "${listing.title}"`:'publishing your listing',contextType:'listing_publish',feedbackToken:token}});
+    if(error)throw error;
+    const status=data?.sent===true?'sent':data?.suppressed||data?.status==='suppressed'?'suppressed':'failed';
+    const {error:logError}=await db.from('feedback_email_sent').update({dispatch_status:status,last_error:status==='failed'?'Provider did not confirm acceptance':null,updated_at:new Date().toISOString()}).eq('id',listing.claim_id);
+    if(logError)throw logError;
+    if(status==='sent')sent++;else if(status==='suppressed')suppressed++;else failed++;
+   }catch(e){failed++;await db.from('feedback_email_sent').update({dispatch_status:'failed',last_error:(e instanceof Error?e.message:'Send failed').slice(0,300),updated_at:new Date().toISOString()}).eq('id',listing.claim_id);}
   }
-
-  return new Response(JSON.stringify({ success: true, sent: sent.length, errors }), {
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  });
+  return respond({ok:true,sent,failed,suppressed});
+ }catch(e){console.error('post_publish_feedback',e instanceof Error?e.message:'Failed');return respond({ok:false,error:'Feedback workflow could not finish'},500);}
 });
