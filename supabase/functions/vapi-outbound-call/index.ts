@@ -1,4 +1,4 @@
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 import { checkRateLimit, clientIp } from '../_shared/rateLimit.ts';
 import { getCaller, isBackendCaller } from '../_shared/callerGuard.ts';
 

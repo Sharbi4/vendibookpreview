@@ -1,5 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 import { z } from 'npm:zod@3';
 import { MUSE_PHRASES, composeMuseDraft, matchMuseLead, museState, requireMuseAdmin, templateDraft, validateMuseOutput, type MuseLead, type MuseListing } from '../_shared/metaMuse.ts';
 const Body=z.object({action:z.enum(['status','matches','template','muse']),lead_id:z.string().uuid().optional()}).strict();
