@@ -193,8 +193,16 @@ serve(async (req) => {
       const existingIds = Array.isArray(currentPrompt.tool_ids) ? currentPrompt.tool_ids.filter((id): id is string => typeof id === 'string') : [];
       const mergedIds = [...new Set([...existingIds, ...toolIds])];
       // Do not silently discard an inline integration that has no registry ID.
-      const unmanagedInline = Array.isArray(_inlineTools) ? _inlineTools.filter((t: any) => t?.type !== 'client' && !existingIds.includes(t?.id)) : [];
-      if (target === 'atlas' && unmanagedInline.length) return json({ agent_updated: false, error: 'Existing inline integration tools need preservation review before syncing.', tools: toolResults }, 409);
+      // ElevenLabs echoes attached registry tools inline (often without `id`), and
+      // system tools live in `built_in_tools`; both are kept, so match them by name.
+      const attachedNames = new Set(rows.filter(r => existingIds.includes(String(r?.id))).map(r => String((r?.tool_config as any)?.name ?? r?.name ?? '')));
+      const builtIns = (currentPrompt as any).built_in_tools;
+      const builtInNames = new Set(builtIns && typeof builtIns === 'object' ? Object.entries(builtIns).filter(([, v]) => v).flatMap(([k, v]: [string, any]) => [k, String(v?.name ?? '')]) : []);
+      const unmanagedInline = Array.isArray(_inlineTools) ? _inlineTools.filter((t: any) => t?.type !== 'client'
+        && !existingIds.includes(t?.id) && !attachedNames.has(String(t?.name ?? ''))
+        && !(t?.type === 'system' && builtInNames.has(String(t?.name ?? '')))) : [];
+      if (target === 'atlas' && unmanagedInline.length) return json({ agent_updated: false, error: 'Existing inline integration tools need preservation review before syncing.',
+        unmanaged_inline: unmanagedInline.map((t: any) => ({ name: t?.name, type: t?.type })), tools: toolResults }, 409);
 
       const patch = {
         conversation_config: {
