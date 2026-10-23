@@ -875,7 +875,10 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
                   </li>
                 );
               })}
-              {config.mode === 'sale' && config.category === 'food_truck' && <li><Link to="/food-trucks-for-sale/north-florida" className="block text-sm text-muted-foreground hover:text-primary">Browse food trucks in North Florida</Link></li>}
+              {config.mode === 'sale' && config.category === 'food_truck' && <>
+                {!cityLinks.some(c => c.slug === 'tucson') && <li><Link to="/food-trucks-for-sale/tucson-az" className="block text-sm text-muted-foreground hover:text-primary">Browse food trucks in Tucson, AZ</Link></li>}
+                <li><Link to="/food-trucks-for-sale/north-florida" className="block text-sm text-muted-foreground hover:text-primary">Browse food trucks in North Florida</Link></li>
+              </>}
             </ul>
           </section>
           )}
