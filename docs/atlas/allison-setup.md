@@ -4,6 +4,16 @@ Allison is a separate ElevenLabs AI agent, not a renamed Atlas or a human. Sourc
 
 ## Activation still required
 
+### October 23 activation check
+
+- Source checkout already contained `cafec115f` and `493454352`; no Git reset, pull, or merge was performed.
+- Created **Vendibook Customer Success Allison**, `agent_9901m5nh7kg2en49an6sm8h55208`, using existing premade female **Sarah**, `EXAVITQu4vr4xnSDxMaL`; provider authentication is enabled. Readback matched the exact source prompt, first message and seven support-only client tools. No voice cloned or Atlas replacement.
+- Saved `ALLISON_AGENT_ID` server-side after removing the unused retired `TAXJAR_API_KEY` to free secret capacity. Deployed `atlas-agent-token` and `elevenlabs-agent-configure` to the actual Vendibook backend.
+- Synced Atlas through the authorized ElevenLabs integration: exact source prompt and all 21 client tools (including handoff), existing tool IDs, voice, authentication and MCP configuration preserved. The owner preview session received 403 from the admin-only maintenance endpoint; no roles or auth gates changed.
+- No Calendly tools attached to Allison: existing workspace tool definitions were inspected, but no accessible Calendly connection/customer-success event type or read-only availability was verified. Do not attach generic booking or unrelated-record tools without verifying their scope.
+- 122 focused Atlas tests and two Allison user-confirmation/stop tests passed; automatic preview build passed. Desktop and phone Contact pages checked; live Allison typing, visible replies, pause/resume and simulated unavailable fallback verified. Ticket tests were mocked and created no records. Browser handoff invoked the development tool hook and connected to a real Allison text session; natural voice handoff and audible voice audition remain unverified.
+- Frontend **not published**: Calendly configuration and full voice/handoff validation remain incomplete. No test tickets, messages, appointments or payments were created.
+
 1. In the authorized ElevenLabs workspace create a separate agent named Allison. Select and audition a licensed female voice; do not clone anyone's voice or silently reuse Atlas's male voice.
 2. Set the returned ID as `ALLISON_AGENT_ID` in Vendibook's actual backend through Lovable. Never point it at Atlas or Vendi. With the ID absent, Allison fails closed; there is no Atlas fallback.
 3. Deploy `atlas-agent-token` and `elevenlabs-agent-configure`, then publish the frontend.
