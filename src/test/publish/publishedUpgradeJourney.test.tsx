@@ -37,3 +37,19 @@ it('opens the BuyerMatch overview without leaving the share kit', () => {
  fireEvent.click(screen.getByRole('button', {name:'Back to plans'}));
  expect(screen.getByRole('button',{name:'Skip upgrades — continue to share kit'})).toBeTruthy();
 });
+
+it('uses Starter and the shared gold Featured listing badge', () => {
+ render(<PublishedUpgradeJourney listing={listing} featured={false} onComplete={vi.fn()} />);
+ expect(screen.getByRole('heading', {name:'Starter'})).toBeTruthy();
+ expect(screen.queryByText('Keep it simple')).toBeNull();
+ expect(screen.getByTitle('Featured listing')).toHaveClass('featured-gold');
+});
+it.each([['Explore PricePilot','PricePilot','/tools/pricepilot'],['Explore PermitPath','PermitPath Plus','/tools/permitpath']])('opens %s without dismissing publishing', (button, heading, destination) => {
+ const complete=vi.fn();render(<PublishedUpgradeJourney listing={listing} featured={false} onComplete={complete} />);
+ fireEvent.click(screen.getByRole('button',{name:button}));
+ expect(screen.getByRole('heading',{name:heading})).toBeTruthy();
+ expect(screen.getByRole('link')).toHaveAttribute('href',destination);
+ fireEvent.click(screen.getByRole('button',{name:'Back to plans'}));
+ expect(complete).not.toHaveBeenCalled();
+ expect(screen.getByRole('button',{name:'Upgrade to Pro'})).toBeTruthy();
+});

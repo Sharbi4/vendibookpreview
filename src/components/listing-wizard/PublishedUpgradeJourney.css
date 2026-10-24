@@ -2,8 +2,8 @@
 .publish-plans.sale-light {
   display: block;
   width: calc(100% - 32px);
-  max-width: 1040px;
-  padding: 26px 30px 20px;
+  max-width: 1120px;
+  padding: 30px 32px 22px;
   border: 1px solid #e9e9e9;
   border-radius: 26px;
   background: #fff;
@@ -11,11 +11,11 @@
   box-shadow: 0 30px 100px -25px #0006;
   font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
-.publish-plans header { padding: 0; max-width: 490px; }
-.publish-plans header > img { position: absolute; left: 28px; top: 25px; height: 20px; margin: 0; }
+.publish-plans header { padding: 0; max-width: 560px; }
+.publish-plans header > img { position: absolute; left: 28px; top: 25px; height: 25px; margin: 0; }
 .publish-plans header > span { border-radius: 5px; background: #f5f5f5; padding: 4px 8px; font-size: 9px; letter-spacing: .04em; text-transform: none; }
-.publish-plans header h2 { margin-top: 10px; font-size: clamp(26px, 3vw, 32px); line-height: 1.12; letter-spacing: -.045em; font-weight: 650; }
-.publish-plans header p { margin-top: 10px; font-size: 12px; line-height: 1.55; color: #777; }
+.publish-plans header h2 { margin-top: 10px; font-size: clamp(28px, 3.5vw, 38px); line-height: 1.12; letter-spacing: -.045em; font-weight: 650; }
+.publish-plans header p { margin-top: 10px; font-size: 13px; line-height: 1.55; color: #666; }
 .publish-plans .publish-listing-context { margin-top: 8px; font-size: 10px; }
 .publish-plans .publish-listing-context img { height: 20px; width: 20px; }
 .publish-plans .publish-period { margin-top: 10px; }
@@ -23,30 +23,30 @@
 .publish-plans .publish-period button { min-height: 34px; padding: 7px 20px; border-radius: 6px; font-size: 11px; transition: background .18s, box-shadow .18s; }
 .publish-plans .publish-period button[aria-pressed=true] { background: #fff; box-shadow: 0 2px 8px #00000012; }
 .publish-plans .publish-period button span { font-size: 9px; }
-.publish-plans .publish-period-note { margin-top: 7px; font-size: 9px; color: #777; }
-.publish-plans .publish-plan-grid { margin-top: 18px; gap: 16px; }
+.publish-plans .publish-period-note { margin-top: 7px; font-size: 10px; color: #777; }
+.publish-plans .publish-plan-grid { margin-top: 26px; gap: 18px; grid-template-columns: .94fr 1.12fr .94fr; }
 .publish-plans .publish-plan { padding: 7px; border-radius: 20px; background: #f5f5f5; border: 1px solid #f1f1f1; }
-.publish-plans .publish-plan > h3, .publish-plans .publish-plan > div:first-child { margin: 10px 10px 0; min-height: 25px; font-size: 15px; }
-.publish-plans .publish-plan > p { margin: 1px 10px 0; font-size: 10px; line-height: 18px; color: #717171; }
-.publish-plans .publish-plan-pro { background: #242424; border-color: #242424; box-shadow: 0 12px 28px -18px #0006; }
+.publish-plans .publish-plan > h3, .publish-plans .publish-plan > div:first-child { margin: 10px 10px 0; min-height: 25px; font-size: 17px; }
+.publish-plans .publish-plan > p { margin: 1px 10px 0; font-size: 11px; line-height: 18px; color: #717171; }
+.publish-plans .publish-plan-pro { background: #242424; border-color: #242424; box-shadow: 0 18px 32px -20px #0008, 0 0 0 1px #242424; }
 .publish-plans .publish-plan-pro > p { color: #c9c9c9; }
 .publish-plans .publish-plan-pro h3 img { width: 105px; }
 .publish-plans .publish-plan-pro h3 span { font-size: 9px; border-radius: 5px; padding: 2px 6px; }
-.publish-plans .publish-plan-body { margin-top: 12px; padding: 16px 16px 12px; min-height: 280px; border: 1px solid #ebebeb; border-radius: 15px; background: #fff; box-shadow: 0 2px 3px #00000003; }
-.publish-plans .publish-plan-price { font-size: 32px; font-weight: 550; line-height: 1.15; letter-spacing: -.055em; }
+.publish-plans .publish-plan-body { margin-top: 12px; padding: 20px 18px 16px; min-height: 280px; border: 1px solid #ebebeb; border-radius: 15px; background: #fff; box-shadow: 0 2px 3px #00000003; }
+.publish-plans .publish-plan-price { font-size: 40px; font-weight: 550; line-height: 1.15; letter-spacing: -.055em; }
 .publish-plans .publish-plan-price span { margin-left: 3px; font-size: 12px; font-weight: 400; letter-spacing: -.01em; color: #888; }
-.publish-plans .publish-plan-body > p:nth-child(2) { margin-top: 7px; min-height: 40px; font-size: 10px; line-height: 1.55; color: #777; }
-.publish-plans .publish-plan-body > .publish-featured-terms { min-height: 40px; font-size: 9px; }
-.publish-plans .publish-plan-body ul { margin-top: 12px; margin-bottom: 12px; font-size: 10px; line-height: 1.6; }
-.publish-plans .publish-plan-body li { gap: 7px; margin-top: 7px; }
+.publish-plans .publish-plan-body > p:nth-child(2) { margin-top: 7px; min-height: 40px; font-size: 11px; line-height: 1.55; color: #777; }
+.publish-plans .publish-plan-body > .publish-featured-terms { min-height: 40px; font-size: 10px; }
+.publish-plans .publish-plan-body ul { margin-top: 12px; margin-bottom: 12px; font-size: 12px; line-height: 1.6; }
+.publish-plans .publish-plan-body li { gap: 7px; margin-top: 9px; }
 .publish-plans .publish-plan-body li:first-child { margin-top: 0; }
-.publish-plans .publish-plan-body li svg { width: 12px; height: 12px; padding: 2px; margin-top: 2px; border-radius: 50%; color: #fff; background: #343434; stroke-width: 3; }
+.publish-plans .publish-plan-body li svg { width: 14px; height: 14px; padding: 2px; margin-top: 2px; border-radius: 50%; color: #fff; background: #343434; stroke-width: 3; }
 .publish-plans .publish-buyer-link { margin: 0 0 12px; font-size: 10px; color: #a43d19; text-decoration-color: #e8bbab; }
-.publish-plans .publish-orange-cta { margin-top: auto; width: 100%; min-height: 39px; border-radius: 9px; border: 1px solid #f96027; background: linear-gradient(180deg,#ff7539,#ff501c); color: #fff; font-size: 11px; font-weight: 600; line-height: 1.4; padding: 10px 8px; box-shadow: 0 4px 13px #ff591c30,inset 0 1px 0 #ffffff45; transition: box-shadow .2s,filter .2s; }
+.publish-plans .publish-orange-cta { margin-top: auto; width: 100%; min-height: 44px; border-radius: 9px; border: 1px solid #f96027; background: linear-gradient(180deg,#ff7539,#ff501c); color: #fff; font-size: 12px; font-weight: 600; line-height: 1.4; padding: 10px 8px; box-shadow: 0 4px 13px #ff591c30,inset 0 1px 0 #ffffff45; transition: box-shadow .2s,filter .2s; }
 .publish-plans .publish-orange-cta:hover:not(:disabled) { filter: brightness(1.04); box-shadow: 0 6px 20px #ff591c50,inset 0 1px 0 #ffffff45; }
 .publish-plans .publish-orange-cta:disabled { box-shadow: none; }
 .publish-plans .publish-orange-cta svg { width: 13px; height: 13px; }
-.publish-plans .publish-included { display: flex; align-items: center; justify-content: space-between; margin-top: auto; min-height: 39px; border: 1px solid #ededed; border-radius: 9px; padding: 10px; font-size: 10px; font-weight: 500; color: #777; }
+.publish-plans .publish-included { display: flex; align-items: center; justify-content: space-between; margin-top: auto; min-height: 44px; border: 1px solid #ededed; border-radius: 9px; padding: 10px; font-size: 10px; font-weight: 500; color: #777; }
 .publish-plans .publish-plans-footer { padding-top: 12px; gap: 6px; }
 .publish-plans .publish-plans-footer > p { max-width: 690px; font-size: 9px; line-height: 1.6; color: #888; }
 .publish-plans .publish-plans-footer > button { min-height: 36px; border: 0; padding: 8px 16px; background: transparent; font-size: 11px; color: #555; }
@@ -55,7 +55,7 @@
   .publish-plans.sale-light { width: calc(100% - 20px); padding: 22px 14px 16px; border-radius: 20px; }
   .publish-plans header { padding: 0 15px; }
   .publish-plans header > img { position: static; height: 22px; margin: 0 auto 12px; }
-  .publish-plans .publish-plan-grid { gap: 12px; margin-top: 18px; }
+  .publish-plans .publish-plan-grid { grid-template-columns: 1fr; gap: 12px; margin-top: 18px; }
   .publish-plans .publish-plan-body { min-height: 0; padding: 18px; }
   .publish-plans .publish-plan-body ul { font-size: 12px; margin-top: 16px; }
   .publish-plans .publish-plan-body > p:nth-child(2) { font-size: 11px; }
@@ -67,3 +67,28 @@
   .publish-plans .publish-plans-footer > button { min-height: 44px; }
 }
 @media(prefers-reduced-motion:reduce) { .publish-plans button { transition:none; } }
+
+.publish-plans .publish-recommended { flex-shrink:0; border:1px solid #ffb18c40; border-radius:99px; background:#ff9f6717; color:#ffbd99; padding:5px 8px; font-size:9px; font-weight:500; }
+.publish-plans .publish-plan-pro > div:first-child { gap:6px; margin-left:9px; margin-right:9px; }
+.publish-plans .publish-plan-pro h3 img { width:100px; }
+.publish-plans .publish-plan-pro .publish-orange-cta { box-shadow:0 6px 22px #ff591c55,inset 0 1px 0 #ffffff65; font-weight:650; }
+.publish-plans .publish-plan-starter .publish-plan-body { background:#fdfdfd; }
+.publish-plans .publish-starter-exclusions { display:flex; flex-direction:column; gap:10px; margin:8px 0 24px; font-size:11px; color:#909090; }
+.publish-plans .publish-starter-exclusions span::before { content:'−'; display:inline-block; width:21px; color:#aaa; }
+.publish-plans .publish-explore-links { display:flex; flex-direction:column; gap:0; margin:3px 0 20px; border-top:1px solid #efefef; padding-top:8px; }
+.publish-plans .publish-explore-links .publish-buyer-link { display:flex; justify-content:space-between; align-items:center; margin:0; padding:6px 0; font-size:11px; color:#713d2c; font-weight:500; text-decoration:none; }
+.publish-plans .publish-explore-links .publish-buyer-link:hover { color:#ed5424; }
+.publish-plans .publish-explore-links svg { width:13px; height:13px; }
+.publish-plans .publish-included { color:#777; background:#f8f8f8; border-color:#ececec; font-size:11px; }
+.publish-tool-overview.sale-light { max-width:500px; padding:32px; border-radius:24px; background:#fff; color:#222; gap:16px; }
+.publish-tool-overview .publish-tool-eyebrow { font-size:10px; text-transform:uppercase; letter-spacing:.12em; color:#a84723; }
+.publish-tool-overview h2 { font-size:30px; letter-spacing:-.04em; }
+.publish-tool-overview > p { font-size:14px; line-height:1.7; color:#555; }
+.publish-tool-overview > .publish-tool-note { font-size:11px; color:#777; }
+.publish-tool-overview .publish-tool-open { display:flex; justify-content:center; align-items:center; gap:10px; padding:13px; border-radius:10px; background:linear-gradient(#ff773a,#ff501c); box-shadow:0 5px 18px #ff591c30; font-size:13px; color:white; font-weight:600; }
+@media(max-width:767px) {
+ .publish-plans .publish-plan-pro { order:-1; }
+ .publish-plans .publish-plan-pro h3 img { width:120px; }
+ .publish-plans .publish-recommended { font-size:10px; }
+ .publish-plans .publish-explore-links .publish-buyer-link { min-height:40px; font-size:12px; }
+}
