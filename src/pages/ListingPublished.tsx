@@ -1,3 +1,4 @@
+import PublishedUpgradeJourney from '@/components/listing-wizard/PublishedUpgradeJourney';
 import PublishedTextAlerts from '@/components/newsletter/PublishedTextAlerts';
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -49,6 +50,7 @@ const ListingPublished: React.FC = () => {
   // their listing where they already sell (Facebook Marketplace, groups), and the
   // listing-live email's "Share your listing" link lands here.
   const [showShare, setShowShare] = useState(true);
+  const [upgradesDone, setUpgradesDone] = useState(false);
 
   useEffect(() => {
     if (notaryPaid) {
@@ -347,7 +349,7 @@ const ListingPublished: React.FC = () => {
               <Wrench className="mr-2 h-4 w-4" />
               Improve my listing
             </Button>
-            <Button variant="outline" onClick={() => setShowShare((s) => !s)}>
+            <Button variant="outline" onClick={() => { setUpgradesDone(true); setShowShare(true); }}>
               <Share2 className="mr-2 h-4 w-4" />
               Share listing
             </Button>
@@ -360,7 +362,9 @@ const ListingPublished: React.FC = () => {
           </button>
         </header>
 
-        {isPublished && showShare && <ShareKit listing={listing} onClose={() => setShowShare(false)} />}
+        {isPublished && !upgradesDone && <PublishedUpgradeJourney key={listingId} listing={listing} featured={featuredActive || featuredPaid} onComplete={() => { setUpgradesDone(true); setShowShare(true); }} />}
+
+        {isPublished && upgradesDone && showShare && <ShareKit listing={listing} onClose={() => setShowShare(false)} />}
 
         {isPublished && <PublishedTextAlerts />}
 
