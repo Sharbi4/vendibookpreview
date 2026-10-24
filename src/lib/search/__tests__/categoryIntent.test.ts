@@ -29,6 +29,14 @@ describe('category intent mapping', () => {
     }
   });
 
+  it('keeps the first word of a two-word alias a keyword, not a category', () => {
+    for (const q of ['coffee', 'Coffee', 'taco', 'catering', 'mobile', 'commercial']) {
+      expect(inferCategoryFromQuery(q), q).toBeNull();
+    }
+    expect(inferCategoryFromQuery('coffee tru')).toBe('food_truck');
+    expect(inferCategoryFromQuery('coffee truck')).toBe('food_truck');
+  });
+
   it('leaves non-category keywords alone', () => {
     for (const q of ['burger', 'Houston, TX', '85719', 'workhorse', '']) {
       expect(inferCategoryFromQuery(q), q).toBeNull();

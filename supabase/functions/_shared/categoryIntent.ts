@@ -59,14 +59,17 @@ export const normalizeQuery = (query: string | undefined | null): string =>
 /**
  * Matches when the alias appears verbatim, or when every typed token is a
  * prefix of the alias's matching token (min 3 chars, so "f" selects nothing).
- * This is what makes the "food truc" typo resolve to food_truck.
+ * This is what makes the "food truc" typo resolve to food_truck. The query
+ * must reach the alias's last word, so a bare "coffee" or "taco" stays a
+ * keyword search instead of hiding every coffee or taco trailer behind
+ * "coffee truck" / "taco truck".
  */
 export const matchesAlias = (queryLower: string, alias: string): boolean => {
   if (!queryLower) return false;
   if (queryLower.includes(alias)) return true;
   const aliasTokens = alias.split(' ');
   const queryTokens = queryLower.split(' ').filter(Boolean);
-  if (queryTokens.length === 0 || queryTokens.length > aliasTokens.length) return false;
+  if (queryTokens.length === 0 || queryTokens.length !== aliasTokens.length) return false;
   return queryTokens.every((tok, i) => {
     const target = aliasTokens[i];
     if (!target) return false;
