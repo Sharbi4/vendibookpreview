@@ -1,10 +1,8 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Star, ShieldCheck, MessageCircle, ChevronRight } from 'lucide-react';
+import { Star, ShieldCheck, ChevronRight } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { SaleCard } from '@/components/listing-detail/sale/SaleCard';
-import MessageHostForm from '@/components/messaging/MessageHostForm';
 import { useHostResponseTime } from '@/hooks/useHostResponseTime';
 import { formatLastActive } from '@/hooks/useActivityTracker';
 
@@ -24,12 +22,11 @@ interface RentalHostCardProps {
 
 /**
  * Single host surface for the rental detail page: identity, real signals only,
- * and the message form. Nothing here is repeated elsewhere on the page.
+ * without a pre-booking messaging entry point.
  */
 export const RentalHostCard = ({
   hostId,
   listingId,
-  listingTitle,
   hostName,
   hostAvatar,
   isVerified = false,
@@ -38,7 +35,6 @@ export const RentalHostCard = ({
   ratingData,
   isOwner = false,
 }: RentalHostCardProps) => {
-  const [showMessage, setShowMessage] = useState(true);
   const { data: responseTimeData } = useHostResponseTime(hostId);
 
   const name = hostName || 'Host';
@@ -95,10 +91,6 @@ export const RentalHostCard = ({
 
       {!isOwner && (
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" onClick={() => setShowMessage((v) => !v)}>
-            <MessageCircle className="h-4 w-4 mr-1.5" />
-            {showMessage ? 'Hide message' : 'Message host'}
-          </Button>
           <Button variant="ghost" size="sm" asChild className="text-muted-foreground">
             <Link to={profileLink}>
               View profile
@@ -108,11 +100,6 @@ export const RentalHostCard = ({
         </div>
       )}
 
-      {!isOwner && showMessage && (
-        <div className="pt-1">
-          <MessageHostForm key={listingId} listingId={listingId} hostId={hostId} listingTitle={listingTitle} />
-        </div>
-      )}
     </SaleCard>
   );
 };
