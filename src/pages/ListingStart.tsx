@@ -19,7 +19,6 @@ import {
 import Header from '@/components/layout/Header';
 import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/AuthContext';
 import { trackEvent } from '@/lib/analytics';
 import { useCatalogPrice } from '@/hooks/useCatalogPrices';
 import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
@@ -214,7 +213,6 @@ export default function ListingStart() {
 
 function ListingGateway() {
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   useEffect(() => {
     trackEvent({ category: 'Supply', action: 'listing_gateway_viewed' });
