@@ -12543,6 +12543,9 @@ export type Database = {
         Row: {
           amount_cents: number
           billing_interval: string | null
+          cancel_confirmed_at: string | null
+          cancel_reason: string | null
+          cancel_requested_at: string | null
           card_id: string | null
           consent_id: string | null
           created_at: string
@@ -12560,6 +12563,7 @@ export type Database = {
           subscription_id: string | null
           tax_cents: number
           tax_exemption_id: string | null
+          tax_snapshot: Json | null
           tier: string | null
           updated_at: string
           user_id: string
@@ -12568,6 +12572,9 @@ export type Database = {
         Insert: {
           amount_cents: number
           billing_interval?: string | null
+          cancel_confirmed_at?: string | null
+          cancel_reason?: string | null
+          cancel_requested_at?: string | null
           card_id?: string | null
           consent_id?: string | null
           created_at?: string
@@ -12585,6 +12592,7 @@ export type Database = {
           subscription_id?: string | null
           tax_cents?: number
           tax_exemption_id?: string | null
+          tax_snapshot?: Json | null
           tier?: string | null
           updated_at?: string
           user_id: string
@@ -12593,6 +12601,9 @@ export type Database = {
         Update: {
           amount_cents?: number
           billing_interval?: string | null
+          cancel_confirmed_at?: string | null
+          cancel_reason?: string | null
+          cancel_requested_at?: string | null
           card_id?: string | null
           consent_id?: string | null
           created_at?: string
@@ -12610,6 +12621,7 @@ export type Database = {
           subscription_id?: string | null
           tax_cents?: number
           tax_exemption_id?: string | null
+          tax_snapshot?: Json | null
           tier?: string | null
           updated_at?: string
           user_id?: string
@@ -14877,6 +14889,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      apply_featured_subscription_period: {
+        Args: { p_attempt: string; p_paid_through: string }
+        Returns: undefined
+      }
       bs_add_member_by_email: {
         Args: { p_email: string; p_manufacturer_id: string; p_role?: string }
         Returns: undefined
@@ -15301,6 +15317,7 @@ export type Database = {
         }
       }
       dispatch_native_push_jobs: { Args: never; Returns: undefined }
+      dispatch_square_reconcile: { Args: never; Returns: undefined }
       equipment_reservation_status: {
         Args: { _listings: string[] }
         Returns: {
@@ -15309,6 +15326,7 @@ export type Database = {
         }[]
       }
       expire_offer_batch: { Args: never; Returns: number }
+      featured_listing_sold: { Args: { p_listing: string }; Returns: boolean }
       finish_commerce_email: {
         Args: { _error?: string; _event: string; _token: string }
         Returns: undefined

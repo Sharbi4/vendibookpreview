@@ -5,7 +5,20 @@ import { Button } from '@/components/ui/button';
 import { EquinoxFundingLogo, PayPalWordmark, PlaidLogo } from '@/components/brand/ProviderLogos';
 import { FLIP_INSURANCE } from '@/lib/flipInsurance';
 import { trackLeadEvent } from '@/lib/leadTracking';
-import cardSaleImg from '@/assets/home/owners-food-truck.jpg';
+/*
+ * "For sale" card photos: real photos from actual published sale listings
+ * (public listing-images bucket). Rotates daily so returning visitors see
+ * different real inventory. Do not replace with stock or AI imagery.
+ */
+const SALE_CARD_PHOTOS = [
+  'https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/b78636fe-5a08-4cb3-b585-88c981f56dfc/446a2b43-2414-4673-9af2-b2fda38bcaf0/1792845421472-s9ub2e.jpg',
+  'https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/4c2cdfa0-e03f-4148-97a9-ebe6e208c2a3/1ade62f4-62d2-4e3b-b854-b65fb9da08aa/1792692408499-1ib0rl.jpeg',
+  'https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/73aee451-57c0-43d7-90e5-b7eddaaee153/c0dedf9e-2c6d-4ccd-9f85-aadfdbe6fccc/1792287511712-scyvn5.jpeg',
+  'https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/b60bfa3e-e495-4597-a31f-00816102e5c4/2ca657ff-abdb-4f81-bd19-c3f657a91c00/1792245299189-qxait.jpeg',
+] as const;
+
+const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+const cardSaleImg = SALE_CARD_PHOTOS[dayOfYear % SALE_CARD_PHOTOS.length];
 import cardRentImg from '@/assets/food-truck-coffee.jpg';
 import cardKitchenImg from '@/assets/home/trust-kitchen.jpg';
 import cardFinancingImg from '@/assets/trailer-black.jpg';
