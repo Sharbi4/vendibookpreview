@@ -36,4 +36,4 @@
 - [done] AI risk checker on messages/offers + admin email alert
 - [done] Plaid identity verification right after sign-up (free, required for all members), then back to intended page
 - [done] Remove Lionel Yates' flagged off-platform message (843909fouty71three) and warn him to keep booking on Vendibook for user/seller safety.
-- [ ] Ad campaign: target established high-growth states (TX/FL/CA proposed) instead of nationwide — confirm list with owner
+- [done] Ad campaign: targeted TX/FL/CA/GA; campaign created and activated 2026-10-24
