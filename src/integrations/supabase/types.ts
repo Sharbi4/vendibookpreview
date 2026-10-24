@@ -12563,6 +12563,7 @@ export type Database = {
           subscription_id: string | null
           tax_cents: number
           tax_exemption_id: string | null
+          tax_snapshot: Json | null
           tier: string | null
           updated_at: string
           user_id: string
@@ -12591,6 +12592,7 @@ export type Database = {
           subscription_id?: string | null
           tax_cents?: number
           tax_exemption_id?: string | null
+          tax_snapshot?: Json | null
           tier?: string | null
           updated_at?: string
           user_id: string
@@ -12619,6 +12621,7 @@ export type Database = {
           subscription_id?: string | null
           tax_cents?: number
           tax_exemption_id?: string | null
+          tax_snapshot?: Json | null
           tier?: string | null
           updated_at?: string
           user_id?: string
