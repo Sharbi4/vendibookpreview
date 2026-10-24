@@ -39,6 +39,8 @@ export function searchGuideFaq(question: string, limit = 3): GuideFaq[] {
  */
 export const ATLAS_PRODUCTS: Record<string, string> = {
   vendibook_pro: 'Monthly membership for sellers: BuyerMatch finds buyers for your sale listings, plus a Featured Boost credit every billing period and PricePilot appraisals.',
+  vendibook_pro_annual: 'Pro billed annually: save $158 (16.7%) at the current $790 yearly price versus $79 monthly; one 30-day Boost credit per annual billing period, no rollover. Cancel renewal anytime.',
+  featured_listing_monthly: 'Monthly subscription for one listing. Cancel anytime; automatically cancels when marked sold; rental listings renew until cancelled. No annual option. Applicable tax is shown at checkout.',
   'boost-featured-30': 'Featured badge and a spot in the Featured row on the homepage for 30 days.',
   pro_listing_30: 'Upgrades one listing to Pro placement and presentation for 30 days.',
   tool_pricepilot: 'A data-backed pricing appraisal with comparable listings and a recommended asking price.',
@@ -620,7 +622,7 @@ export function createAtlasTools(deps: AtlasToolDeps) {
         .eq('is_active', true);
       const products = ((data ?? []) as Row[]).map((r) => ({
         name: r.name,
-        price: `${money(Number(r.price_cents) / 100)}${r.slug === 'vendibook_pro' || r.slug === 'permit_path_plus_monthly' ? '/month' : ''}`,
+        price: `${money(Number(r.price_cents) / 100)}${r.slug === 'vendibook_pro_annual' ? '/year' : r.slug === 'vendibook_pro' || r.slug === 'permit_path_plus_monthly' || r.slug === 'featured_listing_monthly' ? '/month' : ''}`,
         what_you_get: ATLAS_PRODUCTS[String(r.slug)],
       }));
       return JSON.stringify({

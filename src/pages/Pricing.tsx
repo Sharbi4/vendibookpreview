@@ -19,6 +19,7 @@ import {
   ArrowRight, ArrowUpRight, Check, Loader2, Lock, ShieldCheck, XCircle,
 } from 'lucide-react';
 import SEO from '@/components/SEO';
+import MembershipPlans from '@/components/pricing/MembershipPlans';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
@@ -103,23 +104,6 @@ const ONE_LINERS: Record<string, string> = {
   [ACTIVE_PRODUCT_SLUGS.featuredBoost]: 'Top of search and a highlighted card for 30 days.',
   [ACTIVE_PRODUCT_SLUGS.permitPathPlus]: 'Save roadmaps, track permits, store documents, export PDFs.',
 };
-
-const STARTER_FEATURES = [
-  'Unlimited listings for sale or for rent',
-  'Payment protection and PayPal-secured checkout',
-  'Free e-signatures on every agreement',
-  'PermitPath Basic — unlimited permit roadmaps',
-  'Purchase requests and itemized invoices for equipment sales',
-];
-
-const PRO_FEATURES = [
-  'BuyerMatch AI — priority buyer discovery for eligible sale listings',
-  'Reviewed outreach activity reports; campaign activation and capacity apply',
-  '1 Featured Boost credit every billing period',
-  'PricePilot appraisals included — comparable-backed valuations for your equipment',
-  'PermitPath Plus included — save and track permit roadmaps',
-  'Priority placement in search and priority support',
-];
 
 /* ------------------------------------------------------------------ */
 /* Add-on card — reuses the existing checkout helpers, light styling.  */
@@ -242,6 +226,7 @@ const Pricing = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const returnTo = searchParams.get('returnTo');
+  const [annual, setAnnual] = useState(searchParams.get('interval') === 'annual');
   const reduce = useReducedMotion();
 
   const { tier, isLoading: tierLoading, currentPeriodEnd, cancelAtPeriodEnd } = useHostEntitlements();
@@ -254,10 +239,11 @@ const Pricing = () => {
   const { products: permitUpgrades, loading: l3 } = useMonetizationProducts('permit_upgrade');
 
   const proProduct = useMemo(
-    () => subs.find((p) => p.slug === ACTIVE_PRODUCT_SLUGS.vendibookPro),
-    [subs],
+    () => subs.find((p) => p.is_active && p.slug === (annual ? 'vendibook_pro_annual' : ACTIVE_PRODUCT_SLUGS.vendibookPro)),
+    [subs, annual],
   );
 
+  const featuredProduct = listingUpgrades.find(p => p.slug === 'featured_listing_monthly' && p.is_active);
   const addOns = useMemo(() => {
     const seen = new Set<string>();
     // Hidden from the pricing page only (still honored for existing purchases
@@ -266,6 +252,8 @@ const Pricing = () => {
     // - pricepilot: presented here strictly as an included Pro tool, never with
     //   a standalone price.
     const hidden = new Set<string>([
+      'featured_listing_monthly',
+      ACTIVE_PRODUCT_SLUGS.featuredBoost,
       ACTIVE_PRODUCT_SLUGS.proListing,
       ACTIVE_PRODUCT_SLUGS.listingRewrite,
       ACTIVE_PRODUCT_SLUGS.pricePilot,
@@ -297,7 +285,7 @@ const Pricing = () => {
       navigate(
         buildPlanAuthReturnTo({
           planSlug: proProduct.slug,
-          interval: 'monthly',
+          interval: annual ? 'annual' : 'monthly',
           pathname: location.pathname,
           search: location.search,
         }),
@@ -309,7 +297,7 @@ const Pricing = () => {
       ? `${returnTo}${returnTo.includes('?') ? '&' : '?'}purchase=success`
       : paths.successPath;
     void requestCheckout(proProduct, {
-      interval: 'monthly',
+      interval: annual ? 'annual' : 'monthly',
       successPath,
       cancelPath: returnTo ?? paths.cancelPath,
     });
@@ -336,7 +324,7 @@ const Pricing = () => {
       disabled={loadingSubs || !proProduct || proBusy}
     >
       {proBusy ? (
-        <><Loader2 className="h-4 w-4 animate-spin" /> Opening PayPal…</>
+        <><Loader2 className="h-4 w-4 animate-spin" /> Opening checkout…</>
       ) : (
         <>Go Pro <ArrowRight className="h-4 w-4" /></>
       )}
@@ -347,7 +335,7 @@ const Pricing = () => {
     <div className="sale-light min-h-screen flex flex-col">
       <SEO
         title="Vendibook Pricing — Free & Vendibook Pro Membership"
-        description="Vendibook Pro adds BuyerMatch AI, priority buyer discovery, reviewed outreach reports, a monthly Featured Boost credit and premium tools."
+        description="Vendibook Pro adds BuyerMatch AI, priority buyer discovery, reviewed outreach reports, a Featured Boost credit per billing period and premium tools."
         canonical="/pricing"
         image="https://vendibook.com/images/social/vendibook-og-pricing.jpg"
         imageAlt="Vendibook plans and pricing"
@@ -379,15 +367,15 @@ const Pricing = () => {
                 Pricing
               </div>
               <h1 className="text-4xl sm:text-5xl md:text-[3.4rem] font-bold tracking-tight text-foreground mb-5 leading-[1.06]">
-                Your listing deserves more than visibility.
+                More possibilities. One clear plan.
               </h1>
               <p className="text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
-                No listing fees and no contract. Upgrade to Pro when you&rsquo;re
+                Publish for free. Choose Pro when you&rsquo;re
                 ready for buyer discovery, reviewed outreach activity, and the full tool set.
               </p>
               <div className="mt-8 inline-flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
-                <span className="inline-flex items-center gap-1.5"><Check className="h-4 w-4 text-primary" /> Unlimited listings</span>
-                <span className="inline-flex items-center gap-1.5"><Check className="h-4 w-4 text-primary" /> Fee only on completed deals</span>
+                <span className="inline-flex items-center gap-1.5"><Check className="h-4 w-4 text-primary" /> Free listing tools</span>
+                <span className="inline-flex items-center gap-1.5"><Check className="h-4 w-4 text-primary" /> Transparent transaction fees</span>
                 <span className="inline-flex items-center gap-1.5"><Check className="h-4 w-4 text-primary" /> Cancel Pro anytime</span>
               </div>
             </motion.div>
@@ -397,173 +385,15 @@ const Pricing = () => {
         {/* ---------------------------------------------------------- */}
         {/* PLANS — Starter vs Vendibook Pro                            */}
         {/* ---------------------------------------------------------- */}
-        <div className="container mx-auto max-w-5xl px-4 pb-12"><BuyerMatchBenefits /></div>
-        <section aria-labelledby="membership" className="pb-16 md:pb-24">
-          <h2 id="membership" className="sr-only">Membership plans</h2>
-          <div className="container max-w-5xl mx-auto px-4">
-            <div className="grid gap-6 md:grid-cols-2 md:items-stretch">
-
-              {/* Starter */}
-              <motion.div
-                {...(reduce ? {} : fadeUp)}
-                className={`flex flex-col rounded-[28px] border border-border bg-card p-8 md:p-10 ${CARD_SHADOW}`}
-              >
-                <div className="flex items-baseline justify-between gap-3">
-                  <h3 className="text-xl font-bold text-foreground">Starter</h3>
-                  {!tierLoading && !isPro && (
-                    <span className="rounded-full border border-border bg-accent px-3 py-1 text-[11px] font-semibold text-foreground">
-                      Your plan
-                    </span>
-                  )}
-                </div>
-                <p className="mt-5 text-4xl font-bold tracking-tight text-foreground">
-                  $0<span className="ml-1.5 text-base font-normal text-muted-foreground">/month</span>
-                </p>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  <span className="font-semibold text-foreground">12.9%</span> rental host
-                  fee. New online equipment sales are 8.7% for Standard and Pro. No listing fees.
-                </p>
-
-                <ul className="mt-8 space-y-3.5">
-                  {STARTER_FEATURES.map((f) => (
-                    <li key={f} className="flex gap-3 text-[15px] leading-relaxed text-muted-foreground">
-                      <Check className="mt-0.5 h-5 w-5 shrink-0 text-foreground/40" />
-                      <span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <div className="mt-10 flex-1" />
-                <Button asChild variant="cta-outline" size="cta" className="w-full">
-                  <Link to="/list/start">Create a listing</Link>
-                </Button>
-                <div className="mt-3 flex justify-center">
-                  <PlanDetailsDialog
-                    title="Starter"
-                    priceLabel="$0/month"
-                    summary="Everything you need to list, get paid and close a deal on Vendibook. No listing fees and no contract."
-                    included={[
-                      'Unlimited listings for sale or for rent',
-                      '8.7% on new online equipment sales; 12.9% rental host fee',
-                      ...STARTER_FEATURES.slice(1),
-                    ]}
-                    bestFor="Anyone listing their first truck, trailer, cart or space."
-                    billing="No listing fee. New online equipment sales: 8.7%. Rental host fee: 12.9%."
-                    finePrint={[
-                      'Equipment purchases use the request and invoice process. No cash checkout.',
-                      'Rentals paid in person still owe the host commission.',
-                      'Renters pay a separate 12.9% service fee at checkout, shown before they pay. Buyers pay no Vendibook fee on purchases.',
-                    ]}
-                  />
-                </div>
-              </motion.div>
-
-              {/* Vendibook Pro */}
-              <motion.div
-                {...(reduce ? {} : fadeUp)}
-                transition={{ duration: 0.5, delay: reduce ? 0 : 0.08, ease }}
-                className="relative flex flex-col overflow-hidden rounded-[28px] border border-[#2a2622] bg-[#181410] p-8 text-white md:p-10 shadow-[0_2px_4px_rgba(24,20,16,0.08),0_40px_80px_-36px_rgba(24,20,16,0.6)]"
-              >
-                <div
-                  className="pointer-events-none absolute inset-0"
-                  style={{ background: 'radial-gradient(520px 260px at 85% -10%, rgba(255,106,26,0.28), transparent 70%)' }}
-                  aria-hidden="true"
-                />
-                <span className="relative mb-4 inline-flex w-fit items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white">
-                  For active sellers and hosts
-                </span>
-                <div className="flex items-baseline justify-between gap-3">
-                  <h3 className="relative text-xl font-bold text-white">Vendibook Pro</h3>
-                  {!tierLoading && isPro && (
-                    <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[11px] font-semibold text-white">
-                      Your plan
-                    </span>
-                  )}
-                </div>
-                <p className="relative mt-5 text-4xl font-bold tracking-tight text-white">
-                  {loadingSubs ? '—' : formatUsd(proPrice)}
-                  <span className="ml-1.5 text-base font-normal text-white/60">/month</span>
-                </p>
-                <p className="relative mt-2 text-sm text-white/70">
-                  <span className="font-semibold text-white">BuyerMatch AI</span> helps connect your equipment with potential buyers.
-                  Equipment sales: 8.7% on both plans. Cancel anytime.
-                </p>
-
-                {isPro && (
-                  <p className="relative mt-3 text-sm text-white/70">
-                    {cancelAtPeriodEnd
-                      ? `Your membership stays active until ${renews ?? 'the end of the period'}.`
-                      : renews
-                        ? `Active — renews ${renews}.`
-                        : 'Your membership is active.'}
-                  </p>
-                )}
-
-                <ul className="relative mt-8 space-y-3.5">
-                  {PRO_FEATURES.map((f) => (
-                    <li key={f} className="flex gap-3 text-[15px] leading-relaxed text-white/90">
-                      <Check className="mt-0.5 h-5 w-5 shrink-0 text-white/80" />
-                      <span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <div className="mt-10 flex-1" />
-                <div className="relative">{proCta}</div>
-                <div className="relative mt-3 flex justify-center">
-                  <PlanDetailsDialog
-                    className="text-white/65 hover:text-white"
-                    title="Vendibook Pro"
-                    priceLabel={`${loadingSubs ? '—' : formatUsd(proPrice)}/month`}
-                    summary="Priority buyer discovery, reviewed activity reports, a Featured Boost credit every billing period, and premium tools."
-                    included={PRO_FEATURES}
-                    bestFor="Sellers looking for relevant buying opportunities and measurable marketing activity."
-                    billing="Recurring monthly through PayPal · cancel anytime."
-                    statusLabel={isPro ? 'Your plan' : null}
-                    finePrint={[
-                      'BuyerMatch campaigns require activation and are subject to operational limits; no guaranteed leads or sales.',
-                      'Pro does not discount rental or equipment-sale commissions.',
-                      'The Featured Boost credit is 1 per billing period and does not roll over.',
-                      'Cancel anytime — access continues through the end of the current paid period.',
-                    ]}
-                  />
-                </div>
-              </motion.div>
-            </div>
-
-            {/* PricePilot — presented strictly as an included Pro tool. */}
-            <motion.div {...(reduce ? {} : fadeUp)}>
-              <Link
-                to="/tools/pricepilot"
-                className={`group mt-6 flex flex-col gap-4 rounded-[24px] border border-border bg-card p-6 transition-colors hover:border-primary/35 sm:flex-row sm:items-center sm:justify-between ${CARD_SHADOW}`}
-              >
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2.5">
-                    <span className="text-base font-semibold text-foreground">PricePilot</span>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
-                      <Check className="h-3 w-3" />
-                      Included with Vendibook Pro
-                    </span>
-                  </div>
-                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                    A data-backed appraisal of what your equipment is worth — a comparable-backed
-                    range, a recommended price, and rental benchmarks. Included with Pro at no
-                    extra cost.
-                  </p>
-                </div>
-                <span className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-primary">
-                  Explore PricePilot
-                  <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                </span>
-              </Link>
-            </motion.div>
-
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-sm text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-4 w-4" /> Payment protection at checkout</span>
-              <span className="inline-flex items-center gap-1.5"><Lock className="h-4 w-4" /> PayPal-secured billing</span>
-              <span className="inline-flex items-center gap-1.5"><XCircle className="h-4 w-4" /> Cancel anytime online</span>
-            </div>
-
+        <MembershipPlans
+          annual={annual} onAnnualChange={setAnnual}
+          proPrice={loadingSubs ? '—' : proProduct ? formatUsd(proPrice) : 'Unavailable'}
+          featuredPrice={l1 ? '—' : featuredProduct ? formatUsd(effectivePriceCents(featuredProduct)) : 'Unavailable'}
+          proAction={proCta} isPro={isPro}
+          membershipStatus={isPro ? (cancelAtPeriodEnd ? `Active until ${renews ?? 'the end of your paid period'}.` : renews ? `Renews ${renews}.` : 'Your membership is active.') : null}
+        />
+        <section id="buyermatch-overview" className="container mx-auto max-w-5xl px-4 pb-12 scroll-mt-24"><BuyerMatchBenefits /></section>
+        <section className="pb-16 md:pb-24"><div className="container max-w-5xl mx-auto px-4">
             {/* How fees work — who pays what, stated once. */}
             <motion.div {...(reduce ? {} : fadeUp)} className={`mt-14 overflow-hidden rounded-[24px] border border-border bg-card ${CARD_SHADOW}`}>
               <div className="border-b border-border px-6 py-5 sm:px-8">
@@ -617,7 +447,7 @@ const Pricing = () => {
                 Upgrades &amp; services, when you need them.
               </h2>
               <p className="text-base text-muted-foreground mt-3 leading-relaxed">
-                One-time tools and services that work on any plan. No subscription required.
+                Optional tools and services, with billing terms shown before purchase.
               </p>
             </motion.div>
 
@@ -640,7 +470,7 @@ const Pricing = () => {
             )}
 
             <p className="mt-8 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-              Memberships are billed securely through PayPal. Cancel any time — access
+              Memberships use secure checkout. Cancel any time — access
               continues through the current paid period. Existing subscribers keep their
               current pricing.
             </p>
@@ -698,7 +528,7 @@ const Pricing = () => {
                       disabled={loadingSubs || !proProduct || proBusy}
                     >
                       {proBusy ? (
-                        <><Loader2 className="h-4 w-4 animate-spin" /> Opening PayPal…</>
+                        <><Loader2 className="h-4 w-4 animate-spin" /> Opening checkout…</>
                       ) : (
                         <>Go Pro</>
                       )}

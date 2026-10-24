@@ -8,8 +8,9 @@ import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 // Pro does not discount commissions; equipment sales remain 8.7%
 // equipment-sale commission. Pay in person / cash sales are retired.
 
-const buildFaq = (proPrice: string) => [
-  { q: 'What does Vendibook Pro cost?', a: `Vendibook Pro is ${proPrice} per month as a recurring membership. Confirm your renewal details and consent on the subscription screen before you subscribe.` },
+const buildFaq = (proPrice: string, annualPrice: string, featuredPrice: string) => [
+  { q: 'What does Vendibook Pro cost?', a: `Vendibook Pro is ${proPrice} per month or ${annualPrice} per year, billed annually. At current pricing, annual billing saves $158 (16.7%), equivalent to two months free. Confirm your renewal details and consent on the subscription screen before you subscribe.` },
+  { q: 'How does the Featured subscription work?', a: `Featured is ${featuredPrice} per month for one selected listing. It has no annual option. Cancel anytime; renewal automatically stops when the listing is marked sold. Rental listings renew until cancelled. This subscription is separate from Pro’s included 30-day Boost credit. Applicable tax is shown at checkout.` },
   { q: 'What does Pro include?', a: 'Unlimited eligible active listings, one Featured Boost credit each billing period (credits don\'t roll over or convert to cash), Premium Tools and applicable analytics, PermitPath Plus, priority visibility and support, and eligible BuyerMatch AI buyer-discovery support. Pro does not discount commissions.' },
   { q: 'Does Pro lower my fees?', a: 'No. Pro does not discount commissions. Rental hosts pay 12.9%, renters pay a separate 12.9%, and new online equipment sales have an 8.7% seller commission on both plans.' },
   { q: 'How do the fees work?', a: 'New eligible online equipment sales carry an 8.7% seller commission and no Vendibook buyer platform fee. Rentals are paid by card through Square, with a 12.9% host commission and a separate 12.9% renter service fee. Your final transaction screen shows the actual charges.' },
@@ -24,7 +25,9 @@ const buildFaq = (proPrice: string) => [
 export function PlansFAQ() {
   const [open, setOpen] = useState<number | null>(0);
   const proPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.vendibookPro);
-  const FAQ = buildFaq(proPrice.label);
+  const annualPrice = useCatalogPrice('vendibook_pro_annual');
+  const featuredPrice = useCatalogPrice('featured_listing_monthly');
+  const FAQ = buildFaq(proPrice.label, annualPrice.label, featuredPrice.label);
   return (
     <div className="space-y-2">
       <h3 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground leading-tight mb-8">Questions people ask before subscribing</h3>
