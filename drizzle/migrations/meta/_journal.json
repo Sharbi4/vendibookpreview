@@ -183,6 +183,13 @@
       "when": 1792778752088,
       "tag": "0025_message_contact_forty_variants",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1792864746421,
+      "tag": "0026_featured_monthly_subscription",
+      "breakpoints": true
     }
   ]
 }
