@@ -55,8 +55,9 @@ export const SubscriptionConsentDialog: React.FC<Props> = ({
 
   const intro = [
     `You are subscribing to ${payload.productName} at ${priceLabel} per ${interval}.`,
+    ...(payload.productSlug === 'featured_listing_monthly' ? ['Featured applies to one listing and automatically cancels when its sale is recorded. Rental listings renew until you cancel.'] : []),
     `Your subscription automatically renews ${cadence} at ${priceLabel} per ${interval} until you cancel.`,
-    'You can cancel anytime, entirely online, from Account → Host subscription → Manage billing. Cancellations take effect at the end of the current paid period.',
+    'You can cancel anytime, entirely online, from Account → Membership & billing. Cancellations take effect at the end of the current paid period.',
   ].join(' ');
 
   const acceptanceText = `I have read and agree to Vendibook's Subscription Terms and Refund & Cancellation Policy. I understand my ${payload.productName} plan is ${priceLabel} per ${interval} and will automatically renew until I cancel.`;

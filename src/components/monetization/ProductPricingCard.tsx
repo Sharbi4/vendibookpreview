@@ -119,7 +119,7 @@ export function ProductPricingCard({
       <h3 className="text-lg font-semibold text-foreground">{product.name}</h3>
       <div className="mt-2 flex items-baseline gap-1">
         <span className="text-3xl font-bold text-foreground">{formatUsd(price)}</span>
-        {recurring && <span className="text-sm text-muted-foreground">/month</span>}
+        {recurring && <span className="text-sm text-muted-foreground">{/_(annual|yearly)$/.test(product.slug) ? '/year' : '/month'}</span>}
       </div>
       {product.description && (
         <p className="mt-3 text-sm text-muted-foreground">{product.description}</p>
@@ -140,7 +140,7 @@ export function ProductPricingCard({
         )}
         {recurring && (
           <p className="font-medium text-foreground/80">
-            {formatUsd(price)} charged {(((product as unknown) as { metadata?: { interval?: string } }).metadata?.interval === 'year') ? 'annually' : 'monthly'}, automatically renews until canceled.
+            {formatUsd(price)} charged {(/_(annual|yearly)$/.test(product.slug) || ((product as unknown) as { metadata?: { interval?: string } }).metadata?.interval === 'year') ? 'annually' : 'monthly'}, automatically renews until canceled.
           </p>
         )}
         {recurring && <p>Cancel anytime online from Account → Host subscription → Manage billing.</p>}

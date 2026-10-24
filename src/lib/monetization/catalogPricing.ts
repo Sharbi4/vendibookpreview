@@ -27,6 +27,8 @@ export type ActiveProductSlug =
 /** Mirrors monetization_products.price_cents for the ACTIVE catalog. */
 export const FALLBACK_PRICE_CENTS: Record<string, number> = {
   vendibook_pro: 7900,
+  vendibook_pro_annual: 79000,
+  featured_listing_monthly: 4900,
   permit_path_plus_monthly: 799,
   permit_path_plus: 799,
   pro_listing_30: 6900,
@@ -41,6 +43,8 @@ export const FALLBACK_CADENCE: Record<
   string,
   { billing_type: 'one_time' | 'recurring'; duration_days: number | null }
 > = {
+  vendibook_pro_annual: { billing_type: 'recurring', duration_days: null },
+  featured_listing_monthly: { billing_type: 'recurring', duration_days: null },
   vendibook_pro: { billing_type: 'recurring', duration_days: null },
   permit_path_plus_monthly: { billing_type: 'recurring', duration_days: null },
   permit_path_plus: { billing_type: 'recurring', duration_days: null },
@@ -97,10 +101,11 @@ export const cadenceSuffix = (billing_type: string): string =>
 
 /** "$79/mo" or "$49". */
 export const priceWithCadence = (p: CatalogPriceShape): string =>
-  `${priceLabel(p.price_cents)}${cadenceSuffix(p.billing_type)}`;
+  `${priceLabel(p.price_cents)}${p.billing_type === 'recurring' && /_(annual|yearly)$/.test(p.slug) ? '/yr' : cadenceSuffix(p.billing_type)}`;
 
 /** "$79/mo · billed monthly" or "$49 one-time · 30 days". */
 export const priceDetailLabel = (p: CatalogPriceShape): string => {
+  if (p.billing_type === 'recurring' && /_(annual|yearly)$/.test(p.slug)) return `${priceLabel(p.price_cents)}/yr · billed annually`;
   if (p.billing_type === 'recurring') return `${priceLabel(p.price_cents)}/mo · billed monthly`;
   const duration = p.duration_days ? ` · ${p.duration_days} days` : '';
   return `${priceLabel(p.price_cents)} one-time${duration}`;

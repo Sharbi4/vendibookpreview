@@ -28,18 +28,26 @@ Deno.serve(async req => {
       const recurring = product.billing_type === 'recurring';
       const classification = classifyProduct(product);
       const tier = classification.grantsTier || product.slug;
+      const featured = product.slug === 'featured_listing_monthly';
+      if (featured && (!body.listing_id || (body.billing_interval && body.billing_interval !== 'monthly'))) return jsonError(400,'featured_terms','Featured requires a listing and monthly billing.');
+      if (featured && check(await admin.rpc('featured_listing_sold',{p_listing:body.listing_id}))) return jsonError(409,'sold','This listing has already sold.');
       let plan: any = null;
       let consent: any = null;
       const interval = intervalForProduct(product,body.billing_interval);
       if (recurring) {
         consent = check(await admin.from('user_consents').select('id,user_id,revoked_at,related_ids').eq('id',body.consent_id || '00000000-0000-0000-0000-000000000000').maybeSingle());
         if (!consent || consent.user_id !== user.id || consent.revoked_at || consent.related_ids?.product_slug !== product.slug) return jsonError(400,'consent','Accept recurring billing terms before subscribing.');
+        if (!featured) {
         const active = check(await admin.from('host_subscriptions').select('id').eq('user_id',user.id).in('status',['active','trialing','past_due','unpaid']).limit(1));
         if (active?.length) return jsonError(409,'existing_subscription','You already have a membership. Manage it before starting another subscription.');
         // Only a billing-active PayPal subscription blocks Square. `approval_pending`
         // rows are abandoned approvals that never became a membership.
         const legacy = check(await admin.from('paypal_subscriptions').select('id').eq('user_id',user.id).in('status',['active','approved']).limit(1));
         if (legacy?.length) return jsonError(409,'existing_subscription','An existing PayPal membership must be cancelled before starting a new one.');
+        } else {
+          const existing = check(await admin.from('square_billing_attempts').select('id').eq('listing_id',body.listing_id).eq('tier','featured_listing_monthly').eq('environment',config.environment).in('status',['awaiting_payment','active']).limit(1));
+          if(existing?.length) return jsonError(409,'existing_subscription','This listing already has a Featured checkout or subscription. Manage it in your account.');
+        }
         plan = check(await admin.from('square_billing_plans').select('*').eq('product_id',product.id).eq('environment',config.environment).eq('billing_interval',interval).maybeSingle());
         if (!plan) return jsonError(409,'plan_unavailable','This billing option is not configured yet.');
         if(Number(consent.related_ids?.price_cents_shown)!==plan.price_cents) return jsonError(409,'consent_price','The plan price changed. Review the current billing terms again.');
@@ -95,6 +103,7 @@ Deno.serve(async req => {
     if (action === 'cancel') {
       if (!a.subscription_id) return jsonError(400,'subscription','No Square subscription found.');
       const result = await squareRequest('/v2/subscriptions/'+encodeURIComponent(a.subscription_id)+'/cancel',{});
+      check(await admin.from('square_billing_attempts').update({cancel_requested_at:new Date().toISOString(),cancel_reason:'owner',cancel_confirmed_at:new Date().toISOString()}).eq('id',a.id));
       await syncSquareSubscription(admin,a);
       return jsonResponse(200,{status:result.subscription?.status,canceled_date:result.subscription?.canceled_date});
     }
@@ -106,6 +115,7 @@ Deno.serve(async req => {
     if (typeof body.source_id !== 'string' || !body.source_id) return jsonError(400,'source','Enter your payment details.');
     check(await admin.from('square_billing_attempts').update({status:'processing'}).eq('id',a.id));
     if (a.kind === 'subscription') {
+      if (a.tier === 'featured_listing_monthly' && check(await admin.rpc('featured_listing_sold',{p_listing:a.listing_id}))) return jsonError(409,'sold','This listing has already sold.');
       const consent=check(await admin.from('user_consents').select('user_id,revoked_at').eq('id',a.consent_id).single());
       if(consent.user_id!==user.id || consent.revoked_at) return jsonError(400,'consent','Renew your billing consent before paying.');
       if (!a.customer_id) {

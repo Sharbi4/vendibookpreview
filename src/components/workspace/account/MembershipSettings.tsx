@@ -1,3 +1,4 @@
+import FeaturedSubscriptions from '@/components/account/FeaturedSubscriptions';
 import { Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -133,6 +134,7 @@ export default function MembershipSettings({ id = 'membership' }: { id?: string 
       )}
 
       <SettingsRow label="Plans, boosts & services" value="Receipts for platform purchases." action={{ label: 'View', to: '/account/purchases' }} />
+      <FeaturedSubscriptions />
     </SettingsSection>
   );
 }

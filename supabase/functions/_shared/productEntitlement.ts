@@ -34,6 +34,7 @@ function tierFromSlug(slug: string): HostTier | undefined {
   const s = slug.toLowerCase();
   // Listing-scoped upgrades (e.g. pro_listing_30) never grant an account tier.
   if (s.includes('listing')) return undefined;
+  if (s === 'vendibook_pro_annual') return 'pro';
   if (s.includes('operator') || s.includes('premium')) return 'premium';
   if (
     s.includes('growth') || s === 'pro' || s.startsWith('pro_') || s.startsWith('pro-') ||
@@ -50,6 +51,8 @@ export function classifyProduct(product: {
 }): ClassifiedProduct {
   const slug = (product.slug ?? '').toLowerCase();
   const meta = (product.metadata ?? {}) as Record<string, unknown>;
+
+  if (slug === 'featured_listing_monthly') return { kind: 'addon' };
 
   // Tool unlock takes precedence — some tool SKUs are one-time payments.
   const toolSlug = UNLOCK_SLUG_TO_TOOL[slug];

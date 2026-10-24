@@ -22,3 +22,18 @@ it('skips the Featured pitch for a listing already featured', () => {
  fireEvent.click(screen.getByRole('button', { name: 'Continue to sharing' }));
  expect(complete).toHaveBeenCalledOnce();
 });
+
+it('keeps Featured monthly when annual Pro is selected', () => {
+ render(<PublishedUpgradeJourney listing={listing} featured={false} onComplete={vi.fn()} />);
+ fireEvent.click(screen.getByRole('button', {name:/Annual/}));
+ expect(screen.getByText(/Save \$158/)).toBeTruthy();
+ expect(screen.getByText(/Automatically cancels when this listing is marked sold/)).toBeTruthy();
+ expect(screen.getByText(/Billing options apply to Pro/)).toBeTruthy();
+});
+it('opens the BuyerMatch overview without leaving the share kit', () => {
+ render(<PublishedUpgradeJourney listing={listing} featured={false} onComplete={vi.fn()} />);
+ fireEvent.click(screen.getByRole('button', {name:'Explore BuyerMatch AI'}));
+ expect(screen.getByRole('heading', {name:'Meet BuyerMatch AI'})).toBeTruthy();
+ fireEvent.click(screen.getByRole('button', {name:'Back to plans'}));
+ expect(screen.getByRole('button',{name:'Skip upgrades — continue to share kit'})).toBeTruthy();
+});

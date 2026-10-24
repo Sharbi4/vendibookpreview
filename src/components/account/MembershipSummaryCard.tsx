@@ -1,3 +1,4 @@
+import FeaturedSubscriptions from '@/components/account/FeaturedSubscriptions';
 /**
  * MembershipSummaryCard — inline subscription controls for the Account page.
  *
@@ -172,6 +173,7 @@ export default function MembershipSummaryCard() {
           )}
         </div>
       </div>
+      <FeaturedSubscriptions />
     </section>
   );
 }

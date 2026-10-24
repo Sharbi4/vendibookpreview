@@ -1,3 +1,4 @@
+import FeaturedSubscriptions from '@/components/account/FeaturedSubscriptions';
 /**
  * AccountSubscription — dedicated subscription management page.
  *
@@ -429,6 +430,6 @@ export default function AccountSubscription() {
         </section>
       </section>
       </div>
-    </WorkspaceShell>
+    <FeaturedSubscriptions /></WorkspaceShell>
   );
 }

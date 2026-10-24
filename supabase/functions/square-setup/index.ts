@@ -14,12 +14,18 @@ Deno.serve(async req => {
   if (req.method !== 'POST') return new Response('POST required', { status: 405 });
   try {
     const config = squareConfig();
-    const { apply = false } = await req.json();
+    const { apply = false, product_slugs } = await req.json();
     const admin = createClient(Deno.env.get('SUPABASE_URL')!, serviceKey);
     const check = (r: any) => { if (r.error) throw new Error('Billing database operation failed'); return r.data; };
     const { location } = await squareRequest('/v2/locations/' + encodeURIComponent(config.locationId));
     if (location.status !== 'ACTIVE' || location.currency !== 'USD') throw new Error('Square location must be active and use USD');
-    const products = check(await admin.from('monetization_products').select('id,slug,name,price_cents,currency').eq('is_active', true).eq('billing_type', 'recurring'));
+    let query = admin.from('monetization_products').select('id,slug,name,price_cents,currency').eq('is_active', true).eq('billing_type', 'recurring');
+    if (product_slugs !== undefined) {
+      if (!Array.isArray(product_slugs) || !product_slugs.length || product_slugs.length > 20 || product_slugs.some((s:unknown)=>typeof s !== 'string')) throw new Error('Choose valid product slugs');
+      query = query.in('slug',product_slugs);
+    }
+    const products = check(await query);
+    if (product_slugs && products.length !== new Set(product_slugs).size) throw new Error('A requested recurring product is not active');
     const results = [];
     for (const p of products) {
       // Only provision the verified active catalog interval; never invent annual discounts.
