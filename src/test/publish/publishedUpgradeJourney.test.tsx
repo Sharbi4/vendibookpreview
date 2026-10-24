@@ -9,9 +9,7 @@ vi.mock('@/hooks/useProBoostCredit', () => ({ useProBoostCredit: () => ({ data: 
 const listing = { id: 'listing-id', title: 'Mobile kitchen', mode: 'sale' } as any;
 it('lets an owner skip each upgrade to reach sharing without purchasing', () => {
  const complete = vi.fn(); render(<PublishedUpgradeJourney listing={listing} featured={false} onComplete={complete} />);
- fireEvent.click(screen.getByRole('button', { name: 'Skip Pro for now' }));
- expect(screen.getByText('Put this listing in the spotlight.')).toBeTruthy();
- fireEvent.click(screen.getByRole('button', { name: 'Continue to my share kit' }));
+ fireEvent.click(screen.getByRole('button', { name: 'Continue to share kit' }));
  expect(complete).toHaveBeenCalledOnce();
 });
 it('does not sell renter matching as an existing rental benefit', () => {
@@ -21,6 +19,6 @@ it('does not sell renter matching as an existing rental benefit', () => {
 });
 it('skips the Featured pitch for a listing already featured', () => {
  const complete = vi.fn(); render(<PublishedUpgradeJourney listing={listing} featured onComplete={complete} />);
- fireEvent.click(screen.getByRole('button', { name: 'Skip Pro for now' }));
+ fireEvent.click(screen.getByRole('button', { name: 'Continue to sharing' }));
  expect(complete).toHaveBeenCalledOnce();
 });

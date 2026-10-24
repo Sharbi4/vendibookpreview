@@ -364,7 +364,7 @@ const ListingPublished: React.FC = () => {
 
         {isPublished && !upgradesDone && <PublishedUpgradeJourney key={listingId} listing={listing} featured={featuredActive || featuredPaid} onComplete={() => { setUpgradesDone(true); setShowShare(true); }} />}
 
-        {isPublished && upgradesDone && showShare && <ShareKit listing={listing} onClose={() => setShowShare(false)} />}
+        {isPublished && showShare && <ShareKit listing={listing} onClose={() => setShowShare(false)} />}
 
         {isPublished && <PublishedTextAlerts />}
 
