@@ -82,7 +82,7 @@ export const RentalPriceCard = ({
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">
-          The host hasn&rsquo;t published rates yet — send a message to ask.
+          The host hasn&rsquo;t published rates yet.
         </p>
       )}
 
