@@ -25,7 +25,6 @@ import { useCatalogPrice } from '@/hooks/useCatalogPrices';
 import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 import {
   LISTING_ROUTES,
-  authReturnTo,
   quickStartWith,
 } from '@/lib/listings/routes';
 // Real equipment photos (not AI renders).
