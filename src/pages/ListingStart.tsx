@@ -229,8 +229,11 @@ function ListingGateway() {
       label: mode,
       metadata: { mode, surface },
     });
+    // Send everyone straight into the wizard — it saves guest progress and
+    // only asks for sign-in when the draft is created, so ad visitors are
+    // never stopped by an auth wall before they've started.
     const target = mode === 'undecided' ? LISTING_ROUTES.quickStart : quickStartWith({ mode });
-    navigate(user ? target : authReturnTo(target));
+    navigate(target);
   };
 
   return (
