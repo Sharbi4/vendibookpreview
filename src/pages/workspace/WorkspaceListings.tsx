@@ -53,7 +53,7 @@ const priceLine = (l: Listing) => {
 const GRID = 'md:grid md:grid-cols-[minmax(0,1fr)_56px_52px_56px_196px] md:items-center md:gap-x-4 lg:gap-x-5';
 
 export default function WorkspaceListings() {
-  const { listings, isLoading, isError, refetch, pauseListing, unpauseListing, archiveListing, deleteListing } = useHostListings();
+  const { listings, isLoading, isError, refetch, pauseListing, unpauseListing, archiveListing, deleteListing, markListingSold } = useHostListings();
   const paypal = useMyPayPalConnection();
   const paypalReady = paypal.isReady;
   const { walkthroughs } = useVideoWalkthroughs();
@@ -363,6 +363,7 @@ export default function WorkspaceListings() {
                               onPause={pauseListing}
                               onResume={unpauseListing}
                               onArchive={archiveListing}
+                              onMarkSold={markListingSold}
                               onDelete={deleteListing}
                               onShare={() => void share(l.id, l.title)}
                             />

@@ -21,10 +21,11 @@ import { cn } from '@/lib/utils';
 import { btn } from './buttons';
 
 type Props = {
-  listing: { id: string; title: string; status: string };
+  listing: { id: string; title: string; status: string; mode?: string };
   onPause: (id: string) => Promise<unknown>;
   onResume: (id: string) => Promise<unknown>;
   onArchive: (id: string) => Promise<unknown>;
+  onMarkSold?: (id: string) => Promise<unknown>;
   onDelete: (id: string) => Promise<unknown>;
   onShare: () => void;
   /** Also show Pause/Resume as a visible button next to the menu (desktop rows). */
@@ -37,8 +38,8 @@ const item = 'cursor-pointer gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-med
  * Row actions for one listing: Pause/Resume, View, Share, Archive and Delete.
  * Same handlers and the same archive/delete confirmations as ListingManageMenu.
  */
-export default function ListingRowMenu({ listing, onPause, onResume, onArchive, onDelete, onShare, showPauseButton }: Props) {
-  const [action, setAction] = useState<'archive' | 'delete' | null>(null);
+export default function ListingRowMenu({ listing, onPause, onResume, onArchive, onDelete, onShare, showPauseButton, onMarkSold }: Props) {
+  const [action, setAction] = useState<'archive' | 'delete' | 'sold' | null>(null);
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
   const name = listing.title?.trim() || 'Untitled listing';
@@ -82,6 +83,7 @@ export default function ListingRowMenu({ listing, onPause, onResume, onArchive, 
           {canPause && <DropdownMenuItem onSelect={() => void run(onPause)} className={item}><Pause className="h-4 w-4 text-[#8A847B]" />Pause listing</DropdownMenuItem>}
           {canResume && <DropdownMenuItem onSelect={() => void run(onResume)} className={item}><Play className="h-4 w-4 text-[#8A847B]" />Resume listing</DropdownMenuItem>}
           <DropdownMenuSeparator className="bg-[#F1ECE5]" />
+          {listing.mode === 'sale' && onMarkSold && <DropdownMenuItem onSelect={() => setAction('sold')} className={item}>Mark as sold</DropdownMenuItem>}
           {listing.status !== 'archived' && <DropdownMenuItem onSelect={() => setAction('archive')} className={item}><Archive className="h-4 w-4 text-[#8A847B]" />Archive listing</DropdownMenuItem>}
           <DropdownMenuItem onSelect={() => setAction('delete')} className={cn(item, 'text-[#B42318] focus:text-[#9F1F15]')}><Trash2 className="h-4 w-4" />Delete listing</DropdownMenuItem>
         </DropdownMenuContent>
@@ -90,9 +92,9 @@ export default function ListingRowMenu({ listing, onPause, onResume, onArchive, 
       <AlertDialog open={!!action} onOpenChange={(open) => { if (!open && !busy) setAction(null); }}>
         <AlertDialogContent className="rounded-2xl border-[#ECE6DD] bg-white text-[#1C1B1A]">
           <AlertDialogHeader>
-            <AlertDialogTitle>{action === 'delete' ? 'Delete this listing?' : 'Archive this listing?'}</AlertDialogTitle>
+            <AlertDialogTitle>{action === 'sold' ? 'Mark this listing sold?' : action === 'delete' ? 'Delete this listing?' : 'Archive this listing?'}</AlertDialogTitle>
             <AlertDialogDescription className="text-[#5E5953]">
-              {action === 'delete'
+              {action === 'sold' ? 'This archives your listing and requests cancellation of its Featured subscription renewal. It does not record payment, release funds or change an order. Contact support if you mark it sold by mistake.' : action === 'delete'
                 ? `“${name}” will be removed from your listings and the marketplace. Existing transaction records are retained. This cannot be undone from your dashboard.`
                 : `“${name}” will leave the marketplace and remain in your Archived tab. Existing bookings and transactions are unchanged.`}
             </AlertDialogDescription>
@@ -103,9 +105,9 @@ export default function ListingRowMenu({ listing, onPause, onResume, onArchive, 
               type="button"
               disabled={busy}
               className={cn(btn.solid, 'h-10', action === 'delete' && 'bg-[#B42318] hover:bg-[#9F1F15]')}
-              onClick={() => void run(action === 'delete' ? onDelete : onArchive)}
+              onClick={() => void run(action === 'sold' && onMarkSold ? onMarkSold : action === 'delete' ? onDelete : onArchive)}
             >
-              {busy ? 'Saving…' : action === 'delete' ? 'Delete listing' : 'Archive listing'}
+              {busy ? 'Saving…' : action === 'sold' ? 'Mark sold' : action === 'delete' ? 'Delete listing' : 'Archive listing'}
             </button>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -221,6 +221,14 @@ export const useHostListings = () => {
     unpauseListing: (id: string) =>
       updateListingStatus(id, 'published', { preservePublishedAt: true }),
     archiveListing: (id: string) => updateListingStatus(id, 'archived'),
+    markListingSold: async (id: string) => {
+      const { error } = await (supabase.rpc as any)('mark_listing_sold', { p_listing: id });
+      if (error) { toast({ title: 'Could not mark sold', description: 'Please try again.', variant: 'destructive' }); return; }
+      invalidateListingQueries(queryClient);
+      broadcastListingChanged(id);
+      await fetchListings();
+      toast({ title: 'Marked sold', description: 'Listing archived. Featured renewal cancellation is queued for confirmation.' });
+    },
     deleteListing,
     duplicateListing,
     updateListingPrice,
