@@ -12,6 +12,7 @@
 .vu-published-invite{display:flex;gap:20px;align-items:center;justify-content:space-between;border:1px solid #e4e5e8;background:#fafafa;border-radius:20px;padding:24px}.vu-published-invite h2{font-size:18px;font-weight:600;letter-spacing:-.02em}.vu-published-invite p{font-size:13px;line-height:1.65;color:#626670;margin-top:8px}.vu-published-invite button{flex-shrink:0}
 @keyframes vu-enter{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:480px){.vb-updates{padding:20px}.vu-brand{gap:8px;margin-bottom:14px}.vu-brand img{width:132px}.vu-progress{margin-bottom:16px}.vb-updates h2{font-size:27px}.vu-role{padding:14px 10px}.vu-selection{right:10px;top:16px}.vu-intro{margin:10px 0 16px}.vu-dialog{width:calc(100% - 20px)!important;max-height:calc(100dvh - 24px - env(safe-area-inset-bottom,0px));border-radius:18px!important}.vu-consent{font-size:12px;line-height:1.55}.vu-teaser{bottom:max(12px,env(safe-area-inset-bottom));right:12px;left:12px;max-width:none;margin:0;padding:16px}.vu-teaser-logo{width:112px;margin-bottom:8px}.vu-published-invite{flex-direction:column;align-items:flex-start;padding:20px}}
+@media(max-width:767px){.vu-teaser{bottom:calc(72px + env(safe-area-inset-bottom,0px))}}
 @media(max-height:600px){.vb-updates{padding-top:18px;padding-bottom:18px}.vu-brand>span{display:none}}
 @media(prefers-reduced-motion:reduce){.vu-stage,.vu-teaser{animation:none}.vu-role,.vu-primary{transition:none}}
 .vu-sms{border-top:1px solid var(--vu-line);padding:18px 0 0;margin-top:20px}
