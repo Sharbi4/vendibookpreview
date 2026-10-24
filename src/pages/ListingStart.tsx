@@ -19,13 +19,11 @@ import {
 import Header from '@/components/layout/Header';
 import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/AuthContext';
 import { trackEvent } from '@/lib/analytics';
 import { useCatalogPrice } from '@/hooks/useCatalogPrices';
 import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 import {
   LISTING_ROUTES,
-  authReturnTo,
   quickStartWith,
 } from '@/lib/listings/routes';
 // Real equipment photos (not AI renders).
@@ -215,7 +213,6 @@ export default function ListingStart() {
 
 function ListingGateway() {
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   useEffect(() => {
     trackEvent({ category: 'Supply', action: 'listing_gateway_viewed' });
@@ -229,8 +226,11 @@ function ListingGateway() {
       label: mode,
       metadata: { mode, surface },
     });
+    // Send everyone straight into the wizard — it saves guest progress and
+    // only asks for sign-in when the draft is created, so ad visitors are
+    // never stopped by an auth wall before they've started.
     const target = mode === 'undecided' ? LISTING_ROUTES.quickStart : quickStartWith({ mode });
-    navigate(user ? target : authReturnTo(target));
+    navigate(target);
   };
 
   return (
