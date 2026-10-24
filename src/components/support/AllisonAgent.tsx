@@ -3,17 +3,25 @@ import { useNavigate } from 'react-router-dom';
 import { useConversation } from '@elevenlabs/react';
 import { useAuth } from '@/contexts/AuthContext';
 import { invokeEdge } from '@/lib/edge/invokeFunction';
-import { createAtlasTools } from '@/lib/atlas/atlasTools';
+import { getAllisonKnowledge } from '@/lib/atlas/allisonKnowledge';
+import { createAtlasTools, type AtlasListingCard, type AtlasOfferDraft, type AtlasSellerDraft } from '@/lib/atlas/atlasTools';
 import { ALLISON_START_EVENT, ALLISON_TOOL_NAMES } from '@/lib/atlas/allisonConfig';
 import { asksToPauseNavigation } from '@/lib/atlas/atlasNavigation';
 import { ATLAS_START_EVENT } from '@/lib/atlas/atlasFlag';
 import { Button } from '@/components/ui/button';
+import { MakeOfferModal } from '@/components/offers/MakeOfferModal';
+import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
+import MessageHostForm from '@/components/messaging/MessageHostForm';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 
 export default function AllisonAgent() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const userRef = useRef(user); userRef.current = user;
+  const [offer, setOffer] = useState<AtlasOfferDraft | null>(null);
+  const [message, setMessage] = useState<AtlasSellerDraft | null>(null);
+  const [cards, setCards] = useState<AtlasListingCard[]>([]);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -28,8 +36,9 @@ export default function AllisonAgent() {
   const starting = useRef(false);
   const generation = useRef(0);
   const handoff = useRef('');
-  const tools = useMemo(() => createAtlasTools({ navigate, showResults: () => {}, currentListingId: () => null, currentUserId: () => userRef.current?.id ?? null, onNavigationChange: setPaused }), [navigate]);
+  const tools = useMemo(() => createAtlasTools({ navigate, showResults: setCards, openOffer: setOffer, openMessage: setMessage, currentListingId: () => window.location.pathname.match(/^\/listing\/([^/]+)/)?.[1] ?? null, currentUserId: () => userRef.current?.id ?? null, onNavigationChange: setPaused }), [navigate]);
   const clientTools = useMemo(() => Object.fromEntries(ALLISON_TOOL_NAMES.map(name => [name, async (params: Record<string, unknown>) => {
+    if (name === 'get_support_knowledge') return JSON.stringify(getAllisonKnowledge(String(params?.question ?? '')));
     if (name === 'request_follow_up') {
       setTicket(params); setTicketResult('');
       return 'Support request displayed for the user to review and submit. Nothing has been saved or sent yet. Wait for the confirmed result.';
@@ -52,7 +61,7 @@ export default function AllisonAgent() {
       if (starting.current || sessionRef.current.status === 'connected') return;
       starting.current = true;
       const attempt = ++generation.current;
-      setTicket(null); setTicketResult(''); setTurns([]);
+      setTicket(null); setTicketResult(''); setTurns([]); setCards([]);
       setOpen(true); setBusy(true); setError(''); setMuted(false);
       const nextMode = (event as CustomEvent).detail?.mode === 'text' ? 'text' : 'voice';
       handoff.current = String((event as CustomEvent).detail?.summary ?? '').slice(0, 1000);
@@ -75,12 +84,17 @@ export default function AllisonAgent() {
     return () => { window.removeEventListener(ALLISON_START_EVENT, start); window.removeEventListener(ATLAS_START_EVENT, stop); window.removeEventListener('atlas:active', stop); };
   }, []);
   if (!open) return null;
-  return <section data-atlas-ui role="region" aria-label="Allison AI customer support" className="fixed bottom-20 right-4 z-[70] max-h-[calc(100dvh-7rem)] w-[360px] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-border bg-card p-4 text-card-foreground shadow-2xl md:bottom-5">
+  return <>
+    <AuthGateOfferModal open={!!offer && !user} onOpenChange={value => { if (!value && !user) setOffer(null); }} onAuthSuccess={() => {}} />
+    {offer && user && <MakeOfferModal open onOpenChange={value => { if (!value) setOffer(null); }} listingId={offer.listingId} sellerId={offer.hostId} listingTitle={offer.title} askingPrice={offer.askingPrice} initialAmount={offer.amount} initialMessage={offer.message} />}
+    <Dialog open={!!message} onOpenChange={value => { if (!value) setMessage(null); }}><DialogContent data-atlas-ui><DialogHeader><DialogTitle>Review your message</DialogTitle></DialogHeader>{message && <MessageHostForm key={`${message.listingId}:${message.message}`} listingId={message.listingId} hostId={message.hostId} listingTitle={message.title} initialMessage={message.message} />}</DialogContent></Dialog>
+    <section data-atlas-ui role="region" aria-label="Allison AI customer support" className="fixed bottom-20 right-4 z-[70] max-h-[calc(100dvh-7rem)] w-[360px] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-border bg-card p-4 text-card-foreground shadow-2xl md:bottom-5">
     <div className="flex items-center gap-3"><img src="/brand/vendibook-icon-48.png" alt="" className={`h-9 w-9 ${conversation.isSpeaking ? 'animate-pulse motion-reduce:animate-none' : ''}`} /><div><strong>Allison</strong><p className="text-xs text-muted-foreground">AI customer success · {busy ? 'Connecting…' : live ? 'Connected' : 'Offline'}</p></div></div>
     {error && <p role="alert" className="my-3 text-sm">{error}</p>}
     {mode === 'text' && turns.length > 0 && <div role="log" aria-label="Conversation with Allison" aria-live="polite" className="my-3 max-h-64 space-y-3 overflow-y-auto text-sm">
       {turns.map((turn, index) => <p key={index} className="whitespace-pre-wrap break-words"><strong>{turn.source === 'ai' ? 'Allison' : 'You'}: </strong>{turn.message}</p>)}
     </div>}
+    {cards.length > 0 && <div className="my-3 max-h-48 space-y-2 overflow-y-auto" aria-label="Matching listings">{cards.map(card => <a key={card.id} href={`/listing/${card.id}`} className="flex gap-2 rounded-lg border p-2 text-sm">{card.photo && <img src={card.photo} alt="" className="h-12 w-12 rounded object-cover" />}<span><strong>{card.title}</strong><br/>{card.location} · {card.priceText}</span></a>)}</div>}
     {ticket && <div className="my-3 max-h-64 overflow-auto rounded-lg bg-muted p-3 text-sm">
       <strong>Review your support request</strong>
       <p>{String(ticket.name ?? '')} · {String(ticket.email || ticket.phone || 'Account email')}</p>
@@ -108,5 +122,5 @@ export default function AllisonAgent() {
       <Button onClick={() => { generation.current++; void conversation.endSession(); setOpen(false); }}>End</Button>
       {error && <Button variant="ghost" onClick={() => { setOpen(false); navigate('/contact'); }}>Support options</Button>}
     </div>
-  </section>;
+  </section></>;
 }

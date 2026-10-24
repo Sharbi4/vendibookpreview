@@ -11,7 +11,7 @@
  *     platform fee, for Free and Pro sellers alike (Pro does not lower it).
  *     Older committed orders keep their snapshotted terms.
  *   Rentals — 12.9% host commission + 12.9% renter service fee; active
- *     Vendibook Pro hosts pay 10.9% on the host side, savings capped at $500
+ *     Vendibook Pro hosts pay the same 12.9% host commission
  *     per completed transaction.
  *   Pay in person / cash sales are retired (owner override 2026-10-15) —
  *     never describe in-person settlement or a $0 in-person commission.
@@ -65,7 +65,7 @@ export const PRICING_FAQ: PricingFaqEntry[] = [
     id: 'rental-fees',
     question: 'What are the rental fees?',
     answer:
-      'Rentals are paid by card through Square. Standard rentals have a 12.9% host commission and a separate 12.9% renter service fee. Active Vendibook Pro hosts pay a reduced 10.9% host commission (savings capped at $500 per completed transaction); the renter service fee stays 12.9%. Checkout displays the actual calculation and any other applicable charges.',
+      'Rentals are paid by card through Square. Standard rentals have a 12.9% host commission and a separate 12.9% renter service fee. Pro does not discount commissions; both rental fees remain 12.9%. Checkout displays the actual calculation and any other applicable charges.',
     audiences: ['host', 'renter', 'all'],
     cta: { label: 'See rental pricing', href: '/pricing' },
   },
@@ -73,14 +73,14 @@ export const PRICING_FAQ: PricingFaqEntry[] = [
     id: 'host-earnings',
     question: 'What will I actually take home as a host?',
     answer:
-      'Your rental subtotal minus the host commission. On a $1,000 rental subtotal, the standard host fee is $129 and the renter pays a separate $129 service fee, before any separately disclosed tax, security deposit, delivery or adjustments. An active Pro host pays $109 instead, subject to the $500 savings cap. Renters pay by card through Square. We pay out within 24 hours after the rental or sale is complete and confirmed — signatures and the other handoff steps done.',
+      'Your rental subtotal minus the host commission. On a $1,000 rental subtotal, the standard host fee is $129 and the renter pays a separate $129 service fee, before any separately disclosed tax, security deposit, delivery or adjustments. Pro hosts pay the same $129 host commission in this example. Renters pay by card through Square. We pay out within 24 hours after the rental or sale is complete and confirmed — signatures and the other handoff steps done.',
     audiences: ['host', 'all'],
   },
   {
     id: 'pro-sale-commission',
     question: 'Does Pro reduce my equipment-sale commission?',
     answer:
-      'No. The 8.7% online equipment-sale commission applies equally to Free and Pro sellers. Active Pro hosts may receive a reduced 10.9% rental-side host commission, subject to the $500-per-transaction savings cap.',
+      'No. The 8.7% online equipment-sale commission applies equally to Free and Pro sellers. Pro does not discount rental commissions either.',
     audiences: ['seller', 'host', 'all'],
     cta: { label: 'Compare plans', href: '/pricing' },
   },
@@ -111,7 +111,7 @@ export const PRICING_FAQ: PricingFaqEntry[] = [
     id: 'subscriptions-optional',
     question: 'Do I need Pro to sell or rent?',
     answer:
-      'No. You can publish standard listings without Pro. Vendibook Pro adds tools, visibility, a monthly Featured Boost credit, eligible BuyerMatch AI buyer-discovery support and the reduced rental host fee. BuyerMatch does not guarantee buyers or sales.',
+      'No. You can publish standard listings without Pro. Vendibook Pro adds tools, visibility, a monthly Featured Boost credit, eligible BuyerMatch AI buyer-discovery support. BuyerMatch does not guarantee buyers or sales.',
     audiences: ['seller', 'host', 'all'],
     cta: { label: 'Compare plans', href: '/pricing' },
   },

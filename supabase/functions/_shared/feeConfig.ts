@@ -20,10 +20,10 @@ export const FEE_CONFIG = {
   legacySaleSellerFeePct: 12.9,
   /** Build Studio is a separate commercial policy. */
   buildStudioManufacturerFeePct: 6.5,
-  /** Preserved rental host benefit; never use for new equipment sales. */
-  proSellerFeePct: 10.9,
+  /** No Pro commission discount for new quotes (owner 2026-10-24). Existing locked snapshots remain authoritative. */
+  proSellerFeePct: 12.9,
   /** Max Pro saving versus standard, per completed transaction. */
-  proMaxSavingsCents: 50_000,
+  proMaxSavingsCents: 0,
 } as const;
 
 export type FeeConfig = typeof FEE_CONFIG;

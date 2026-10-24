@@ -13,7 +13,7 @@
  *        platform fee, for Free and Pro sellers alike (Pro does NOT lower the
  *        sale commission); older committed orders keep their snapshotted terms;
  *      rentals: 12.9% host commission + 12.9% renter service fee; active Pro
- *        hosts pay 10.9% on the rental host side, savings capped at $500 per
+ *        hosts pay the same 12.9% host commission per
  *        completed transaction;
  *      Build Studio: planned 6.5% manufacturer fee under separate terms.
  *  - Pay in person / cash sales are RETIRED (owner override 2026-10-15). Never
@@ -522,7 +522,7 @@ export const faqCategories: FaqCategory[] = [
         id: "seller-fees",
         question: "What are the seller fees?",
         answer:
-          "For new eligible online equipment sales, the Vendibook seller fee is 8.7% of the agreed equipment amount, for Free and Pro sellers alike, and buyers pay no Vendibook platform fee. Confirm the exact fee in your transaction quote; older committed orders keep their agreed terms. Rentals are priced separately: a 12.9% host commission plus a 12.9% renter service fee, with active Vendibook Pro hosts paying 10.9% on the host side (savings capped at $500 per completed transaction).",
+          "For new eligible online equipment sales, the Vendibook seller fee is 8.7% of the agreed equipment amount, for Free and Pro sellers alike, and buyers pay no Vendibook platform fee. Confirm the exact fee in your transaction quote; older committed orders keep their agreed terms. Rentals are priced separately: a 12.9% host commission plus a 12.9% renter service fee on both Free and Pro.",
         keywords: ["fee", "commission", "8.7%", "sale fee"],
         actions: [A.pricing],
       },
@@ -620,7 +620,7 @@ export const faqCategories: FaqCategory[] = [
         id: "host-fees",
         question: "What does hosting cost?",
         answer:
-          "Standard rentals have a 12.9% host commission and a separate 12.9% renter service fee. Active Vendibook Pro hosts pay a reduced 10.9% host commission, with savings capped at $500 per completed transaction; the renter fee stays 12.9%. Checkout displays the actual calculation and any other applicable charges.",
+          "Standard rentals have a 12.9% host commission and a separate 12.9% renter service fee. Pro does not discount these commissions. Checkout displays the actual calculation and any other applicable charges.",
         keywords: ["rental fee", "host fee", "renter fee", "commission"],
         actions: [A.pricing],
       },
@@ -644,7 +644,7 @@ export const faqCategories: FaqCategory[] = [
         id: "tiers-overview",
         question: "What plans are available?",
         answer:
-          "Two: Free (two active listings unless grandfathered, drafts free, core buying, selling and renting) and Vendibook Pro at {{price:vendibook_pro}} (unlimited eligible active listings, one Featured Boost credit each billing period, Premium Tools and analytics including PricePilot, PermitPath Plus, priority visibility and support, eligible BuyerMatch AI buyer-discovery support, and a reduced 10.9% rental host fee capped at $500 saved per completed transaction). PermitPath Plus is also available on its own for {{price:permit_path_plus_monthly}}. See the full comparison on the pricing page.",
+          "Two: Free (two active listings unless grandfathered, drafts free, core buying, selling and renting) and Vendibook Pro at {{price:vendibook_pro}} (unlimited eligible active listings, one Featured Boost credit each billing period, Premium Tools and analytics including PricePilot, PermitPath Plus, priority visibility and support, eligible BuyerMatch AI buyer-discovery support). PermitPath Plus is also available on its own for {{price:permit_path_plus_monthly}}. See the full comparison on the pricing page.",
         actions: [A.pricing],
       },
       {
@@ -659,7 +659,7 @@ export const faqCategories: FaqCategory[] = [
         id: "pro-benefits",
         question: "What does Pro include?",
         answer:
-          "Pro includes unlimited eligible active listings, a monthly Featured Boost credit, Premium Tools, applicable analytics, PermitPath Plus, priority visibility and support, and eligible BuyerMatch AI buyer-discovery support. An active Pro rental host also receives the reduced 10.9% rental host fee (savings capped at $500 per completed transaction). Campaign timing and results vary; buyers or sales are not guaranteed.",
+          "Pro includes unlimited eligible active listings, a monthly Featured Boost credit, Premium Tools, applicable analytics, PermitPath Plus, priority visibility and support, and eligible BuyerMatch AI buyer-discovery support. Pro does not discount commissions. Campaign timing and results vary; buyers or sales are not guaranteed.",
         keywords: ["pro", "membership", "benefits", "BuyerMatch", "boost credit"],
         actions: [A.pricing, A.subscription],
       },
@@ -815,7 +815,7 @@ export const faqCategories: FaqCategory[] = [
         id: "addon-differences",
         question: "What's the difference between Featured Boost, Pro Listing, and Vendibook Pro?",
         answer:
-          "Featured Boost buys featured visibility for one listing for 30 days. Pro Listing is an enhanced-presentation upgrade for one listing for 30 days. Vendibook Pro is an account-level monthly membership: unlimited eligible listings, eligible BuyerMatch AI support (activation required), Premium Tools, PermitPath Plus, a Featured Boost credit each billing period, and the reduced 10.9% rental host fee. Pro does not change the 8.7% equipment-sale commission.",
+          "Featured Boost buys featured visibility for one listing for 30 days. Pro Listing is an enhanced-presentation upgrade for one listing for 30 days. Vendibook Pro is an account-level monthly membership: unlimited eligible listings, eligible BuyerMatch AI support (activation required), Premium Tools, PermitPath Plus, a Featured Boost credit each billing period. Pro does not change the 8.7% equipment-sale commission.",
         actions: [A.pricing],
       },
       {
@@ -904,7 +904,7 @@ export const faqCategories: FaqCategory[] = [
         id: "fee-transparency",
         question: "What are Vendibook's fees, exactly?",
         answer:
-          "New eligible online equipment sales: 8.7% seller commission for Free and Pro sellers, $0 buyer platform fee. Rentals: 12.9% host commission + 12.9% renter service fee; active Vendibook Pro hosts pay 10.9% on the host side, capped at $500 saved per completed transaction. Build Studio: a planned 6.5% manufacturer fee under separate terms. Subscriptions and one-time upgrades are separate — see the pricing page. Your transaction screen shows the actual charges.",
+          "New eligible online equipment sales: 8.7% seller commission for Free and Pro sellers, $0 buyer platform fee. Rentals: 12.9% host commission + 12.9% renter service fee; the same fees apply on Free and Pro. Build Studio: a planned 6.5% manufacturer fee under separate terms. Subscriptions and one-time upgrades are separate — see the pricing page. Your transaction screen shows the actual charges.",
         actions: [A.pricing],
       },
       {

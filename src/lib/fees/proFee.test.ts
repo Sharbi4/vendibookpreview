@@ -12,30 +12,13 @@ describe('computeProSellerFee', () => {
     expect(r.effectiveRatePct).toBe(12.9);
   });
 
-  it('$5,000 sale — Pro saves 2 points ($100), under the cap', () => {
-    const r = computeProSellerFee({ baseCents: usd(5000), isPro: true });
-    expect(r.standardFeeCents).toBe(usd(645));
-    expect(r.discountCents).toBe(usd(100));
-    expect(r.feeCents).toBe(usd(545));
-    expect(r.effectiveRatePct).toBe(10.9);
-    expect(r.savingsCapped).toBe(false);
-  });
-
-  it('$25,000 sale — 2 points is exactly $500, at the cap', () => {
-    const r = computeProSellerFee({ baseCents: usd(25000), isPro: true });
-    expect(r.standardFeeCents).toBe(usd(3225));
-    expect(r.discountCents).toBe(usd(500));
-    expect(r.feeCents).toBe(usd(2725));
-    expect(r.effectiveRatePct).toBe(10.9);
-  });
-
-  it('$50,000 sale — savings capped at $500 (effective rate above 10.9%)', () => {
-    const r = computeProSellerFee({ baseCents: usd(50000), isPro: true });
-    expect(r.standardFeeCents).toBe(usd(6450));
-    expect(r.discountCents).toBe(usd(500));
-    expect(r.feeCents).toBe(usd(5950));
-    expect(r.savingsCapped).toBe(true);
-    expect(r.effectiveRatePct).toBe(11.9);
+  it('does not discount new rental quotes for Pro at any transaction size', () => {
+    for (const amount of [5000, 25000, 50000]) {
+      const pro = computeProSellerFee({ baseCents: usd(amount), isPro: true });
+      expect(pro).toEqual(computeProSellerFee({ baseCents: usd(amount), isPro: false }));
+      expect(pro.discountCents).toBe(0);
+      expect(pro.proApplied).toBe(false);
+    }
   });
 
   it('pay-in-person sales stay free for everyone, Pro included', () => {

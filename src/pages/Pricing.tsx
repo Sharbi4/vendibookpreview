@@ -522,7 +522,7 @@ const Pricing = () => {
                     statusLabel={isPro ? 'Your plan' : null}
                     finePrint={[
                       'BuyerMatch campaigns require activation and are subject to operational limits; no guaranteed leads or sales.',
-                      'Existing rental fee benefits remain unchanged; see the rental fee schedule below.',
+                      'Pro does not discount rental or equipment-sale commissions.',
                       'The Featured Boost credit is 1 per billing period and does not roll over.',
                       'Cancel anytime — access continues through the end of the current paid period.',
                     ]}
@@ -573,7 +573,7 @@ const Pricing = () => {
               <dl className="grid divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
                 {[
                   { who: 'Equipment sellers', rate: '8.7%', note: 'New online sales, on Free and Pro. Equipment price only; excludes tax and separately priced transport.' },
-                  { who: 'Rental hosts', rate: '12.9%', note: '10.9% with Pro, savings capped at $500 per completed rental.' },
+                  { who: 'Rental hosts', rate: '12.9%', note: 'Same commission on Free and Pro.' },
                   { who: 'Renters', rate: '12.9%', note: 'Service fee shown at checkout before you pay.' },
                   { who: 'Buyers', rate: '$0', note: 'No Vendibook fee on purchases.' },
                 ].map((row) => (

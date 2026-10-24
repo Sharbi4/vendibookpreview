@@ -5,13 +5,13 @@ import { useCatalogPrice } from '@/hooks/useCatalogPrices';
 import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 
 // Copy follows the owner's AI Support Agent Master Guide v5.0 (2026-10-14):
-// Pro's fee benefit is rental-only (10.9% host, $500 cap); it never lowers the 8.7%
+// Pro does not discount commissions; equipment sales remain 8.7%
 // equipment-sale commission. Pay in person / cash sales are retired.
 
 const buildFaq = (proPrice: string) => [
   { q: 'What does Vendibook Pro cost?', a: `Vendibook Pro is ${proPrice} per month as a recurring membership. Confirm your renewal details and consent on the subscription screen before you subscribe.` },
-  { q: 'What does Pro include?', a: 'Unlimited eligible active listings, one Featured Boost credit each billing period (credits don\'t roll over or convert to cash), Premium Tools and applicable analytics, PermitPath Plus, priority visibility and support, and eligible BuyerMatch AI buyer-discovery support. Active Pro rental hosts also get a reduced 10.9% host fee.' },
-  { q: 'Does Pro lower my fees?', a: 'Only on rentals. Active Pro hosts pay a 10.9% rental host commission instead of 12.9%, with savings capped at $500 per completed transaction; the renter service fee stays 12.9%. Pro does not reduce the 8.7% online equipment-sale commission, which is the same for Free and Pro sellers.' },
+  { q: 'What does Pro include?', a: 'Unlimited eligible active listings, one Featured Boost credit each billing period (credits don\'t roll over or convert to cash), Premium Tools and applicable analytics, PermitPath Plus, priority visibility and support, and eligible BuyerMatch AI buyer-discovery support. Pro does not discount commissions.' },
+  { q: 'Does Pro lower my fees?', a: 'No. Pro does not discount commissions. Rental hosts pay 12.9%, renters pay a separate 12.9%, and new online equipment sales have an 8.7% seller commission on both plans.' },
   { q: 'How do the fees work?', a: 'New eligible online equipment sales carry an 8.7% seller commission and no Vendibook buyer platform fee. Rentals are paid by card through Square, with a 12.9% host commission and a separate 12.9% renter service fee. Your final transaction screen shows the actual charges.' },
   { q: 'Does BuyerMatch guarantee a buyer?', a: 'No. BuyerMatch helps research relevant buyer demand and, where activated, supports reviewed outreach for eligible sale listings. Your membership can be active before a campaign starts — the dashboard shows Awaiting Activation until then. Reports show actual recorded activity only; matches, replies, leads and sales are not guaranteed.' },
   { q: 'Is basic listing still free?', a: 'Yes. Creating and publishing a basic listing is free on the Free plan, which supports two active listings (founding-member accounts may have more). Drafts are free and don\'t count toward the limit.' },

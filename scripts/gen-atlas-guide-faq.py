@@ -21,6 +21,9 @@ for l in lines:
 flush()
 # Owner overrides that take precedence over the guide (record the date).
 OVERRIDES = {
+    # Owner 2026-10-24: Pro no longer discounts any commission.
+    'Does Pro reduce my equipment-sale commission?': ('Does Pro reduce my equipment-sale commission?', 'No. New online equipment sales have an 8.7% seller commission on Free and Pro. Rental hosts pay 12.9% and renters pay a separate 12.9% on both plans. Pro does not discount commissions.'),
+    'What does Pro include?': ('What does Pro include?', 'Pro includes eligible BuyerMatch AI discovery with reviewed outreach subject to activation and capacity, one Featured Boost credit per billing period, PricePilot, PermitPath Plus, priority placement and support. Pro does not discount commissions or guarantee buyers or sales.'),
     # v5.3 retires pay in person itself ("Can I pay the seller directly or in person?").
     # 2026-10-15: mission line.
     'What is Vendibook?': ('What is Vendibook?',

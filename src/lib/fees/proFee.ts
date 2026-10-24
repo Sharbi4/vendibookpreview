@@ -1,7 +1,7 @@
 /**
  * Rental host fee benefit and historical transaction compatibility.
  * New equipment sales use equipmentSaleFee.ts (8.7% Standard and Pro).
- * The rental-only 10.9% benefit and $500 cap remain unchanged.
+ * Pro no longer discounts new rental quotes; locked historical terms are read separately.
  */
 
 import { FEE_CONFIG } from '../../../supabase/functions/_shared/feeConfig';
@@ -25,7 +25,7 @@ export interface ProFeeResult {
   standardFeeCents: number;
   discountCents: number;
   feeCents: number;
-  /** Effective seller/host rate actually charged, e.g. 10.9 or 11.9. */
+  /** Effective seller/host rate actually charged, normally 12.9. */
   effectiveRatePct: number;
   proApplied: boolean;
   savingsCapped: boolean;

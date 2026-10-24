@@ -614,7 +614,7 @@ export function createAtlasTools(deps: AtlasToolDeps) {
     },
 
     get_pricing: async () => {
-      const { data } = await (supabase.from('monetization_products') as LooseQuery)
+      const { data, error: catalogError } = await (supabase.from('monetization_products') as LooseQuery)
         .select('slug, name, price_cents, is_active')
         .in('slug', Object.keys(ATLAS_PRODUCTS))
         .eq('is_active', true);
@@ -627,9 +627,11 @@ export function createAtlasTools(deps: AtlasToolDeps) {
         listing: 'Free to list. No listing fee.',
         equipment_sales: `Sellers pay a ${FEE_CONFIG.saleSellerFeePct}% commission on the agreed equipment amount for new online sales; the same rate for Free and Pro sellers. Buyers pay no Vendibook platform fee; the invoice may separately show tax, freight or other agreed amounts. Older committed orders keep their agreed terms.`,
         pay_in_person: 'Not available: Vendibook no longer supports pay-in-person or cash sales.',
-        rentals: `Renters pay a ${FEE_CONFIG.rentalRenterFeePct}% service fee and hosts pay a ${FEE_CONFIG.rentalHostFeePct}% commission. Active Vendibook Pro hosts pay ${FEE_CONFIG.proSellerFeePct}% instead, with savings capped at $${FEE_CONFIG.proMaxSavingsCents / 100} per completed transaction. The checkout shows the exact math.`,
+        rentals: `Renters pay a ${FEE_CONFIG.rentalRenterFeePct}% service fee and hosts pay a ${FEE_CONFIG.rentalHostFeePct}% commission. The same rates apply to Free and Pro; Pro does not discount commissions. The checkout shows the exact math.`,
         free_plan: 'The Free plan allows two active listings (some founding members have more); drafts are free.',
-        optional_upgrades: products,
+        optional_upgrades: catalogError ? [] : products,
+        catalog_status: catalogError ? 'unavailable' : 'loaded',
+        catalog_note: catalogError ? 'Current package prices could not be loaded. Do not quote cached prices or say packages are unavailable; offer the pricing page or retry.' : 'Only active catalog products are shown; confirm current terms on the purchase screen.',
         note: 'Upgrades are optional and never required to list or sell.',
       });
     },

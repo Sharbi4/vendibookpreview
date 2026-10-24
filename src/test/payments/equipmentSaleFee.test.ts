@@ -15,7 +15,7 @@ describe('new equipment commission', () => {
     for (const amount of [-1, NaN, Infinity, 1.5]) expect(() => equipmentSaleFee(amount)).toThrow();
   });
   it('preserves rental Pro fees', () => {
-    expect(computeProSellerFee({ baseCents: 100_000, isPro: true }).feeCents).toBe(10900);
+    expect(computeProSellerFee({ baseCents: 100_000, isPro: true }).feeCents).toBe(12900);
     expect(computeProSellerFee({ baseCents: 100_000, isPro: false }).feeCents).toBe(12900);
   });
   it('honors locked old sales and historical unsnapshotted rates', () => {

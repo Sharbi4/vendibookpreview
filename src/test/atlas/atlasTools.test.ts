@@ -434,11 +434,11 @@ describe('Atlas policy knowledge (owner master guide v5.3)', () => {
     expect(await createAtlasTools(deps()).get_faq({ question: 'zebra quantum pickles' })).toMatch(/do not guess/);
   });
 
-  it('pricing has no pay-in-person option and keeps the Pro rental host rate', async () => {
+  it('pricing has no pay-in-person option and does not promise a Pro commission discount', async () => {
     const out = JSON.parse(await createAtlasTools(deps()).get_pricing());
     expect(out.pay_in_person).toMatch(/no longer supports/);
     expect(out.equipment_sales).toMatch(/8\.7%/);
-    expect(out.rentals).toMatch(/10\.9%/);
+    expect(out.rentals).toContain('Pro does not discount commissions');
   });
 });
 

@@ -34,3 +34,10 @@ Code changes are made locally and pushed directly to `fix/paypal-webhook-config`
 - Support requests use the existing Admin Support flow and branded notifications. No ticket exists until the write succeeds. A ticket is never a Calendly booking.
 - Calendly scheduling requires real tools, available slot and explicit confirmation; without them offer the support request.
 - Claims of live activation, female voice selection, calendar attachment or successful real conversations require provider readback and browser checks. Code tests alone do not establish these.
+
+
+## Current knowledge and sales guidance (2026-10-24)
+
+Allison is support-first and also guides sales. The source configuration now exposes 14 tools, including sourced support search, public listing discovery, pricing, page navigation and customer-reviewed offer/message forms. Callback requests use the existing support request flow with user confirmation; requested timing must include a time zone and is not an appointment. Calendly meetings require verified provider access and real availability.
+
+Regenerate provider-ready files with `node scripts/export-allison-config.mjs`. The knowledge export contains 11 workflow playbooks and 87 owner-guide FAQs. Current prices always require the active catalog; historical amounts never override a live quote. Owner correction: Pro has no commission discount. Rental host and renter fees are each 12.9%, new equipment sales 8.7% seller and zero buyer platform fee. Locked prior transaction snapshots remain authoritative.

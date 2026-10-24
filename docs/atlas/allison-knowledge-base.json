@@ -1,0 +1,510 @@
+{
+  "version": "2026-10-23",
+  "pricing_rule": "Always call get_pricing for current active catalog quotes. Static amounts are historical context.",
+  "playbooks": [
+    {
+      "topic": "packages pricing Pro upgrades addons",
+      "answer": "Call get_pricing for live active catalog amounts before quoting. Explain Free, Pro membership, single-listing Pro placement, Featured Boost, PricePilot, listing rewrite and PermitPath Plus separately. Monthly memberships are different from one-time listing upgrades. Explain eligibility, duration and renewal from the current screen. No guaranteed buyers, placement outcome or sales. Open pricing, inspect headings and scroll to the relevant package; customer chooses checkout.",
+      "source": "src/lib/monetization/catalogPricing.ts; src/lib/atlas/atlasTools.ts",
+      "page": "pricing"
+    },
+    {
+      "topic": "rent rental booking Square documents insurance",
+      "answer": "Rentals use Square card checkout only. Host listing rates and required documents come from the actual listing and dates; platform fees are separate. Guide through listing, review, details, required documents and payment. Only request documents the host requires. Do not upload or accept agreements for the customer. Never suggest PayPal installments for rentals.",
+      "source": "src/data/pricingFaq.ts; owner instructions",
+      "page": "search"
+    },
+    {
+      "topic": "sale buy purchase offers negotiation checkout",
+      "answer": "Ask use, location and budget; match menu needs to listed equipment, not just cuisine in the title. Search local inventory first; ask before expanding nationwide. Open the matching listing promptly, distinguishing confirmed equipment from unknowns. Explain and prepare offers with draft_offer; customer sends from the form. A request, offer or invoice is not proof of payment or completed sale. Equipment purchases use approved PayPal checkout/invoices.",
+      "source": "src/lib/atlas/atlasTools.ts; src/data/pricingFaq.ts",
+      "page": "search"
+    },
+    {
+      "topic": "payments charged missing failed duplicate refund dispute",
+      "answer": "For a charge without an order, do not retry payment. Collect a non-sensitive reference, time, page and visible error, then offer a support request for reconciliation. Do not promise refunds, determine liability, disclose private order data or mark an order paid. Explain the displayed policy and escalate disputed or missing records.",
+      "source": "src/lib/atlas/atlasGuideFaq.ts",
+      "page": "payments"
+    },
+    {
+      "topic": "technical support error login account dashboard browser",
+      "answer": "Ask the intended action, exact visible error, device/browser and steps already tried. Inspect the page before guiding one reversible step at a time. Preserve unsaved work. Never request passwords, OTPs, card details or identity files in the conversation. Authenticated account changes and approvals remain customer-controlled; escalate if the issue persists.",
+      "source": "src/lib/atlas/atlasPage.ts; support workflow",
+      "page": "account"
+    },
+    {
+      "topic": "callback phone human person support ticket schedule time timezone",
+      "answer": "Offer request_follow_up with preferred_contact phone, name, phone, issue and requested local date/time and time zone written in the summary. Display the draft for user submission. This saves a callback request, not a reserved appointment; the team confirms requested availability. Read only the returned reference and follow-up deadline. Do not promise an immediate transfer or an exact callback slot.",
+      "source": "supabase/functions/atlas-follow-up/index.ts; supabase/functions/_shared/followUpWindow.ts",
+      "page": "contact"
+    },
+    {
+      "topic": "Calendly meeting calendar available availability appointment",
+      "answer": "Only attached, working Calendly tools can establish availability. Find the actual customer-success event type, show returned slots in the customer time zone, confirm name/email/purpose and one selected slot before booking. Report success only from the booking response. A calendar attached to Atlas is not evidence Allison has access. If unavailable, offer a callback request; never invent a calendar link, slot or booking.",
+      "source": "Allison provider integration contract",
+      "page": "contact"
+    },
+    {
+      "topic": "walkthrough video seller host schedule live",
+      "answer": "Help sellers find their listing walkthrough settings in the dashboard and explain enabling availability. Buyers request a walkthrough from the listing; verify controls and availability on screen. A walkthrough request is not confirmed until accepted/scheduled; never imply support is the seller or invent a room link.",
+      "source": "owner walkthrough workflow",
+      "page": "my_listings"
+    },
+    {
+      "topic": "freight shipping delivery free seller covered",
+      "answer": "Use get_delivery_quote for the actual destination and listing. Seller-covered Vendibook Freight is Free shipping to the buyer. Never expose internal freight rates or calculations. A delivery quote is not live GPS or a delivery guarantee.",
+      "source": "AGENTS.md; src/lib/atlas/atlasTools.ts",
+      "page": "freight"
+    },
+    {
+      "topic": "financing approval insurance FLIP",
+      "answer": "Open financing or insurance and explain the actual displayed provider terms. Vendibook is not a lender or insurer. Do not guarantee approval, price, coverage or a deadline. Rental checkout remains Square. Insurance eligibility and policy requirements depend on the provider and host.",
+      "source": "src/data/pricingFaq.ts; src/lib/atlas/allisonConfig.ts",
+      "page": "financing"
+    },
+    {
+      "topic": "pages navigation show scroll stop guide",
+      "answer": "Open the relevant page when helping, inspect it with look_at_page, then point to the relevant heading or safe control. Keep explanations short while the customer sees the page. Immediately set_navigation paused true when asked to stop moving pages; resume only on explicit request. Never press purchase, send, signature, publish, deletion or permission controls.",
+      "source": "src/lib/atlas/atlasPage.ts; src/lib/atlas/atlasTools.ts",
+      "page": "pricing"
+    }
+  ],
+  "faq_source": "Vendibook AI Support Agent Master Guide v5.3 (2026-10-14)",
+  "faq": [
+    {
+      "category": "Getting started & listings",
+      "question": "What is Vendibook?",
+      "answer": "Vendibook is a marketplace for finding, buying, selling and renting mobile-food equipment and spaces, including food trucks, food trailers, carts, commercial kitchens and vendor lots. We are here to support the food truck community: helping operators buy, sell and rent the right equipment and grow their businesses."
+    },
+    {
+      "category": "Getting started & listings",
+      "question": "Does it cost money to publish a listing?",
+      "answer": "Creating and publishing a basic listing is free, subject to the listing limit on your account. Paid promotion and Pro membership are optional."
+    },
+    {
+      "category": "Getting started & listings",
+      "question": "How many listings can I publish for free?",
+      "answer": "The standard Free account supports two active listings under the audited quota. Founding-member accounts may have grandfathered unlimited listings. Drafts do not count."
+    },
+    {
+      "category": "Getting started & listings",
+      "question": "Do I need Pro to sell or rent?",
+      "answer": "No. You can publish standard listings without Pro. Pro adds tools, visibility and eligible buyer-discovery benefits."
+    },
+    {
+      "category": "Getting started & listings",
+      "question": "Do I have to verify my identity before publishing?",
+      "answer": "The optional paid Identity Verified badge is not required to publish. Specific contact, purchase or payment actions may require other identity or phone checks."
+    },
+    {
+      "category": "Getting started & listings",
+      "question": "What pictures should I upload?",
+      "answer": "Include at least three clear photos. We recommend all sides of the unit, the kitchen, major equipment, service windows, tires/hitch and known defects. A video can help but is optional."
+    },
+    {
+      "category": "Getting started & listings",
+      "question": "Can I save a listing as a draft?",
+      "answer": "Yes. Drafts save without a payment. Complete the missing required fields before publishing."
+    },
+    {
+      "category": "Getting started & listings",
+      "question": "Why is my listing not showing up in search?",
+      "answer": "Check published and moderation status, your listing category/location filters and any indexing delay. If the listing is public but still missing, contact support with the listing link."
+    },
+    {
+      "category": "Getting started & listings",
+      "question": "Can I list a truck for sale and rent?",
+      "answer": "Some assets can have linked sale and rental listings where supported. Availability must be managed carefully, and linked rentals may be paused when the same asset is sold."
+    },
+    {
+      "category": "Fees & payments",
+      "question": "What is the fee for selling online?",
+      "answer": "For new eligible online equipment sales, the configured Vendibook seller fee is 8.7% of the agreed equipment amount. Confirm the exact fee in the transaction quote; older committed orders retain their agreed terms."
+    },
+    {
+      "category": "Fees & payments",
+      "question": "Does a buyer pay a Vendibook platform fee for an equipment purchase?",
+      "answer": "No, the configured buyer platform fee for equipment sales is $0. The invoice may separately show tax, freight or other expressly agreed amounts."
+    },
+    {
+      "category": "Fees & payments",
+      "question": "Can I pay the seller directly or in person?",
+      "answer": "No. Vendibook does not offer Pay in Person, cash equipment-sale settlement, or direct buyer-to-seller payment as a checkout option. All purchases must be paid through Vendibook using the supported online checkout or itemized invoice."
+    },
+    {
+      "category": "Fees & payments",
+      "question": "What are the rental fees?",
+      "answer": "Standard rentals have a 12.9% host commission and a separate 12.9% renter service fee. The checkout displays the actual calculation and other applicable charges."
+    },
+    {
+      "category": "Fees & payments",
+      "question": "Does Pro reduce my equipment-sale commission?",
+      "answer": "Under the current new-sale configuration, the 8.7% online equipment-sale commission applies equally to Free and Pro sellers. Pro does not discount rental commissions either."
+    },
+    {
+      "category": "Fees & payments",
+      "question": "Can I pay with a card?",
+      "answer": "Eligible equipment sales use the approved PayPal-powered checkout or invoice flow; rentals are paid by card through Square. Available payment options are shown on the actual payment screen."
+    },
+    {
+      "category": "Fees & payments",
+      "question": "Is every equipment purchase paid through Vendibook?",
+      "answer": "Yes. All equipment purchases are completed through Vendibook using the supported checkout or itemized invoice process. We do not offer cash at pickup, Pay in Person, or direct payment to a seller."
+    },
+    {
+      "category": "Fees & payments",
+      "question": "Does Vendibook hold payments in escrow?",
+      "answer": "No. Vendibook is not an escrow service. Sellers and hosts are paid out within 24 hours after the sale or rental is complete and confirmed, with signatures and the other handoff steps done. Equipment sales are paid through the PayPal-powered checkout or invoice; rentals are paid by card through Square."
+    },
+    {
+      "category": "Fees & payments",
+      "question": "Do I have to connect PayPal to publish a listing?",
+      "answer": "No. Publishing and seller payment setup are separate. A specific online transaction path may require an approved connected seller account."
+    },
+    {
+      "category": "Fees & payments",
+      "question": "What if PayPal says my seller connection is incomplete?",
+      "answer": "Return to your payment setup page and review the status or required action. If you see an error, send support the exact error text and timestamp, not your password or PayPal credentials."
+    },
+    {
+      "category": "Fees & payments",
+      "question": "What happens if my card was charged but no order exists?",
+      "answer": "Do not try paying again. Contact support immediately with your payment reference so the transaction can be reconciled."
+    },
+    {
+      "category": "Fees & payments",
+      "question": "When do I get paid?",
+      "answer": "We pay out within 24 hours after the sale or rental is complete and confirmed: the agreement is signed and the other handoff steps are done. Rentals are paid by card through Square; equipment sales through the PayPal-powered checkout or invoice."
+    },
+    {
+      "category": "Vendibook Pro & BuyerMatch AI",
+      "question": "What does Vendibook Pro cost?",
+      "answer": "Vendibook Pro is $79 per month as a recurring membership. Confirm your renewal details and consent on the subscription screen."
+    },
+    {
+      "category": "Vendibook Pro & BuyerMatch AI",
+      "question": "What does Pro include?",
+      "answer": "Pro includes unlimited eligible active listings, a monthly Featured Boost credit, Premium Tools, applicable analytics, PermitPath Plus, priority visibility/support and eligible BuyerMatch AI buyer-discovery support. Pro does not discount commissions."
+    },
+    {
+      "category": "Vendibook Pro & BuyerMatch AI",
+      "question": "What is BuyerMatch AI?",
+      "answer": "BuyerMatch AI helps research relevant buyer demand and, where activated, supports reviewed outreach for eligible sale listings based on equipment type, budget, location and documented purchase interest."
+    },
+    {
+      "category": "Vendibook Pro & BuyerMatch AI",
+      "question": "Does BuyerMatch guarantee I will get a buyer?",
+      "answer": "No. BuyerMatch does not guarantee matches, replies, leads, sales or time to sell. Activity depends on listing eligibility, campaign activation, capacity and actual demand."
+    },
+    {
+      "category": "Vendibook Pro & BuyerMatch AI",
+      "question": "What does the BuyerMatch dashboard show?",
+      "answer": "Where available, it shows campaign activation state, genuine research, verified outreach attempts, replies, qualified conversations and attributed listing activity. It should never show invented leads or messages."
+    },
+    {
+      "category": "Vendibook Pro & BuyerMatch AI",
+      "question": "Why does my BuyerMatch dashboard say Awaiting Activation?",
+      "answer": "The Pro membership may be active before an individual campaign starts. Awaiting Activation means no verified campaign execution should be assumed. Contact Pro support if the status appears inconsistent with your entitlement."
+    },
+    {
+      "category": "Vendibook Pro & BuyerMatch AI",
+      "question": "Which platforms does BuyerMatch use?",
+      "answer": "Supported channels can include approved public research, outreach and referral sources. A channel is only counted as used when actual authorized activity is recorded; private third-party messages are not automatically accessible."
+    },
+    {
+      "category": "Vendibook Pro & BuyerMatch AI",
+      "question": "Can I use my included Featured Boost immediately?",
+      "answer": "A valid Pro member can redeem one included Featured Boost credit per billing period for an eligible published listing. Credits do not roll over or convert to cash."
+    },
+    {
+      "category": "Vendibook Pro & BuyerMatch AI",
+      "question": "Can I cancel Pro anytime?",
+      "answer": "You can cancel through Account → Subscription. Generally, future renewal stops and access continues through the paid period, subject to the verified provider and your plan terms."
+    },
+    {
+      "category": "Vendibook Pro & BuyerMatch AI",
+      "question": "Can I get a refund of my Pro subscription?",
+      "answer": "Subscription charges are generally nonrefundable unless an approved exception applies. Canceling a membership does not automatically refund the current paid period."
+    },
+    {
+      "category": "Purchasing, invoices & offers",
+      "question": "How do I buy a food truck or trailer?",
+      "answer": "Find a listing, review equipment and disclosures, then message the seller or start an available purchase request. Where invoice-first checkout is enabled, the seller approves terms before an itemized invoice is issued. Follow the payment, agreement and handoff steps shown in your transaction."
+    },
+    {
+      "category": "Purchasing, invoices & offers",
+      "question": "Can I make an offer?",
+      "answer": "Eligible listings allow offers. Sellers can accept, decline or counter. The final accepted terms must be confirmed in the official order before payment."
+    },
+    {
+      "category": "Purchasing, invoices & offers",
+      "question": "What is Request to buy?",
+      "answer": "It sends a request for the seller to review. Submitting the request does not by itself mean the seller has accepted, an invoice exists, or a payment has been made."
+    },
+    {
+      "category": "Purchasing, invoices & offers",
+      "question": "Why is there an invoice after seller approval?",
+      "answer": "An itemized invoice makes the agreed equipment price and any separately disclosed tax or shipping clear before the buyer authorizes payment. Invoice rollout and payment options depend on the actual enabled transaction flow."
+    },
+    {
+      "category": "Purchasing, invoices & offers",
+      "question": "Does an invoice mean the equipment is reserved?",
+      "answer": "Not necessarily. Reservation or commitment only applies once the platform has recorded the required status under the enabled workflow. Check the listing and invoice state."
+    },
+    {
+      "category": "Purchasing, invoices & offers",
+      "question": "What information should be on my invoice?",
+      "answer": "At minimum, review the seller and equipment, agreed equipment amount, delivery or freight, any applicable tax, final total, payment deadline and agreed terms. Request correction before paying if anything is inaccurate."
+    },
+    {
+      "category": "Purchasing, invoices & offers",
+      "question": "What is a pro forma invoice?",
+      "answer": "A pro forma is a purchase summary often used for financing applications. It is not proof of an approved sale or a paid transaction."
+    },
+    {
+      "category": "Purchasing, invoices & offers",
+      "question": "What happens if an invoice expires or changes?",
+      "answer": "Do not pay an outdated or unrelated link. Request a reviewed replacement or updated terms through Vendibook."
+    },
+    {
+      "category": "Purchasing, invoices & offers",
+      "question": "Do I need to sign an agreement?",
+      "answer": "The specific purchase or rental transaction may require a digital agreement and consents. Review and sign your actual document; do not assume an unsigned document is complete."
+    },
+    {
+      "category": "Purchasing, invoices & offers",
+      "question": "Can I buy from a seller in another state?",
+      "answer": "Yes, depending on the listing's pickup, seller delivery or eligible freight arrangements. Confirm availability, cost and timing for your destination before paying."
+    },
+    {
+      "category": "Walkthrough, shipping, pickup & signoff",
+      "question": "Can I request a video walkthrough?",
+      "answer": "Ask the seller for an available live video walkthrough to view the equipment and discuss condition or missing details. Video does not replace an in-person inspection."
+    },
+    {
+      "category": "Walkthrough, shipping, pickup & signoff",
+      "question": "Does Vendibook offer nationwide freight?",
+      "answer": "Some eligible listings offer Vendibook Freight or another shipping option. Nationwide delivery is not guaranteed for every listing or route; check the specific vehicle and destination quote."
+    },
+    {
+      "category": "Walkthrough, shipping, pickup & signoff",
+      "question": "Can I track a shipped food trailer?",
+      "answer": "Eligible deliveries may show shipping milestones and GPS updates when a seller or driver has opted into current location sharing. Stale location data should not be described as live."
+    },
+    {
+      "category": "Walkthrough, shipping, pickup & signoff",
+      "question": "Can I pick the equipment up myself?",
+      "answer": "Where offered, you can coordinate pickup with the seller. Confirm location, date, transport capacity, loading, title, keys and included accessories beforehand."
+    },
+    {
+      "category": "Walkthrough, shipping, pickup & signoff",
+      "question": "When should I confirm receipt?",
+      "answer": "Only after you have physically received and inspected the equipment, reviewed title/ownership documents and checked the agreed included items. If something is wrong, report it before confirming."
+    },
+    {
+      "category": "Walkthrough, shipping, pickup & signoff",
+      "question": "What is digital handoff signoff?",
+      "answer": "Buyer and seller each record the relevant handoff or receipt confirmation in the transaction flow, creating a clearer documented record of delivery or pickup."
+    },
+    {
+      "category": "Walkthrough, shipping, pickup & signoff",
+      "question": "Does a video or signed handoff guarantee the equipment is problem-free?",
+      "answer": "No. They help document what was shown and acknowledged but do not guarantee mechanical condition or remove all legal rights and responsibilities."
+    },
+    {
+      "category": "Refunds, cancellations & disputes",
+      "question": "Can I request a refund on a food truck purchase?",
+      "answer": "Yes, you can request review where the applicable order terms and law allow. The result depends on the transaction facts, buyer/seller obligations, processor status and approved policy. Do not assume a universal automatic return window."
+    },
+    {
+      "category": "Refunds, cancellations & disputes",
+      "question": "What if the truck never arrives?",
+      "answer": "Do not confirm receipt. Open your transaction, report the problem, preserve seller communications and shipping evidence, and contact Vendibook support immediately."
+    },
+    {
+      "category": "Refunds, cancellations & disputes",
+      "question": "What if equipment is materially different from the listing?",
+      "answer": "Document the differences with photos or video and use the transaction's Report an issue or refund request option. A review is required; refunds are not automatic."
+    },
+    {
+      "category": "Refunds, cancellations & disputes",
+      "question": "Can a seller issue a partial refund?",
+      "answer": "Some eligible PayPal sale orders support approved partial refunds. Any refund must be confirmed by the payment provider and reflected in the transaction records."
+    },
+    {
+      "category": "Refunds, cancellations & disputes",
+      "question": "How long do refunds take?",
+      "answer": "Refund approval and return-to-payment-method timing vary with the processor, payment method, dispute and order status. Support should quote only the verified refund status and the relevant provider's stated estimate."
+    },
+    {
+      "category": "Refunds, cancellations & disputes",
+      "question": "What are rental cancellation rules?",
+      "answer": "Each rental is governed by its displayed cancellation terms and signed rental agreement. Review the policy before paying and the booking's actual cancellation/refund calculation."
+    },
+    {
+      "category": "Refunds, cancellations & disputes",
+      "question": "Will I get my rental deposit back?",
+      "answer": "A refundable security deposit is handled according to the rental agreement and verified return/condition record. Damage or other documented charges may apply; do not assume a guaranteed amount or date."
+    },
+    {
+      "category": "Refunds, cancellations & disputes",
+      "question": "What if a seller pressures me to pay outside Vendibook?",
+      "answer": "Do not pay the seller directly. All purchases must be paid through Vendibook, and a request to move payment elsewhere is a fraud warning sign. Keep communications documented and report the request to support."
+    },
+    {
+      "category": "Account management, closure & data privacy",
+      "question": "How do I close my Vendibook account?",
+      "answer": "Sign in and visit Dashboard → Account at vendibook.com/dashboard/account. Scroll to Close account, select Close account, then Email closure request. Send the message from your registered account email. Our support team verifies your request and reviews outstanding transactions and subscriptions before confirming closure."
+    },
+    {
+      "category": "Account management, closure & data privacy",
+      "question": "Does clicking Close account immediately delete my account?",
+      "answer": "No. The button opens a closure-request dialog and prepares an email to support. You must send that email. Opening the email draft does not close the account, delete data or cancel billing."
+    },
+    {
+      "category": "Account management, closure & data privacy",
+      "question": "Can I close an account if I have an active sale or rental?",
+      "answer": "You can request closure, but the team must review open purchases, bookings, invoices, deliveries, disputes, refunds, payables and other obligations before finishing the process."
+    },
+    {
+      "category": "Account management, closure & data privacy",
+      "question": "Will my Vendibook Pro subscription automatically cancel when I request account closure?",
+      "answer": "No. Cancel Pro separately from Account → Subscription, confirm the provider-specific cancellation status and paid-through date, and then proceed with the account-closure request."
+    },
+    {
+      "category": "Account management, closure & data privacy",
+      "question": "How do I cancel Vendibook Pro?",
+      "answer": "Open Account → Subscription while signed in and select the available cancellation control. The membership generally stays active through its paid period, and stopping renewal is not the same as receiving a refund."
+    },
+    {
+      "category": "Account management, closure & data privacy",
+      "question": "Can I delete one listing without closing my account?",
+      "answer": "Yes, when the listing management tools offer pause, archive or removal, use Dashboard → Listings for the selected item. Active transaction obligations must still be resolved even if a listing stops appearing in search."
+    },
+    {
+      "category": "Account management, closure & data privacy",
+      "question": "How do I request deletion of my personal information?",
+      "answer": "Email support@vendibook.com from your registered address or contact privacy@vendibook.com. Your request will be verified before processing. Some records must be retained for legal, transaction, tax, fraud-prevention or dispute reasons."
+    },
+    {
+      "category": "Account management, closure & data privacy",
+      "question": "Can I download or correct my data?",
+      "answer": "You may request access, a copy, or correction of your information by contacting support@vendibook.com from your registered email or privacy@vendibook.com. The team follows the applicable privacy policy and verification requirements."
+    },
+    {
+      "category": "Account management, closure & data privacy",
+      "question": "What happens to my sales and payment records after account closure?",
+      "answer": "Records that must be kept to complete transactions, meet tax or legal duties, investigate fraud or resolve disputes may remain for the required period. Account closure does not necessarily erase every historical record."
+    },
+    {
+      "category": "Account management, closure & data privacy",
+      "question": "What if I no longer have access to my registered email?",
+      "answer": "Contact support through the official Help Center and explain the access issue. The team may require an alternative secure verification procedure before discussing or processing a closure request."
+    },
+    {
+      "category": "Account management, closure & data privacy",
+      "question": "Can I reopen a closed account?",
+      "answer": "Do not assume restoration is possible. Contact support to ask what, if anything, can be recovered after the closure status is verified."
+    },
+    {
+      "category": "Account management, closure & data privacy",
+      "question": "I received a closure request I did not make. What should I do?",
+      "answer": "Contact support immediately using the official website. Do not share passwords or verification codes. Report the request as a possible account-security issue."
+    },
+    {
+      "category": "Other services & support",
+      "question": "Does Vendibook offer financing?",
+      "answer": "Yes. Eligible food trucks, trailers, carts and some custom builds may qualify for financing through third-party financing partners. Start at https://vendibook.com/financing. Equinox Funding handles the application and underwriting directly; approval and terms are not guaranteed."
+    },
+    {
+      "category": "Other services & support",
+      "question": "How do I apply for equipment financing?",
+      "answer": "Open a for-sale listing or https://vendibook.com/financing, select the Equinox Funding application link and apply directly with the financing provider. If approved, review their offer before accepting any financing obligation."
+    },
+    {
+      "category": "Other services & support",
+      "question": "Who decides whether I qualify, and how long does it take?",
+      "answer": "Equinox Funding reviews applications, supporting information and credit under its own standards. The financing page says many decisions arrive in 24-48 hours, but actual eligibility and timing vary, and Vendibook cannot guarantee either."
+    },
+    {
+      "category": "Other services & support",
+      "question": "Can I finance as a startup or finance freight/custom builds?",
+      "answer": "First-time operators, custom builds and freight costs may qualify in some programs, subject to the financing provider's approval, documentation and specific transaction. Discuss the exact equipment and expenses with Equinox."
+    },
+    {
+      "category": "Other services & support",
+      "question": "Can I use a Pro Forma Invoice as proof my order is paid?",
+      "answer": "No. A pro forma is a preliminary purchase/equipment summary for lender review; it is not a final approved invoice, evidence of payment, or a commitment from a lender."
+    },
+    {
+      "category": "Other services & support",
+      "question": "Do I pay the equipment seller directly after my lender approves?",
+      "answer": "No direct buyer-to-seller settlement is a supported Vendibook payment option. Coordinate the provider-approved financed payment path through Vendibook and financing operations; never assume a loan approval means the equipment sale has been paid."
+    },
+    {
+      "category": "Other services & support",
+      "question": "What is ClickLease?",
+      "answer": "ClickLease has been discussed as an additional option for some qualifying trailers. We can refer your request to financing operations; do not rely on a ClickLease approval or link until the current program has been confirmed."
+    },
+    {
+      "category": "Other services & support",
+      "question": "Does Vendibook provide insurance?",
+      "answer": "Vendibook refers customers to its insurance partner, FLIP (Food Liability Insurance Program). You apply for, purchase and manage insurance directly through FLIP. Vendibook does not issue or guarantee policies. Learn more at https://vendibook.com/insurance."
+    },
+    {
+      "category": "Other services & support",
+      "question": "Is insurance included with my rental or purchase?",
+      "answer": "No. Insurance is not automatically included. Read your host's requirements and obtain appropriate coverage separately. FLIP is one option, and other providers may satisfy the host's requirements."
+    },
+    {
+      "category": "Other services & support",
+      "question": "How do I get FLIP insurance for my rented food truck or trailer?",
+      "answer": "Review the host's insurance rules, open https://vendibook.com/insurance, follow the partner link, describe your actual business and rented equipment to FLIP, review coverage, then purchase directly with FLIP if suitable. Save the policy and COI for the booking."
+    },
+    {
+      "category": "Other services & support",
+      "question": "What is a COI and how do I provide it?",
+      "answer": "A Certificate of Insurance (COI) summarizes a policy. Keep the full policy and any required endorsements; submit the COI using the booking's requested document-upload process. A COI alone does not prove every activity or asset is insured."
+    },
+    {
+      "category": "Other services & support",
+      "question": "Does FLIP automatically cover driving, towing, damage or theft of the trailer?",
+      "answer": "No coverage should be assumed. Food-business liability, commercial auto, physical damage, tools/equipment and rented-property exposure are different risks. Ask FLIP or another licensed insurance specialist to verify the policy and endorsements for your exact situation."
+    },
+    {
+      "category": "Other services & support",
+      "question": "Do I have to use FLIP?",
+      "answer": "Not necessarily. You may use another provider if the policy and documents meet your host's applicable insurance requirements. Always check limits, dates, and any additional-insured wording with your host."
+    },
+    {
+      "category": "Other services & support",
+      "question": "Will Vendibook receive my FLIP insurance certificate automatically?",
+      "answer": "Do not assume so. Some partner documentation may be shared as permitted, but you should keep your own copy and complete any required document submissions for your specific booking."
+    },
+    {
+      "category": "Other services & support",
+      "question": "What is Build Studio?",
+      "answer": "Build Studio is Vendibook's developing guided custom truck/trailer configuration and manufacturer-matching program. Manufacturer approval and final quotation determine what can actually be built."
+    },
+    {
+      "category": "Other services & support",
+      "question": "How much does Build Studio cost manufacturers?",
+      "answer": "The planned fee for qualifying Build Studio manufacturer transactions is 6.5% under separate commercial terms. A buyer's final quote and any review deposit must be disclosed before acceptance."
+    },
+    {
+      "category": "Other services & support",
+      "question": "What is the Identity Verified badge?",
+      "answer": "It is an optional identity-check badge, currently listed at $19.99 subject to active product terms. It does not guarantee the equipment's condition, title or seller honesty."
+    },
+    {
+      "category": "Other services & support",
+      "question": "Can I use Atlas to find equipment?",
+      "answer": "Where enabled, Atlas is Vendibook's voice-led shopping assistant. It can help research real listings and navigate pages, but you must personally approve offers, purchase requests, payments and signatures."
+    },
+    {
+      "category": "Other services & support",
+      "question": "How do I contact support?",
+      "answer": "Use the Help Center or contact support@vendibook.com. Published phone and hours should be confirmed on Vendibook.com before citing a response deadline."
+    }
+  ]
+}
