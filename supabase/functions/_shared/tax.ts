@@ -160,6 +160,8 @@ export async function quoteSalesTax(opts: {
   kind?: TaxKind;
   exemption?: { id: string; state: string } | null;
   today?: Date;
+  /** Payment creation must not silently treat a missing jurisdiction as tax-free. */
+  requireDestination?: boolean;
 }): Promise<TaxQuote> {
   const taxableAmountCents = Math.max(0, Math.round(opts.amountCents));
   const state = normalizeUsState(opts.destination.state);
@@ -168,6 +170,7 @@ export async function quoteSalesTax(opts: {
     ...(exemptionId ? { exemptionId } : {}),
   });
 
+  if (!state && opts.requireDestination) throw new Error("A valid US tax state is required before payment. Update the billing or fulfillment address.");
   if (!state) return result("no_destination");
   if ((STATE_SALES_TAX_RATES[state] ?? 0) <= 0) return result("no_tax_state");
   const { ratePct, share } = taxRateFor(state, opts.kind ?? "sale", opts.today);

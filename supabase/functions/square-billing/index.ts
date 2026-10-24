@@ -4,7 +4,7 @@ import { squareConfig, squareRequest, catalogPrice } from '../_shared/square.ts'
 import { reconcileSquareAddonPayment, reconcileSquareAddonByPaymentId } from '../_shared/squareAddonReconciliation.ts';
 import { validateSquarePlan } from '../_shared/squarePlan.ts';
 import { syncSquareSubscription } from '../_shared/squareSubscription.ts';
-import { quoteSalesTax } from '../_shared/tax.ts';
+import { normalizeUsState, quoteSalesTax } from '../_shared/tax.ts';
 import { findActiveExemption } from '../_shared/taxExemption.ts';
 import { classifyProduct } from '../_shared/productEntitlement.ts';
 import { intervalForProduct } from '../_shared/ensureProviderPlan.ts';
@@ -71,17 +71,19 @@ Deno.serve(async req => {
       // never a delivery address). Saved to the profile for next time.
       const ba = body.billing_address;
       if (ba && typeof ba === 'object') {
-        const state = String(ba.state || '').trim().toUpperCase();
+        const state = normalizeUsState(String(ba.state || ''));
         const zip = String(ba.zip || '').trim();
         const city = String(ba.city || '').trim().slice(0,80);
-        if (!/^[A-Z]{2}$/.test(state) || !/^\d{5}(-\d{4})?$/.test(zip)) return jsonError(400,'billing_address','Enter a valid 2-letter state and ZIP code.');
+        if (!state || !/^\d{5}(-\d{4})?$/.test(zip)) return jsonError(400,'billing_address','Enter a valid 2-letter state and ZIP code.');
         profile.state = state; profile.zip_code = zip; profile.city = city || profile.city || null;
         check(await admin.from('profiles').update({state,zip_code:zip,...(city?{city}:{})}).eq('id',user.id));
       }
-      if (!profile.state || !profile.zip_code) return jsonResponse(200,{needs_billing_address:true,name:product.name,billing_address:{state:profile.state||'',city:profile.city||'',zip:profile.zip_code||''}});
+      profile.state = normalizeUsState(profile.state);
+      if (!profile.state || !/^\d{5}(-\d{4})?$/.test(String(profile.zip_code || ''))) return jsonResponse(200,{needs_billing_address:true,name:product.name,billing_address:{state:profile.state||'',city:profile.city||'',zip:profile.zip_code||''}});
       // Subscriptions, boosts and add-ons are digital: taxed only where the
       // buyer's state taxes online services, never with an active exemption.
-      const tax = await quoteSalesTax({amountCents:amount,destination:{state:profile.state,city:profile.city,zip:profile.zip_code},kind:'digital',exemption:await findActiveExemption(admin,user.id,profile.state)});
+      const tax = await quoteSalesTax({amountCents:amount,destination:{state:profile.state,city:profile.city,zip:profile.zip_code},kind:'digital',requireDestination:true,exemption:await findActiveExemption(admin,user.id,profile.state)});
+      const taxSnapshot = {source:tax.source,state:tax.state,city:profile.city,zip:profile.zip_code,rate_pct:tax.ratePct,tax_cents:tax.taxCents,kind:'digital',exemption_id:tax.exemptionId ?? null,quoted_at:new Date().toISOString()};
       const attempts = check(await admin.from('square_billing_attempts').select('*').eq('user_id',user.id).eq('environment',config.environment).eq('product_id',product.id).in('status',['pending','processing']).limit(10));
       let attempt = attempts?.find((a:any) => (a.listing_id || null) === (body.listing_id || null));
       // A checkout that has not started charging picks up a changed tax (new
@@ -90,8 +92,11 @@ Deno.serve(async req => {
         attempt = check(await admin.from('square_billing_attempts').update({tax_cents:tax.taxCents,tax_exemption_id:tax.exemptionId ?? null}).eq('id',attempt.id).eq('status','pending').select().single());
       }
       if (attempt && (attempt.amount_cents !== amount || attempt.tax_cents !== tax.taxCents || attempt.variation_id !== (plan?.variation_id || null))) return jsonError(409,'pending_checkout','An earlier checkout must be resolved before changing this billing option.');
-      if (!attempt) attempt = check(await admin.from('square_billing_attempts').insert({user_id:user.id,product_id:product.id,listing_id:body.listing_id || null,environment:config.environment,kind:recurring?'subscription':'addon',tier,amount_cents:amount,tax_cents:tax.taxCents,tax_exemption_id:tax.exemptionId ?? null,currency,billing_interval:recurring?interval:null,variation_id:plan?.variation_id || null,consent_id:recurring?body.consent_id:null}).select().single());
-      return jsonResponse(200,{attempt_id:attempt.id,application_id:config.applicationId,location_id:config.locationId,environment:config.environment,name:product.name,amount_cents:attempt.amount_cents,tax_cents:attempt.tax_cents,tax_label:tax.label,tax_rate_pct:tax.ratePct,tax_state:tax.state,tax_exempt:tax.source==='exempt',currency,recurring,billing_interval:interval,billing_contact:{givenName:profile.first_name,familyName:profile.last_name,email:user.email,countryCode:'US',state:profile.state,city:profile.city,postalCode:profile.zip_code}});
+      if (attempt?.status === 'pending') {
+        attempt = check(await admin.from('square_billing_attempts').update({tax_snapshot:taxSnapshot}).eq('id',attempt.id).eq('status','pending').select().single());
+      }
+      if (!attempt) attempt = check(await admin.from('square_billing_attempts').insert({user_id:user.id,product_id:product.id,listing_id:body.listing_id || null,environment:config.environment,kind:recurring?'subscription':'addon',tier,tax_snapshot:taxSnapshot,amount_cents:amount,tax_cents:tax.taxCents,tax_exemption_id:tax.exemptionId ?? null,currency,billing_interval:recurring?interval:null,variation_id:plan?.variation_id || null,consent_id:recurring?body.consent_id:null}).select().single());
+      return jsonResponse(200,{attempt_id:attempt.id,application_id:config.applicationId,location_id:config.locationId,environment:config.environment,name:product.name,amount_cents:attempt.amount_cents,tax_cents:attempt.tax_cents,tax_label:tax.label,tax_rate_pct:tax.ratePct,tax_state:tax.state,tax_source:tax.source,tax_exempt:tax.source==='exempt',currency,recurring,billing_interval:interval,billing_contact:{givenName:profile.first_name,familyName:profile.last_name,email:user.email,countryCode:'US',state:profile.state,city:profile.city,postalCode:profile.zip_code}});
     }
     const a = check(await admin.from('square_billing_attempts').select('*').eq('id',body.attempt_id).eq('user_id',user.id).eq('environment',config.environment).single());
     if (action === 'status') {
@@ -112,6 +117,7 @@ Deno.serve(async req => {
       if (a.kind === 'addon' && a.payment_id) await reconcileSquareAddonByPaymentId(admin,a.payment_id,'checkout_retry');
       return jsonResponse(200,{status:a.status,subscription_id:a.subscription_id});
     }
+    if (!a.tax_snapshot || !normalizeUsState(a.tax_snapshot.state) || a.tax_snapshot.source === 'no_destination' || a.tax_snapshot.tax_cents !== a.tax_cents) return jsonError(409,'tax_quote_required','Refresh checkout to confirm the tax and billing address before paying.');
     if (typeof body.source_id !== 'string' || !body.source_id) return jsonError(400,'source','Enter your payment details.');
     check(await admin.from('square_billing_attempts').update({status:'processing'}).eq('id',a.id));
     if (a.kind === 'subscription') {
@@ -128,7 +134,7 @@ Deno.serve(async req => {
         a.card_id=result.card.id;
         check(await admin.from('square_billing_attempts').update({card_id:a.card_id}).eq('id',a.id));
       }
-      const result = await squareRequest('/v2/subscriptions',{idempotency_key:a.id,location_id:config.locationId,customer_id:a.customer_id,card_id:a.card_id,plan_variation_id:a.variation_id,...(a.tax_cents>0?{tax_percentage:String(Number((a.tax_cents/a.amount_cents*100).toFixed(4)))}:{})});
+      const result = await squareRequest('/v2/subscriptions',{idempotency_key:a.id,location_id:config.locationId,customer_id:a.customer_id,card_id:a.card_id,plan_variation_id:a.variation_id,...(a.tax_cents>0?{tax_percentage:String(a.tax_snapshot.rate_pct)}:{})});
       check(await admin.from('square_billing_attempts').update({subscription_id:result.subscription.id,status:'awaiting_payment'}).eq('id',a.id));
       // ACTIVE is a subscription lifecycle state, not proof of a paid invoice.
       return jsonResponse(200,{status:'awaiting_payment',subscription_id:result.subscription.id});

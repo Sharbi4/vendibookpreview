@@ -109,6 +109,7 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const cardFields = body.card_fields === true;
     const kind = String(body?.kind ?? "");
+    if (kind === "booking") return jsonError(409,"square_required","Rental payments must use Square checkout.");
     const targetId = body?.id ? String(body.id) : null;
 
     let quote: QuoteResult;
@@ -532,6 +533,7 @@ serve(async (req) => {
         amountCents: quote.taxableBaseCents,
         destination: taxDestination,
         kind: taxKind,
+        requireDestination: true,
         // The paying buyer's certificate for the state the purchase is taxed in.
         exemption: await findActiveExemption(admin, user.id, taxDestination.state),
       });

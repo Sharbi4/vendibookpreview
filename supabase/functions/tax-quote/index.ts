@@ -94,7 +94,7 @@ serve(async (req) => {
       amountCents = Math.round(totalCents / (1 + RENTER_FEE_PERCENT / 100));
       const listingLoc = parseStateZipFromAddress(listing.address);
       destination = {
-        state: listing.state ?? null,
+        state: listing.state || listingLoc.state,
         zip: listingLoc.zip ?? null,
         city: listing.city ?? null,
       };

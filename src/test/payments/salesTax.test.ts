@@ -36,3 +36,23 @@ describe('sales tax engine (state + average local, midyear 2026)', () => {
     expect(taxRateFor('ZZ', 'sale').ratePct).toBe(0);
   });
 });
+
+describe('payment tax readiness', () => {
+  it('refuses payment tax quotes with an unknown or missing state', async () => {
+    for (const state of [null, '', 'ZZ', 'not a state']) {
+      await expect(quoteSalesTax({amountCents:4900,destination:{state},kind:'digital',requireDestination:true})).rejects.toThrow('valid US tax state');
+    }
+  });
+  it('keeps unfinished estimates distinct from payment-ready zero tax', async () => {
+    expect(await quoteSalesTax({amountCents:4900,destination:{},kind:'digital'})).toMatchObject({source:'no_destination'});
+    expect(await quoteSalesTax({amountCents:4900,destination:{state:'Delaware'},kind:'digital',requireDestination:true})).toMatchObject({source:'no_tax_state',state:'DE',taxCents:0});
+  });
+  it('includes tax above the Featured price in a taxable state', async () => {
+    const tax = await quoteSalesTax({amountCents:4900,destination:{state:'Washington'},kind:'digital',requireDestination:true});
+    expect(tax).toMatchObject({source:'state_table',ratePct:9.57,taxCents:469});
+    expect(4900 + tax.taxCents).toBe(5369);
+  });
+  it('retains a reason for a non-taxed Featured purchase under current rules', async () => {
+    expect(await quoteSalesTax({amountCents:4900,destination:{state:'IL'},kind:'digital',requireDestination:true})).toMatchObject({source:'not_taxable',taxCents:0});
+  });
+});

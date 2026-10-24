@@ -21,3 +21,23 @@ facilitator); tax never reduces seller or host proceeds.
 
 Applied to the live database 2026-10-13 (migration 20261013200000, rolled-back dry run first).
 Tests: `src/test/payments/salesTax.test.ts`, `scripts/test-tax-exemptions.mjs`.
+
+
+## 2026-10-24 billing audit and safeguards
+
+The owner-supplied table matches Tax Foundation January 1, 2026, not the newer July 1 table already used in code. Neither is address-exact. The table alone does not establish product taxability.
+
+Read-only audit found a completed $49 Featured Boost on October 19 with zero tax and a current Illinois profile, plus an October 20 Florida pending attempt with zero tax. These old attempts did not retain the billing-state snapshot; current profiles cannot prove the state at purchase. Historical charges were not changed or recharged.
+
+Official sources reviewed:
+- Illinois: https://tax.illinois.gov/content/dam/soi/en/web/tax/research/legalinformation/letterrulings/st/documents/2024/ST24-0031-GIL.pdf (no state digital-advertising tax).
+- Florida: https://floridarevenue.com/TaxLaw/Documents/TAA%2098A-083.pdf (fact-specific Internet banner advertising ruling).
+- Washington: https://dor.wa.gov/taxes-rates/retail-sales-tax/services-newly-subject-retail-sales-tax/advertising-services (advertising taxable from October 1, 2025).
+- New York: https://www.tax.ny.gov/pubs_and_bulls/advisory_opinions/sales/24-46s.htm (online job postings treated as advertising rather than software).
+- California: https://www.cdtfa.ca.gov/lawguides/vol2/suta/540-0346.html (Internet ad space without tangible property not taxable); software changes are separately described at https://cdtfa.ca.gov/industry/retailers-and-purchasers-of-digital-products/.
+
+This audit does NOT certify the existing broad digital/SaaS state matrix for advertising, every service, or titled vehicles. Featured classification, local sourcing and registration obligations need confirmation for the actual products. Do not impose a general equipment rate on every service or silently substitute unverified new tax rules.
+
+Technical patch: payment-time quotes require a valid state; Square billing requests corrected address details for invalid saved states/ZIPs. Rental state falls back to the parsed listing address when the structured field is absent. Quotes used for payment store state/city/ZIP, rate, tax cents, product kind, exemption and zero-tax reason in square_billing_attempts.tax_snapshot. New Square purchase receipts inherit that snapshot. No historical location is backfilled from mutable profiles. Recurring Square billing uses the quoted effective percentage rather than reconstructing it from rounded cents. Missing legacy snapshots require refreshed checkout before new payment.
+
+Deploy migration 20261024140000_billing_tax_audit.sql before square-billing, square-rental-payment, paypal-create-order and tax-quote. PayPal order creation explicitly rejects rental booking requests, which remain Square only. Never test with a real charge. Verify taxed and legitimately zero-tax cases read-only before declaring production fixed.

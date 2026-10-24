@@ -62,11 +62,12 @@ async function rentalQuote(admin: Admin, booking: any, partnerCode = "", userId 
   const hostPro = locked ? { isPro: !!booking.pro_fee_applied } : { isPro: (await resolveProStatus(admin, booking.host_id)).isPro };
   const quote: QuoteResult = quoteBookingRequest(booking, booking.listing?.title ?? "Listing", hostPro);
   const loc = parseStateZipFromAddress(booking.listing?.address);
-  const state = booking.listing?.state ?? null;
+  const state = booking.listing?.state || loc.state;
   const tax = await quoteSalesTax({
     amountCents: quote.taxableBaseCents,
     destination: { state, zip: loc.zip ?? null, city: booking.listing?.city ?? null },
     kind: "rental",
+    requireDestination: true,
     // The renter's own certificate for the state the rental happens in.
     exemption: await findActiveExemption(admin, booking.shopper_id, state),
   });
