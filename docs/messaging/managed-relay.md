@@ -1,5 +1,14 @@
 # Screened listing inquiry relay
 
+## Verified rollout status — October 25, 2026
+
+- Owner confirmed `Vendibook Concierge <hello@updates.vendibook.com>` and participant-specific private reply addresses at `updates.vendibook.com` in this chat.
+- Both migrations and `managed-inquiries` deployed through Lovable. Independent live signed-out inbox request returned 401; raw guest contacts are now admin-only.
+- Existing delivered Jessica email reconciled, without resending, into thread `2d8f44ff-33cd-4840-abfc-127b1a821f12`, message `71f46de0-cee6-4e2f-b22f-91d023485aca`. Original provider timestamp retained.
+- Codex heartbeat `vendibook-screened-reply-monitor` is active every 15 minutes, with routine screened relays authorized and exceptional messages held.
+- Frontend code is pushed to `fix/paypal-webhook-config`. Production website bundle checked after backend deployment did not contain the new inquiry route; frontend publication remains necessary. Do not claim seller UI verified live until published.
+- Seven isolated database/privacy/inbox tests passed; conversation page bundled successfully. No actual customer test emails sent.
+
 Owner-approved scope, 2026-10-25: screen guest listing inquiries and participant replies; relay routine listing questions between the saved buyer and listing owner. Never expose either participant's email or phone to the other. Do not invent user profiles or impersonate an authenticated buyer. Display first name + last initial and “Relayed by Vendibook.”
 
 ## Deployment
