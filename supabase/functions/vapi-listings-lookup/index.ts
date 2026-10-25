@@ -158,14 +158,15 @@ async function searchListings(supabase: any, args: any) {
 
   if (mode) qb = qb.eq('mode', mode);
   if (category) qb = qb.eq('category', category);
+  const __safeTerm = (v: unknown) => String(v ?? '').replace(/[^\p{L}\p{N}\s'.-]/gu, ' ').replace(/\s+/g, ' ').trim().slice(0, 100);
   if (city) {
     // Search city in both city field AND address field, since some listings have city only in address
-    const cityTerm = `%${city.replace(/,?\s*(TX|CA|FL|AL|GA|NC|AZ|NY|IL|OH|PA|WA|OR|CO|MA|NJ|VA|MD|MN|WI|MO|TN|IN|MI|SC|LA|KY|OK|CT|IA|MS|AR|KS|NV|NE|NM|WV|ID|HI|ME|MT|RI|DE|SD|ND|AK|VT|WY|DC)$/i, '').trim()}%`;
+    const cityTerm = `%${__safeTerm(city).replace(/,?\s*(TX|CA|FL|AL|GA|NC|AZ|NY|IL|OH|PA|WA|OR|CO|MA|NJ|VA|MD|MN|WI|MO|TN|IN|MI|SC|LA|KY|OK|CT|IA|MS|AR|KS|NV|NE|NM|WV|ID|HI|ME|MT|RI|DE|SD|ND|AK|VT|WY|DC)$/i, '').trim()}%`;
     qb = qb.or(`city.ilike.${cityTerm},address.ilike.${cityTerm}`);
   }
 
   if (query && query.trim()) {
-    const term = `%${query.trim()}%`;
+    const term = `%${__safeTerm(query)}%`;
     qb = qb.or(`title.ilike.${term},description.ilike.${term},address.ilike.${term}`);
   }
 
