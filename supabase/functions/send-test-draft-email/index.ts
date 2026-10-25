@@ -1,3 +1,4 @@
+import { isAllowedTestRecipient } from "../_shared/callerGuard.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
@@ -43,6 +44,11 @@ serve(async (req) => {
     }
 
     const data: TestEmailRequest = await req.json();
+    if (data.to && !isAllowedTestRecipient(data.to, userData?.user?.email)) {
+      return new Response(JSON.stringify({ error: "Test emails can only go to your own or a Vendibook address" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
     if (!data.to) {
       return new Response(JSON.stringify({ error: "Recipient required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }

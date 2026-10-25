@@ -575,10 +575,10 @@ function buildListingHTML(listing: any, reviews: any[] = [], redirectHumans = fa
   <meta name="twitter:site" content="@vendibook" />
 
   <!-- JSON-LD (pure JSON, no other content) -->
-  <script type="application/ld+json">${JSON.stringify(schemas)}</script>
+  <script type="application/ld+json">${JSON.stringify(schemas).replace(/</g, "\\u003c")}</script>
 
   ${redirectHumans ? `<!-- Share alias only: send humans to the canonical listing page (different URL, no loop) -->
-  <script>window.location.replace(${JSON.stringify(canonicalUrl)});</script>
+  <script>window.location.replace(${JSON.stringify(canonicalUrl).replace(/</g, "\\u003c")});</script>
   <noscript>
     <meta http-equiv="refresh" content="0; url=${canonicalUrl}" />
   </noscript>` : "<!-- Served at the canonical URL: no redirect (would loop) -->"}
@@ -669,7 +669,7 @@ function buildBlogHTML(post: BlogPostMeta): string {
   <meta name="twitter:site" content="@vendibook" />
 
   <!-- JSON-LD -->
-  <script type="application/ld+json">${JSON.stringify(schema)}</script>
+  <script type="application/ld+json">${JSON.stringify(schema).replace(/</g, "\\u003c")}</script>
   <!-- No redirect: this HTML is served at the canonical URL itself; a redirect would loop. -->
 </head>
 <body>

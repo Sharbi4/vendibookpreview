@@ -119,7 +119,9 @@ Deno.serve(async (req) => {
       // Public visitors can create at most a few versions per explainer (one per
       // script revision); admins/backend can always regenerate.
       const versions = (await supabase.storage.from("explainer-audio").list(explainerId, { limit: 100 })).data ?? [];
-      if (versions.length >= MAX_PUBLIC_VERSIONS && !(await isAdminOrBackendCaller(req))) {
+      void versions; void MAX_PUBLIC_VERSIONS;
+      // Only admins/backend may generate new paid narration; visitors get cached audio only.
+      if (!(await isAdminOrBackendCaller(req))) {
         return new Response(JSON.stringify({ error: "Narration is not available right now." }), {
           status: 404,
           headers: { ...corsHeaders, "Content-Type": "application/json" },

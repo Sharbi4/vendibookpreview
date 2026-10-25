@@ -44,8 +44,14 @@ const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   prior_experience_proof: "Prior Experience Proof",
 };
 
+const __REDACT_KEYS = /^(e?mail|to|recipient|recipientEmail|email_address|phone|requester|description|comment|address|name)$/i;
+const __redact = (v: unknown): string => JSON.stringify(v, (k, val) => {
+  if (k && __REDACT_KEYS.test(k)) return "[redacted]";
+  if (typeof val === "string") return val.replace(/[^\s@"]+@[^\s@"]+\.[^\s@"]+/g, "[redacted-email]");
+  return val;
+});
 const logStep = (step: string, details?: any) => {
-  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  const detailsStr = details ? ` - ${__redact(details)}` : '';
   console.log(`[DOCUMENT-NOTIFICATION] ${step}${detailsStr}`);
 };
 
