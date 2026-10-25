@@ -47,3 +47,20 @@ it('shows replies when the visitor explicitly chooses text', async () => {
   act(() => mocks.options.onMessage({ source: 'ai', message: 'A readable reply' }));
   expect(screen.getByRole('log').textContent).toContain('A readable reply');
 });
+
+it('retains paused navigation when receiving an Atlas handoff', async () => {
+  render(<AllisonAgent />);
+  await act(async () => { window.dispatchEvent(new CustomEvent(ALLISON_START_EVENT, { detail: { mode: 'text', summary: 'Payment question', navigationPaused: true } })); });
+  expect(mocks.pause).toHaveBeenCalledWith({ paused: true });
+  expect(mocks.start).toHaveBeenCalledTimes(1);
+});
+
+it('does not connect after the customer ends while a token is pending', async () => {
+  let finish!: (value: unknown) => void;
+  mocks.invoke.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+  render(<AllisonAgent />);
+  act(() => { window.dispatchEvent(new CustomEvent(ALLISON_START_EVENT, { detail: { mode: 'text' } })); });
+  fireEvent.click(screen.getByRole('button', { name: 'End' }));
+  await act(async () => { finish({ data: { signedUrl: 'wss://api.elevenlabs.io/test' } }); });
+  expect(mocks.start).not.toHaveBeenCalled();
+});

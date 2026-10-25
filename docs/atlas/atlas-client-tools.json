@@ -336,11 +336,16 @@
       "properties": {
         "summary": {
           "type": "string",
-          "description": "Brief non-sensitive issue and steps already tried; omit passwords, payment information and private documents."
+          "description": "Brief non-sensitive issue, current listing and steps already tried; omit passwords, payment information and private documents."
+        },
+        "confirmed": {
+          "type": "boolean",
+          "description": "True only after the user asks for or agrees to Allison AI support. A request for a human is not agreement."
         }
       },
       "required": [
-        "summary"
+        "summary",
+        "confirmed"
       ]
     }
   },

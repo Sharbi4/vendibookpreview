@@ -79,16 +79,34 @@ serve(async (req) => {
       return { ok: res.ok, status: res.status, body: parsed };
     };
 
+    // The provider defaults to 30 tools per page. A partial registry caused
+    // repeated syncs to create duplicate attachments instead of finding tools.
+    const listTools = async () => {
+      const rows: Array<Record<string, any>> = [];
+      const seen = new Set<string>();
+      let cursor = '';
+      for (let page = 0; page < 100; page++) {
+        const result = await el(`/convai/tools?page_size=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`);
+        if (!result.ok) return result;
+        const body = result.body as any;
+        rows.push(...(body.tools ?? []));
+        if (!body.has_more) return { ok: true, status: 200, body: { tools: rows } };
+        if (!body.next_cursor || seen.has(body.next_cursor)) break;
+        cursor = body.next_cursor; seen.add(cursor);
+      }
+      return { ok: false, status: 502, body: { error: 'Incomplete tool registry; no configuration changed.' } };
+    };
+
     if (action === "get") {
       const agent = await el(`/convai/agents/${AGENT_ID}`);
-      const tools = await el(`/convai/tools`);
+      const tools = await listTools();
       return json({ agent, tools }, agent.ok ? 200 : agent.status);
     }
 
     if (action === "status") {
       const agent = await el(`/convai/agents/${AGENT_ID}`);
       if (!agent.ok) return json({ error: 'Unable to read agent configuration' }, agent.status);
-      const registry = await el('/convai/tools');
+      const registry = await listTools();
       if (!registry.ok) return json({ error: 'Unable to read tool registry' }, registry.status);
       const config = (agent.body as any)?.conversation_config?.agent ?? {};
       const prompt = config.prompt ?? {};
@@ -102,6 +120,10 @@ serve(async (req) => {
         has_permit_guidance: String(prompt.prompt ?? '').includes('get_permit_requirements'),
         has_buyer_follow_up: String(prompt.prompt ?? '').includes('offer_buyer_follow_up'),
         has_calendly_guidance: String(prompt.prompt ?? '').includes('Customer-success meetings through Calendly'),
+        provider_auth_enabled: (agent.body as any)?.platform_settings?.auth?.enable_auth === true,
+        native_transfer: prompt.built_in_tools?.transfer_to_agent ?? null,
+        duplicate_tool_names: attached.map((t: any) => t.name).filter((name: string, index: number, all: string[]) => all.indexOf(name) !== index),
+        configured_agent_matches_owner: target !== 'allison' || AGENT_ID === 'agent_8301m5nh7dq6e1x9wgqk2yx7k4pd',
       });
     }
 
@@ -139,14 +161,14 @@ serve(async (req) => {
       if (!prompt) return json({ error: "prompt_required" }, 400);
       // This sync only manages browser tools; existing provider integrations remain attached.
       if (
-        target === "atlas" &&
+        (target === "atlas" || target === "allison") &&
         toolDefs.some((d: { type?: string; name?: string }) => d?.type !== "client" || !/^[a-z_]{1,40}$/.test(String(d?.name ?? "")))
       ) {
         return json({ error: "atlas_client_tools_only" }, 400);
       }
 
       // 1. Upsert every client tool by name.
-      const existing = await el(`/convai/tools`);
+      const existing = await listTools();
       if (!existing.ok) return json({ step: "list_tools", ...existing }, existing.status);
       const rows = (existing.body as { tools?: Array<Record<string, unknown>> })?.tools ?? [];
       // Tools are shared across the ElevenLabs workspace. For Atlas, only reuse
@@ -191,7 +213,12 @@ serve(async (req) => {
       const { tools: _inlineTools, ...currentPrompt } =
         ((current.body as Record<string, any>)?.conversation_config?.agent?.prompt ?? {}) as Record<string, unknown>;
       const existingIds = Array.isArray(currentPrompt.tool_ids) ? currentPrompt.tool_ids.filter((id): id is string => typeof id === 'string') : [];
-      const mergedIds = [...new Set([...existingIds, ...toolIds])];
+      const registryById = new Map(rows.map(r => [String(r.id), r]));
+      if (existingIds.some(id => !registryById.has(id))) return json({ agent_updated: false, error: 'An attached tool could not be resolved; refusing to discard integrations.' }, 409);
+      // Replace this agent's browser registry, retaining integrations. Stale
+      // inherited publishing/sending tools must not remain available to Allison.
+      const preservedIds = target === 'vendi' ? existingIds : existingIds.filter(id => (registryById.get(id)?.tool_config as any)?.type !== 'client');
+      const mergedIds = [...new Set([...preservedIds, ...toolIds])];
       // Do not silently discard an inline integration that has no registry ID.
       // ElevenLabs echoes attached registry tools inline (often without `id`), and
       // system tools live in `built_in_tools`; both are kept, so match them by name.
@@ -204,12 +231,28 @@ serve(async (req) => {
       if ((target === 'atlas' || target === 'allison') && unmanagedInline.length) return json({ agent_updated: false, error: 'Existing inline integration tools need preservation review before syncing.',
         unmanaged_inline: unmanagedInline.map((t: any) => ({ name: t?.name, type: t?.type })), tools: toolResults }, 409);
 
+      const counterpart = target === 'atlas' ? Deno.env.get('ALLISON_AGENT_ID') : target === 'allison' ? AGENTS.atlas : undefined;
+      const nativeTransfer = counterpart ? {
+        type: 'system', name: 'transfer_to_agent',
+        description: 'Outside the Vendibook website only: transfer to the other AI specialist after the customer asks or agrees. Website sessions use their browser handoff tool. A human request must never be redirected to another AI.',
+        params: { system_tool_type: 'transfer_to_agent', transfers: [{
+          agent_id: counterpart,
+          condition: target === 'atlas'
+            ? 'The customer agreed to Allison AI customer support for an account or technical issue, and this is not a Vendibook website client session. Never for a request to speak with a human.'
+            : 'The customer explicitly asked for Atlas AI sales assistance or agreed to that handoff, and this is not a Vendibook website client session. Do not automatically transfer ordinary sales questions or bounce them back.',
+          delay_ms: 0,
+          transfer_message: target === 'atlas' ? "I'm connecting you with Allison, our AI support assistant." : "I'm connecting you with Atlas, our AI sales assistant.",
+          enable_transferred_agent_first_message: false,
+        }] },
+      } : undefined;
+
       const patch = {
         conversation_config: {
           agent: {
             ...(firstMessage ? { first_message: firstMessage } : {}),
             prompt: {
               ...currentPrompt,
+              ...(nativeTransfer ? { built_in_tools: { ...(builtIns ?? {}), transfer_to_agent: nativeTransfer } } : {}),
               prompt,
               tool_ids: mergedIds,
             },
@@ -228,7 +271,7 @@ serve(async (req) => {
           agent_updated: updated.ok,
           agent_status: updated.status,
           agent_error: updated.ok ? undefined : updated.body,
-          preserved_tool_count: existingIds.filter(id => !toolIds.includes(id)).length,
+          preserved_tool_count: preservedIds.filter(id => !toolIds.includes(id)).length,
         },
         updated.ok ? 200 : updated.status,
       );

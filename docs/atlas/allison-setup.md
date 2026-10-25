@@ -1,5 +1,14 @@
 # Allison customer success
 
+## October 25 handoff update
+
+- Website handoffs now work in both directions: `transfer_to_support` and Allison's `transfer_to_sales`. Each requires explicit agreement, carries a bounded issue summary and preserves paused navigation. It starts a separate session without forcing a page change.
+- Provider sync configures native `transfer_to_agent` rules for non-website channels only. Website context explicitly chooses the browser route so the displayed agent and client tools stay aligned. Neither route is a live human transfer.
+- Native rules preserve the selected target voice; first-message replay is disabled. A handoff summary is unverified context, never action consent.
+- Registry sync follows every pagination cursor, replaces stale browser attachments and preserves non-client integrations and built-ins. Inspection reports duplicate names, provider authentication and the configured Allison ID match.
+- Allison now has dated operator and local-permit knowledge tools. Both agents explain the review-first guest relay and keep private contact information hidden.
+- Current provider readback and deployment status are recorded in `agent-handoff-verification.md`; older activation notes below are historical.
+
 Allison is a separate ElevenLabs AI agent, not a renamed Atlas or a human. Source configuration: `src/lib/atlas/allisonConfig.ts`. The Contact page launches her voice/text session; Atlas can hand off after consent using `transfer_to_support`. This browser handoff ends Atlas and starts a separate Allison session with a brief issue summary. It is not a seamless provider-side transfer or live human call.
 
 ## Current owner-selected agent

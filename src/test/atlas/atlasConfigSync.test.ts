@@ -19,7 +19,7 @@ describe('Atlas provider sync protects integrations', () => {
   beforeEach(() => {
     isAdmin = true; failTool = false; inline = []; provider.mockReset();
     provider.mockImplementation(async (url: string, init?: RequestInit) => {
-      if (url.endsWith('/convai/tools')) return new Response(JSON.stringify({ tools: [
+      if (url.includes('/convai/tools?')) return new Response(JSON.stringify({ tools: [
         { id: 'browser-search', tool_config: { type: 'client', name: 'search_listings' } },
         { id: 'calendly-booking', tool_config: { type: 'webhook', name: 'book_calendly' } },
       ] }));
@@ -32,7 +32,7 @@ describe('Atlas provider sync protects integrations', () => {
     expect((await handler(request())).status).toBe(200);
     const patch = provider.mock.calls.find(([url, init]) => url.includes('/convai/agents/') && init?.method === 'PATCH');
     const prompt = JSON.parse(patch![1].body).conversation_config.agent.prompt;
-    expect(prompt.tool_ids).toEqual(['browser-search', 'calendly-booking']);
+    expect(prompt.tool_ids.slice().sort()).toEqual(['browser-search', 'calendly-booking']);
     expect(prompt.mcp_server_ids).toEqual(['connected-calendar']);
     expect(provider.mock.calls.some(([url, init]) => url.includes('/tools/calendly-booking') && init?.method === 'PATCH')).toBe(false);
   });
@@ -50,5 +50,17 @@ describe('Atlas provider sync protects integrations', () => {
     isAdmin = false;
     expect((await handler(request())).status).toBe(403);
     expect(provider).not.toHaveBeenCalled();
+  });
+  it('sets a native AI handoff while preserving existing integrations', async () => {
+    await handler(request());
+    const patch = provider.mock.calls.find(([url, init]) => url.includes('/convai/agents/') && init?.method === 'PATCH');
+    const transfer = JSON.parse(patch![1].body).conversation_config.agent.prompt.built_in_tools.transfer_to_agent;
+    expect(transfer.params.transfers).toHaveLength(1);
+    expect(transfer.params.transfers[0].condition).toContain('not a Vendibook website');
+  });
+  it('fails closed when tool pagination is incomplete', async () => {
+    provider.mockResolvedValue(new Response(JSON.stringify({ tools: [], has_more: true })));
+    expect((await handler(request())).status).toBe(502);
+    expect(provider.mock.calls.some(([, init]) => init?.method === 'PATCH')).toBe(false);
   });
 });

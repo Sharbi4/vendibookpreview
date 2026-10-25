@@ -58,9 +58,23 @@ describe('Atlas tools', () => {
     expect(await createAtlasTools(deps()).transfer_to_support({})).toContain('unavailable');
     const transferToSupport = vi.fn().mockResolvedValue(undefined);
     const tools = createAtlasTools({ ...deps(), transferToSupport });
-    expect(await tools.transfer_to_support({ summary: 'x'.repeat(1200) })).toContain('Starting a connection');
-    expect(transferToSupport).toHaveBeenCalledWith('x'.repeat(1000));
+    expect(await tools.transfer_to_support({ summary: 'issue' })).toContain('after they agree');
+    expect(transferToSupport).not.toHaveBeenCalled();
+    await tools.set_navigation({ paused: true });
+    expect(await tools.transfer_to_support({ summary: 'x'.repeat(1200), confirmed: true })).toContain('Starting a connection');
+    expect(transferToSupport).toHaveBeenCalledWith('x'.repeat(1000), true);
     expect(invoke).not.toHaveBeenCalled();
+  });
+  it('returns to sales only with agreement and retains paused navigation', async () => {
+    const transferToSales = vi.fn();
+    const tools = createAtlasTools({ ...deps(), transferToSales });
+    await tools.transfer_to_sales({ summary: 'Find a trailer' });
+    expect(transferToSales).not.toHaveBeenCalled();
+    await tools.set_navigation({ paused: true });
+    await tools.transfer_to_sales({ summary: 'Find a trailer', confirmed: true });
+    expect(transferToSales).toHaveBeenCalledWith('Find a trailer', true);
+    transferToSales.mockRejectedValueOnce(new Error('connection failed'));
+    await expect(tools.transfer_to_sales({ confirmed: true })).rejects.toThrow('connection failed');
   });
   it('pauses page actions and navigation until explicitly resumed', async () => {
     const d = deps();
@@ -139,7 +153,7 @@ describe('Atlas tools', () => {
 
 describe('Atlas config', () => {
   it('registers a definition for every implemented tool', () => {
-    const impl = Object.keys(createAtlasTools(deps())).sort();
+    const impl = Object.keys(createAtlasTools(deps())).filter(name => name !== 'transfer_to_sales').sort();
     expect(ATLAS_TOOL_DEFINITIONS.map((t) => t.name).sort()).toEqual(impl);
   });
 

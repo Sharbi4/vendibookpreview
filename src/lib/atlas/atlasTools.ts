@@ -64,7 +64,8 @@ export interface AtlasListingCard {
 }
 
 export interface AtlasToolDeps {
-  transferToSupport?: (summary: string) => Promise<void>;
+  transferToSupport?: (summary: string, navigationPaused: boolean) => Promise<void>;
+  transferToSales?: (summary: string, navigationPaused: boolean) => Promise<void>;
   onNavigationChange?: (paused: boolean) => void;
   navigate: (to: string) => void;
   showResults: (cards: AtlasListingCard[]) => void;
@@ -314,8 +315,15 @@ export function createAtlasTools(deps: AtlasToolDeps) {
   return {
     transfer_to_support: async (p: Row = {}) => {
       if (!deps.transferToSupport) return 'Allison transfer is unavailable. Offer a human follow-up or the Contact page.';
-      await deps.transferToSupport(typeof p.summary === 'string' ? p.summary.slice(0, 1000) : 'The user requested customer support.');
+      if (p.confirmed !== true) return 'Ask whether the customer wants Allison, the AI support assistant. Transfer only after they agree, with confirmed true. A request for a human is not consent to an AI transfer.';
+      await deps.transferToSupport(typeof p.summary === 'string' ? p.summary.slice(0, 1000) : 'The user requested customer support.', navigationPaused);
       return 'Starting a connection to Allison, the AI support assistant. Do not claim a live human joined or that connection succeeded before the UI confirms it.';
+    },
+    transfer_to_sales: async (p: Row = {}) => {
+      if (!deps.transferToSales) return 'Atlas transfer is unavailable. Continue helping or offer the Contact page.';
+      if (p.confirmed !== true) return 'Ask whether the customer wants Atlas, the AI sales assistant. Transfer only after they agree, with confirmed true.';
+      await deps.transferToSales(typeof p.summary === 'string' ? p.summary.slice(0, 1000) : 'The user requested sales help.', navigationPaused);
+      return 'Starting a connection to Atlas, the AI sales assistant. Do not claim success until the interface confirms connection.';
     },
     set_navigation: async (p: Row = {}) => {
       if (typeof p.paused !== 'boolean') return 'Specify paused true to stop page control or false only when the user asks to resume.';

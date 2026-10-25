@@ -1,7 +1,19 @@
 {
-  "version": "2026-10-23",
+  "version": "2026-10-24",
   "pricing_rule": "Always call get_pricing for current active catalog quotes. Static amounts are historical context.",
   "playbooks": [
+    {
+      "topic": "Pro monthly annual yearly subscription discount membership",
+      "answer": "Current published Pro prices are $79/month or $790/year billed annually: save $158 (16.7%), equivalent to two months free. Verify live active catalog with get_pricing before quoting. Cancel renewal anytime; do not promise an unused-period refund. Equipment sales remain 8.7% on both plans. Annual Pro includes one 30-day Featured Boost credit per annual billing period, not twelve monthly credits. Credits do not roll over. PricePilot, PermitPath Plus, priority placement/support and BuyerMatch buyer and renter matching for eligible sale and rental listings are included; activation, eligibility and capacity apply, with no guaranteed leads or sales.",
+      "source": "Owner-approved pricing 2026-10-24; monetization catalog",
+      "page": "pricing"
+    },
+    {
+      "topic": "Featured listing subscription monthly cancel sold rental renewal",
+      "answer": "Featured listing is $49/month per selected listing, plus applicable tax. No annual Featured option. Cancel renewal anytime from the account. It automatically cancels when the listing is marked sold; rentals renew until cancelled. Verify live catalog and subscription status before quoting or confirming cancellation. Separate this recurring product from the included 30-day Pro Boost credit and legacy one-time boosts. Customer selects a listing and reviews recurring consent before purchase. Do not charge or cancel for them, promise refunds, or claim a seller has marked a listing sold without verification.",
+      "source": "Owner-approved Featured subscription 2026-10-24; square billing",
+      "page": "pricing"
+    },
     {
       "topic": "packages pricing Pro upgrades addons",
       "answer": "Call get_pricing for live active catalog amounts before quoting. Explain Free, Pro membership, single-listing Pro placement, Featured Boost, PricePilot, listing rewrite and PermitPath Plus separately. Monthly memberships are different from one-time listing upgrades. Explain eligibility, duration and renewal from the current screen. No guaranteed buyers, placement outcome or sales. Open pricing, inspect headings and scroll to the relevant package; customer chooses checkout.",
@@ -179,17 +191,17 @@
     {
       "category": "Vendibook Pro & BuyerMatch AI",
       "question": "What does Vendibook Pro cost?",
-      "answer": "Vendibook Pro is $79 per month as a recurring membership. Confirm your renewal details and consent on the subscription screen."
+      "answer": "Vendibook Pro is $79 per month or $790 per year billed annually (save $158). Confirm your renewal details and consent on the subscription screen."
     },
     {
       "category": "Vendibook Pro & BuyerMatch AI",
       "question": "What does Pro include?",
-      "answer": "Pro includes unlimited eligible active listings, a monthly Featured Boost credit, Premium Tools, applicable analytics, PermitPath Plus, priority visibility/support and eligible BuyerMatch AI buyer-discovery support. Pro does not discount commissions."
+      "answer": "Pro includes unlimited eligible active listings, one Featured Boost credit per billing period, Premium Tools, applicable analytics, PermitPath Plus, priority visibility/support and eligible BuyerMatch AI buyer and renter matching support. Pro does not discount commissions."
     },
     {
       "category": "Vendibook Pro & BuyerMatch AI",
       "question": "What is BuyerMatch AI?",
-      "answer": "BuyerMatch AI helps research relevant buyer demand and, where activated, supports reviewed outreach for eligible sale listings based on equipment type, budget, location and documented purchase interest."
+      "answer": "BuyerMatch AI helps research relevant buyer and renter demand and, where activated, supports reviewed outreach for eligible sale and rental listings based on equipment type, budget, location and documented purchase or rental interest."
     },
     {
       "category": "Vendibook Pro & BuyerMatch AI",

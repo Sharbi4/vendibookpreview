@@ -7,6 +7,7 @@ import { invokeEdge } from '@/lib/edge/invokeFunction';
 import { ATLAS_NAME } from '@/lib/atlas/atlasConfig';
 import { asksToPauseNavigation } from '@/lib/atlas/atlasNavigation';
 import { ALLISON_START_EVENT } from '@/lib/atlas/allisonConfig';
+import { handoffBriefing, type AgentHandoff } from '@/lib/atlas/agentHandoff';
 import { ATLAS_PAGE_EVENT, pageOutline } from '@/lib/atlas/atlasPage';
 import { createAtlasTools, liveListingIds, type AtlasListingCard, type AtlasOfferDraft, type AtlasSellerDraft } from '@/lib/atlas/atlasTools';
 import { useAuth } from '@/contexts/AuthContext';
@@ -76,7 +77,10 @@ export default function AtlasAgent() {
   // After Atlas points at something, the card shrinks for a few seconds so it doesn't cover it (phones).
   const [peek, setPeek] = useState(false);
   const [navigationPaused, setNavigationPaused] = useState(false);
-  const supportTransfer = useRef<(summary: string) => Promise<void>>(async () => {});
+  const supportTransfer = useRef<(summary: string, paused: boolean) => Promise<void>>(async () => {});
+  const incomingHandoff = useRef<AgentHandoff>();
+  const starting = useRef(false);
+  const generation = useRef(0);
   const [expanded, setExpanded] = useState(false);
   const [followUpDraft, setFollowUpDraft] = useState<AtlasFollowUpDraft | null>(null);
   const [menuConcept, setMenuConcept] = useState<AtlasMenuConcept | null>(null);
@@ -137,7 +141,7 @@ export default function AtlasAgent() {
     () =>
       createAtlasTools({
         onNavigationChange: setNavigationPaused,
-        transferToSupport: summary => supportTransfer.current(summary),
+        transferToSupport: (summary, paused) => supportTransfer.current(summary, paused),
         navigate: (to) => navigate(to),
         showResults: (next) => {
           setCards(next);
@@ -193,6 +197,8 @@ export default function AtlasAgent() {
     micMuted: muted,
     onConnect: () => {
       setPhase('live');
+      conversation.sendContextualUpdate(handoffBriefing('Allison', incomingHandoff.current));
+      incomingHandoff.current = undefined;
       const resume = resumeRef.current;
       resumeRef.current = null;
       if (resume) window.setTimeout(() => conversation.sendContextualUpdate(buildResumeBriefing(resume, goneRef.current)), 50);
@@ -241,7 +247,9 @@ export default function AtlasAgent() {
 
   const call = useCallback(
     async (opts: { mode: Mode; resume: boolean }) => {
-      if (phase === 'connecting' || live) return;
+      if (starting.current || phase === 'connecting' || live) return;
+      starting.current = true;
+      const attempt = ++generation.current;
       window.dispatchEvent(new Event('atlas:active'));
       const remembered = opts.resume ? loadAtlasMemory() : null;
       // Re-check listings from the earlier call: one may have sold or been archived since.
@@ -273,12 +281,15 @@ export default function AtlasAgent() {
           await conversation.startSession({ agentId: AGENT_ID, connectionType: textOnly ? 'websocket' : 'webrtc', textOnly, overrides });
         } else {
           const { data, error: edgeError } = await invokeEdge<{ token?: string; signedUrl?: string }>('atlas-agent-token', { body: { mode: opts.mode } }, { retries: 1, timeoutMs: 15000 });
+          if (attempt !== generation.current) return;
           if (edgeError) throw new Error('unavailable');
           if (textOnly && data?.signedUrl) await conversation.startSession({ signedUrl: data.signedUrl, connectionType: 'websocket', textOnly: true, overrides });
           else if (!textOnly && data?.token) await conversation.startSession({ conversationToken: data.token, connectionType: 'webrtc', overrides });
           else throw new Error('unavailable');
         }
+        if (attempt !== generation.current) await conversation.endSession();
       } catch (e) {
+        if (attempt !== generation.current) return;
         resumeRef.current = null;
         if (memory) setSaved(memory);
         const denied = e instanceof DOMException && (e.name === 'NotAllowedError' || e.name === 'NotFoundError');
@@ -288,7 +299,7 @@ export default function AtlasAgent() {
             : { text: 'Atlas can’t take the call right now. Please try again in a moment.', offerTyping: false },
         );
         setPhase('error');
-      }
+      } finally { starting.current = false; }
     },
     [conversation, live, phase],
   );
@@ -300,12 +311,14 @@ export default function AtlasAgent() {
   liveRef.current = live;
   useEffect(() => {
     const onStart = (e: Event) => {
-      const { mode: m, topic } = (e as CustomEvent<{ mode: Mode; topic?: AtlasTopic }>).detail ?? {};
+      const { mode: m, topic, summary, navigationPaused: paused } = (e as CustomEvent<{ mode: Mode; topic?: AtlasTopic; summary?: string; navigationPaused?: boolean }>).detail ?? {};
       if (liveRef.current) {
         if (topic) conversation.sendContextualUpdate(ATLAS_TOPIC_BRIEFINGS[topic]);
         return;
       }
       topicRef.current = topic ?? null;
+      incomingHandoff.current = typeof summary === 'string' ? { summary: summary.slice(0, 1000), navigationPaused: paused === true } : undefined;
+      if (incomingHandoff.current) void tools.set_navigation({ paused: incomingHandoff.current.navigationPaused });
       void callRef.current({ mode: m === 'text' ? 'text' : 'voice', resume: false });
     };
     window.addEventListener(ATLAS_START_EVENT, onStart);
@@ -314,19 +327,20 @@ export default function AtlasAgent() {
   }, []);
 
   const hangUp = () => {
+    generation.current++;
     void conversation.endSession();
     setSaved(loadAtlasMemory());
     setPhase('idle');
   };
 
-  supportTransfer.current = async summary => {
+  supportTransfer.current = async (summary, paused) => {
+    generation.current++;
     await conversation.endSession();
     setPhase('idle');
-    navigate('/contact');
-    window.dispatchEvent(new CustomEvent(ALLISON_START_EVENT, { detail: { mode, summary } }));
+    window.dispatchEvent(new CustomEvent(ALLISON_START_EVENT, { detail: { mode, summary, navigationPaused: paused } }));
   };
   useEffect(() => {
-    const stopForSupport = () => { void conversation.endSession(); setPhase('idle'); };
+    const stopForSupport = () => { generation.current++; void conversation.endSession(); setPhase('idle'); };
     window.addEventListener(ALLISON_START_EVENT, stopForSupport);
     return () => window.removeEventListener(ALLISON_START_EVENT, stopForSupport);
   }, [conversation]);
