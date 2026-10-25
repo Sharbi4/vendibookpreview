@@ -1,3 +1,4 @@
+import { isAllowedTestRecipient } from "../_shared/callerGuard.ts";
 // Vendibook "Feature your listing" seller conversion campaign (2026-09).
 //
 // Admin-gated. Modes: preview_count | preview_html | test | broadcast.
@@ -229,6 +230,12 @@ serve(async (req) => {
     if (isTest) {
       const testEmail = String(body.testEmail ?? "").trim().toLowerCase();
       if (!isMailableAddress(testEmail)) return json({ error: "Valid testEmail required" }, 400);
+      if (callerId) {
+        const { data: cu } = await admin.auth.admin.getUserById(callerId);
+        if (!isAllowedTestRecipient(testEmail, cu?.user?.email)) {
+          return json({ error: "Test emails can only go to your own or a Vendibook address" }, 400);
+        }
+      }
       const sample = (recipients[0]?.listings ?? (bySeller.values().next().value ?? [])) as CampaignListing[];
       queue = [{
         email: testEmail,

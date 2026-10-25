@@ -1,3 +1,4 @@
+import { isAllowedTestRecipient } from "../_shared/callerGuard.ts";
 // Vendibook Business Spotlight invitation campaign.
 //
 // Admin-gated. Modes: preview_count | preview_html | test | broadcast.
@@ -209,6 +210,12 @@ serve(async (req) => {
     if (isTest) {
       const testEmail = String(body.testEmail ?? "").trim().toLowerCase();
       if (!isMailableAddress(testEmail)) return json({ error: "Valid testEmail required" }, 400);
+      if (callerId) {
+        const { data: cu } = await admin.auth.admin.getUserById(callerId);
+        if (!isAllowedTestRecipient(testEmail, cu?.user?.email)) {
+          return json({ error: "Test emails can only go to your own or a Vendibook address" }, 400);
+        }
+      }
       queue = [{ email: testEmail, user_id: callerId ?? "00000000-0000-0000-0000-000000000000", first_name: body.previewFirstName ?? null }];
     } else {
       if (body.confirm !== CAMPAIGN_ID) {

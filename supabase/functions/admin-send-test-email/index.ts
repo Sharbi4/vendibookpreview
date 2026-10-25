@@ -1,3 +1,4 @@
+import { isAllowedTestRecipient } from "../_shared/callerGuard.ts";
 // Admin-only test harness for every registered transactional template.
 //
 // Safety design:
@@ -119,6 +120,9 @@ Deno.serve(async (req) => {
   }
 
   const to: string = (body.to || DEFAULT_TEST_RECIPIENT).trim().toLowerCase()
+  if (to !== DEFAULT_TEST_RECIPIENT && !isAllowedTestRecipient(to, userData?.user?.email)) {
+    return json({ error: 'Test sends may only target your own or a Vendibook address.' }, 400)
+  }
   if (to !== DEFAULT_TEST_RECIPIENT && body.confirm !== true) {
     return json(
       {
