@@ -1,3 +1,4 @@
+import ManagedInquiryInbox from '@/components/messaging/ManagedInquiryInbox';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -121,6 +122,7 @@ export default function WorkspaceMessages() {
 
   return (
     <WorkspaceShell>
+      {!conversationId && <ManagedInquiryInbox />}
       <div className={cn(ws.page, 'ws-inbox')}>
         <div className="flex flex-col gap-6 sm:gap-8">
           <PageHeader

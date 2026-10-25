@@ -16,6 +16,7 @@ const SECTIONS = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
   { to: "/admin/listings", label: "Listings", icon: FileText },
   { to: "/admin/users", label: "Users", icon: Users },
+  { to: "/admin/managed-messaging", label: "Managed messaging", icon: MessagesSquare },
   { to: "/admin/messages", label: "Messages", icon: MessagesSquare },
   { to: "/admin/meta-muse", label: "Lead review", icon: ClipboardCheck },
   { to: "/admin/freight", label: "Freight", icon: Truck },

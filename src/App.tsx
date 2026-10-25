@@ -143,6 +143,8 @@ const AdminInvoices = lazy(() => import("./pages/AdminInvoices"));
 const AdminPayouts = lazy(() => import("./pages/AdminPayouts"));
 const AdminFreightRequests = lazy(() => import("./pages/AdminFreightRequests"));
 const AdminUsers = lazy(() => import("./pages/AdminUsers"));
+const ManagedInquiry = lazy(() => import('./pages/ManagedInquiry'));
+const AdminManagedMessaging = lazy(() => import('./pages/AdminManagedMessaging'));
 const AdminMessages = lazy(() => import("./pages/AdminMessages"));
 const AdminVerifiedSellers = lazy(() => import("./pages/AdminVerifiedSellers"));
 const OrderDetail = lazy(() => import("./pages/OrderDetail"));
@@ -509,6 +511,8 @@ const AnimatedRoutes = () => {
           <Route path="/admin/disputes" element={<PageTransition><AdminDisputes /></PageTransition>} />
           <Route path="/admin/freight" element={<PageTransition><AdminFreightRequests /></PageTransition>} />
           <Route path="/admin/users" element={<PageTransition><AdminUsers /></PageTransition>} />
+          <Route path="/inquiries/:id" element={<ManagedInquiry />} />
+          <Route path="/admin/managed-messaging" element={<AdminManagedMessaging />} />
           <Route path="/admin/messages" element={<PageTransition><AdminMessages /></PageTransition>} />
           <Route path="/admin/verified-sellers" element={<PageTransition><AdminVerifiedSellers /></PageTransition>} />
 

@@ -421,3 +421,6 @@ verify_jwt = false
 # Authenticated administrator verified inside the handler on every request.
 [functions.admin-operations]
 verify_jwt = false
+
+[functions.managed-inquiries]
+verify_jwt = false
