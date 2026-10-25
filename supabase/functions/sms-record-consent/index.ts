@@ -165,10 +165,16 @@ Deno.serve(async (req) => {
     .maybeSingle();
 
   if (existing && existing.user_id && existing.user_id !== userId) {
-    // This number belongs to another member; only they can change it.
-    return new Response(JSON.stringify({ error: 'phone_in_use' }), {
-      status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    // This number belongs to another member; only they can change it. Return
+    // the same neutral "verification required" shape as any unverified
+    // enrollment so callers cannot learn whether a number is registered.
+    return new Response(JSON.stringify({
+      ok: true,
+      status: 'pending_verification',
+      requires_verification: true,
+      was_suppressed: false,
+      still_suppressed: false,
+    }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 
   if (existing) {
