@@ -20,8 +20,19 @@ interface NotificationRequest {
 
 const SITE_URL = "https://vendibook.com";
 
+const __cleanReason = (v: unknown, max = 500): string => String(v ?? "")
+  .replace(/https?:\/\/\S+|www\.\S+/gi, "[link removed]")
+  .replace(/[^\s@]+@[^\s@]+\.[^\s@]+/g, "[email removed]")
+  .replace(/[<>]/g, "")
+  .replace(/\s+/g, " ").trim().slice(0, max);
+const __REDACT_KEYS = /^(e?mail|to|recipient|recipientEmail|email_address|phone|requester|description|comment|address|name)$/i;
+const __redact = (v: unknown): string => JSON.stringify(v, (k, val) => {
+  if (k && __REDACT_KEYS.test(k)) return "[redacted]";
+  if (typeof val === "string") return val.replace(/[^\s@"]+@[^\s@"]+\.[^\s@"]+/g, "[redacted-email]");
+  return val;
+});
 const logStep = (step: string, details?: any) => {
-  const detailsStr = details ? ` - ${JSON.stringify(details)}` : "";
+  const detailsStr = details ? ` - ${__redact(details)}` : "";
   console.log(`[BOOKING-NOTIFICATION] ${step}${detailsStr}`);
 };
 
@@ -260,7 +271,7 @@ serve(async (req) => {
       });
 
     } else if (event_type === "hold_released") {
-      const releaseReason = reason || host_response || "The host was unable to approve your booking.";
+      const releaseReason = __cleanReason(reason || host_response, 300) || "The host was unable to approve your booking.";
       if (shopper?.email) {
         emails.push({
           to: shopper.email,

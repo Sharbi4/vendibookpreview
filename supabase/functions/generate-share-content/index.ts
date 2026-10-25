@@ -27,23 +27,6 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    // Check cache
-    const { data: cached } = await admin
-      .from("share_templates")
-      .select("*")
-      .eq("listing_id", listing_id)
-      .eq("variant", variant)
-      .in("channel", channels);
-
-    const cachedChannels = new Set((cached || []).map((c: any) => c.channel));
-    const missingChannels = channels.filter((c: string) => !cachedChannels.has(c));
-
-    if (missingChannels.length === 0) {
-      return new Response(JSON.stringify({ templates: cached }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     // Fetch listing
     const { data: listing } = await admin
       .from("listings")
@@ -61,6 +44,24 @@ Deno.serve(async (req) => {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Check cache
+    const { data: cached } = await admin
+      .from("share_templates")
+      .select("*")
+      .eq("listing_id", listing_id)
+      .eq("variant", variant)
+      .in("channel", channels);
+
+    const cachedChannels = new Set((cached || []).map((c: any) => c.channel));
+    const missingChannels = channels.filter((c: string) => !cachedChannels.has(c));
+
+    if (missingChannels.length === 0) {
+      return new Response(JSON.stringify({ templates: cached }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
 
     // Generate per channel via Lovable AI
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

@@ -1,3 +1,4 @@
+import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
@@ -126,6 +127,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+  if (!(await isAdminOrBackendCaller(req))) return forbiddenResponse(corsHeaders);
 
   try {
     const merchantId = Deno.env.get('GOOGLE_MERCHANT_ID');

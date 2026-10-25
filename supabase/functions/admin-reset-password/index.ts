@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log("Password reset email sent to:", email);
+    console.log("Password reset email sent");
 
     return new Response(
       JSON.stringify({ success: true, message: `Reset link sent to ${email}` }),

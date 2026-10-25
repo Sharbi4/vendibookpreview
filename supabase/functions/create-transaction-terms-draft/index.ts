@@ -84,6 +84,17 @@ Deno.serve(async (req) => {
       return json({ error: 'You cannot transact on your own listing' }, 403);
     }
 
+    if (body.booking_id) {
+      const { data: booking } = await admin
+        .from('booking_requests')
+        .select('id, shopper_id, listing_id')
+        .eq('id', body.booking_id)
+        .maybeSingle();
+      if (!booking || booking.shopper_id !== userId || booking.listing_id !== body.listing_id) {
+        return json({ error: 'Booking not found' }, 404);
+      }
+    }
+
     const { data: row, error: insErr } = await admin
       .from('transaction_terms')
       .insert({

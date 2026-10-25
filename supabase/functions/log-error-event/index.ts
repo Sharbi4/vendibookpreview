@@ -96,11 +96,13 @@ Deno.serve(async (req) => {
   const referenceCode = generateRefCode();
 
   // Pull user email if user_id provided
-  let userEmail: string | null = body.user_email ?? null;
-  if (!userEmail && body.user_id) {
+  // Only resolve the profile email for the verified caller, never from a body-supplied id.
+  let userEmail: string | null = typeof body.user_email === "string" ? body.user_email.slice(0, 320) : null;
+  const authHeader = req.headers.get("Authorization");
+  if (!userEmail && body.user_id && authHeader?.startsWith("Bearer ")) {
     try {
-      const { data } = await admin.from("profiles").select("email").eq("id", body.user_id).maybeSingle();
-      if (data?.email) userEmail = data.email;
+      const { data: u } = await admin.auth.getUser(authHeader.slice(7));
+      if (u?.user?.id && u.user.id === body.user_id) userEmail = u.user.email ?? null;
     } catch (_) { /* ignore */ }
   }
 

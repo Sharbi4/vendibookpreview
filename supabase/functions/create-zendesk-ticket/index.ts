@@ -1,3 +1,4 @@
+import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const corsHeaders = {
@@ -5,8 +6,14 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const __REDACT_KEYS = /^(e?mail|to|recipient|recipientEmail|email_address|phone|requester|description|comment|address|name)$/i;
+const __redact = (v: unknown): string => JSON.stringify(v, (k, val) => {
+  if (k && __REDACT_KEYS.test(k)) return "[redacted]";
+  if (typeof val === "string") return val.replace(/[^\s@"]+@[^\s@"]+\.[^\s@"]+/g, "[redacted-email]");
+  return val;
+});
 const logStep = (step: string, details?: Record<string, unknown>) => {
-  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  const detailsStr = details ? ` - ${__redact(details)}` : '';
   console.log(`[CREATE-ZENDESK-TICKET] ${step}${detailsStr}`);
 };
 
@@ -48,6 +55,8 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  // Zendesk is retired from user flows; only admins/backend may create tickets.
+  if (!(await isAdminOrBackendCaller(req))) return forbiddenResponse(corsHeaders);
 
   try {
     logStep("Function started");

@@ -244,7 +244,7 @@ serve(async (req: Request) => {
 
         if (!geo) {
           results.push({ id: listing.id, title: listing.title, status: "low_confidence", address });
-          console.warn(`No confident geocode for "${address}" (listing "${listing.title}")`);
+          console.warn(`No confident geocode for listing ${listing.id}`);
           continue;
         }
 
