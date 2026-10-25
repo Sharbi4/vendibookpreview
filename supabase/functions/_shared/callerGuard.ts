@@ -114,3 +114,14 @@ export function maskEmail(email: unknown): string {
   if (at < 1) return "***";
   return `${s.slice(0, Math.min(2, at))}***${s.slice(at)}`;
 }
+
+/**
+ * Test/manual sends by admin users may only target the admin's own address
+ * or a Vendibook staff mailbox, so admin tools cannot mail arbitrary people.
+ */
+export function isAllowedTestRecipient(recipient: string, callerEmail: string | null | undefined): boolean {
+  const r = String(recipient ?? "").trim().toLowerCase();
+  if (!r) return false;
+  if (callerEmail && r === callerEmail.trim().toLowerCase()) return true;
+  return /@vendibook\.com$/.test(r);
+}
