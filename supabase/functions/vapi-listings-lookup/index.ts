@@ -43,6 +43,8 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     console.log('Vapi request:', JSON.stringify(body).substring(0, 500));
+    // Outbound messages (booking link) require Vapi's shared tool credential.
+    currentCallerTrusted = hasVapiSecret(req);
     
     // Handle Vapi tool-calls format
     const message = body.message;
@@ -729,7 +731,16 @@ async function lookupDocumentHelp(args: any) {
 
 // --- Send Booking Link via SMS + Email ---
 
+let currentCallerTrusted = false;
+function hasVapiSecret(req: Request): boolean {
+  const secret = Deno.env.get('VAPI_TOOL_SHARED_SECRET') ?? '';
+  const auth = req.headers.get('authorization') ?? '';
+  const presented = (auth.startsWith('Bearer ') ? auth.slice(7) : req.headers.get('x-vapi-secret') ?? '').trim();
+  return !!secret && presented === secret;
+}
+
 async function sendBookingLink(supabase: any, args: any) {
+  if (!currentCallerTrusted) return { error: 'Booking links can only be sent during a verified Vendibook call.' };
   const { listing_id, phone, email, name, start_date, end_date } = args;
   
   if (!listing_id) return { error: 'listing_id is required' };
