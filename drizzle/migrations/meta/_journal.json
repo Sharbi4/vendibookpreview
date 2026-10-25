@@ -204,6 +204,13 @@
       "when": 1792890429683,
       "tag": "0028_relay_all_messages_through_vendibook",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1792899320613,
+      "tag": "0029_buyermatch_foundation_gap",
+      "breakpoints": true
     }
   ]
 }
