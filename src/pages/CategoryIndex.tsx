@@ -27,6 +27,7 @@ import { useBuyerSeoTracking } from '@/hooks/useBuyerSeoTracking';
 import { Compass, Store, Hammer, Handshake } from 'lucide-react';
 import { BUYER_MARKETS, buyerMarketPath } from '@/lib/listings/buyerMarkets';
 import { BuyerCitySupport } from '@/components/seo/BuyerCitySupport';
+import CityBuyerMatch from '@/components/seo/CityBuyerMatch';
 import { PostPurchasePreview } from '@/components/home/PostPurchasePreview';
 import { listingCardImageUrl } from '@/lib/listings/cardImage';
 
@@ -734,6 +735,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
 
           {market && config.city && <BuyerCitySupport city={config.city.name} path={config.path} category={config.category} />}
           {market && <PostPurchasePreview />}
+          {config.city && <CityBuyerMatch city={config.city.name} tracking={{landingPage:config.path,category:config.category}} />}
 
           {config.answerBlock && (
             <section
