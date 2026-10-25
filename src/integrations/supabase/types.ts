@@ -5601,6 +5601,39 @@ export type Database = {
           },
         ]
       }
+      listing_sold_declarations: {
+        Row: {
+          declared_at: string
+          listing_id: string
+          seller_id: string
+        }
+        Insert: {
+          declared_at?: string
+          listing_id: string
+          seller_id: string
+        }
+        Update: {
+          declared_at?: string
+          listing_id?: string
+          seller_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_sold_declarations_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_sold_declarations_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_spec_suggestions: {
         Row: {
           accepted_value: Json | null
@@ -15644,6 +15677,7 @@ export type Database = {
           owner_id: string
         }[]
       }
+      mark_listing_sold: { Args: { p_listing: string }; Returns: undefined }
       marketplace_updates_audience: {
         Args: { p_role: string; p_topic: string; p_zips?: string[] }
         Returns: {
