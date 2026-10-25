@@ -153,7 +153,7 @@ const FLOW: FlowStep[] = [
     body: <>Make an offer or submit your purchase details. Keep the price, fulfillment choice, and agreement together. The seller reviews and accepts before you complete online payment.</>,
     art: documentsOkArt, artAlt: 'Seller reviews the purchase and agreement' },
   { step: '04', title: 'Your final review. Then Pay now.',
-    body: <>After seller approval, review the final total and terms, choose your PayPal payment method, and submit payment. Your transaction updates when payment is verified. Pay in Person is available only where the listing offers it.</>,
+    body: <>After seller approval, review the final total and terms, choose your PayPal payment method, and submit payment online. Your transaction updates when payment is verified.</>,
     art: documentsOkArt, artAlt: 'Buyer reviews the final total before paying' },
   { step: '05', title: 'A plan for every mile',
     body: <>Choose buyer pickup, seller delivery, or coordinated Vendibook Freight where available. Keep the agreed timing and handoff details on your transaction. Delivery tracking appears when the assigned seller or driver starts Delivery Mode.</>,
@@ -294,7 +294,7 @@ const ECOSYSTEM: { icon: LucideIcon; name: string; note: string; to: string }[] 
   {
     icon: Wallet,
     name: 'Payments',
-    note: 'Secure PayPal checkout, Pay in Person, and how payouts work.',
+    note: 'Secure online PayPal checkout and how payouts work.',
     to: '/payments',
   },
   {
@@ -410,6 +410,11 @@ const HowItWorks = () => {
             </div>
           </div>
         </section>
+
+        {/* ---------------------------------------------------------- */}
+        {/* AFTER YOU BUY — show the transaction experience early       */}
+        {/* ---------------------------------------------------------- */}
+        <PostPurchasePreview />
 
         {/* ---------------------------------------------------------- */}
         {/* MARKETPLACE FLOW — editorial numbered rows                  */}
@@ -703,7 +708,6 @@ const HowItWorks = () => {
         </section>
       </main>
 
-      <PostPurchasePreview/>
       <Footer />
     </div>
   );

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { PostPurchasePreview } from '@/components/home/PostPurchasePreview';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
   ArrowRight,
@@ -262,6 +263,8 @@ const HowPurchasingWorks = () => {
             </div>
           </div>
         </section>
+
+        <PostPurchasePreview />
 
         <section className="bg-muted/40 py-16 md:py-24">
           <div className="container mx-auto max-w-6xl px-4">

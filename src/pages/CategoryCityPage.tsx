@@ -31,6 +31,7 @@ import { useNationwideInventory, type InventoryCategory } from '@/hooks/useNatio
 import { formatListingPriceLabel, PRICE_TBD } from '@/lib/listings/rentalPricing';
 import ExpandSearchModule, { LowInventoryInlineLine, LOW_INVENTORY_THRESHOLD, NEAR_EMPTY_THRESHOLD } from '@/components/seo/ExpandSearchModule';
 import CityBuyerMatch from '@/components/seo/CityBuyerMatch';
+import { PostPurchasePreview } from '@/components/home/PostPurchasePreview';
 import TransactionConfidenceSection from '@/components/seo/TransactionConfidenceSection';
 
 interface CategoryCityPageProps {
@@ -502,6 +503,7 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
             </section>
           )}
 
+          {mode === 'buy' && <PostPurchasePreview />}
           <CityBuyerMatch city={city.name} />
           <TransactionConfidenceSection audience={mode === 'rent' ? 'renter' : 'buyer'} source={`city_${mode}`} />
 

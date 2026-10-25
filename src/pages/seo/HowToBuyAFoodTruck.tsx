@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AiContentLayout, { FaqList } from '@/components/seo/AiContentLayout';
 import { useBuyerSeoTracking } from '@/hooks/useBuyerSeoTracking';
+import { PostPurchasePreview } from '@/components/home/PostPurchasePreview';
 
 import {
   HOW_TO_BUY_PATH, HOW_TO_BUY_TITLE, HOW_TO_BUY_DESCRIPTION, HOW_TO_BUY_H1,
@@ -50,9 +51,12 @@ const HowToBuyAFoodTruck = () => {
             </a>
           </li>
         ))}
+        <li><a href="#purchase-preview-title" className="text-foreground hover:text-primary">See what happens after you buy</a></li>
         <li><a href="#faq" className="text-foreground hover:text-primary"><span className="text-muted-foreground mr-2">?</span>Common questions</a></li>
       </ol>
     </nav>
+
+    <PostPurchasePreview />
 
     <ol className="space-y-8">
       {HOW_TO_BUY_STEPS.map((s, i) => (

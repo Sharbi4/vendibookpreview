@@ -622,7 +622,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
             )}
           </header>
 
-          {market && <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium"><a href="#buyer-help" className="underline underline-offset-4">Financing & sales help</a><a href="#purchase-preview-title" className="underline underline-offset-4">See what happens after you buy</a><Link to="/how-to-buy-a-food-truck" className="underline underline-offset-4">Buying guide</Link></div>}
+          {config.mode === 'sale' && <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium">{market && <a href="#buyer-help" className="underline underline-offset-4">Financing & sales help</a>}<a href="#purchase-preview-title" className="underline underline-offset-4">See what happens after you buy</a><Link to="/how-to-buy-a-food-truck" className="underline underline-offset-4">Buying guide</Link></div>}
 
           {!loading && !loadError && inventoryStats && (
             <section
@@ -733,8 +733,8 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
             </div>
           )}
 
+          {config.mode === 'sale' && <PostPurchasePreview />}
           {market && config.city && <BuyerCitySupport city={config.city.name} path={config.path} category={config.category} />}
-          {market && <PostPurchasePreview />}
           {config.city && <CityBuyerMatch city={config.city.name} tracking={{landingPage:config.path,category:config.category}} />}
 
           {config.answerBlock && (

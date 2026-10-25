@@ -4,6 +4,7 @@ import { useMonetizationProducts } from '@/hooks/useMonetizationProducts';
 import { ProductPricingCard } from '@/components/monetization/ProductPricingCard';
 import { SectionHeader, TrustModule, PAYMENT_TRUST_POINTS } from '@/components/journey';
 import { buildCheckoutReturnPaths } from '@/lib/monetization/returnRoutes';
+import { PostPurchasePreview } from '@/components/home/PostPurchasePreview';
 
 const BuyerServicesHub = () => {
   const { products, loading } = useMonetizationProducts('buyer_service');
@@ -69,6 +70,7 @@ const BuyerServicesHub = () => {
           <TrustModule variant="compact" points={PAYMENT_TRUST_POINTS} />
         </div>
       </section>
+      <PostPurchasePreview />
     </div>
   );
 };

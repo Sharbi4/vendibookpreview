@@ -1,5 +1,6 @@
 import { useParams, Navigate, Link } from 'react-router-dom';
 import CityBuyerMatch from '@/components/seo/CityBuyerMatch';
+import { PostPurchasePreview } from '@/components/home/PostPurchasePreview';
 import { useQuery } from '@tanstack/react-query';
 import { MapPin, Truck, Building2, Warehouse, Search, ArrowRight, ArrowUpRight } from 'lucide-react';
 import Header from '@/components/layout/Header';
@@ -162,7 +163,7 @@ const DynamicCityPage = ({ mode, category }: DynamicCityPageProps) => {
             </h1>
             <p className="mt-4 text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl">
               {city.tagline}. Compare available equipment and spaces near {city.name}, message the owner
-              directly, and complete the deal online or in person.
+              directly, and complete the deal online through Vendibook.
             </p>
 
             <div className="mt-7 flex flex-col sm:flex-row gap-3">
@@ -346,6 +347,7 @@ const DynamicCityPage = ({ mode, category }: DynamicCityPageProps) => {
           </div>
         </section>
 
+        {mode !== 'rent' && (!category || category === 'food_truck' || category === 'food_trailer') && <PostPurchasePreview />}
         <div className="container max-w-5xl"><CityBuyerMatch city={city.name} /></div>
 
         {/* Closing CTA */}
