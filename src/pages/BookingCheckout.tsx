@@ -1,3 +1,4 @@
+import GuestRequestForm from '@/components/messaging/GuestRequestForm';
 import { isValidRentalDateRange, parseRentalDate, parseRentalSlot, rentalIsInstant, rentalSubmitAllowed, validRentalContact } from '@/lib/rentalCheckoutValidation';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
@@ -1236,19 +1237,24 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
           </div>
         )}
       >
-        {!user && (
-          <div className="v2-checkout-section" style={{ padding: '16px 20px' }}>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-foreground">Sign in to complete your booking</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Sign in now so we keep your details when you return — no need to retype anything.
-                </p>
-              </div>
-              <Link to={authPath(bookingReturnPath)} className="v2-btn shrink-0">
-                Sign in / Create account
-              </Link>
+        {!user && listing && (
+          <div className="v2-checkout-section space-y-4" style={{ padding: '16px 20px' }}>
+            <div>
+              <p className="text-sm font-semibold text-foreground">Request to book as a guest</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Share your contact details and we’ll send your invoice. No payment is collected now.
+              </p>
             </div>
+            <GuestRequestForm
+              listingId={listing.id}
+              hostId={listing.host_id}
+              kind="rent"
+              details={`Request to book: ${listing.title}${startDate ? ` · ${startDate.toDateString()}${endDate ? ` – ${endDate.toDateString()}` : ''}` : ''}`}
+              submitLabel="Send Booking Request"
+            />
+            <Link to={authPath(bookingReturnPath)} className="v2-btn inline-flex">
+              Or sign in / create account
+            </Link>
           </div>
         )}
 
