@@ -7,6 +7,7 @@
 - Existing delivered Jessica email reconciled, without resending, into thread `2d8f44ff-33cd-4840-abfc-127b1a821f12`, message `71f46de0-cee6-4e2f-b22f-91d023485aca`. Original provider timestamp retained.
 - Codex heartbeat `vendibook-screened-reply-monitor` is active every 15 minutes, with routine screened relays authorized and exceptional messages held.
 - Frontend code is pushed to `fix/paypal-webhook-config`. Production website bundle checked after backend deployment did not contain the new inquiry route; frontend publication remains necessary. Do not claim seller UI verified live until published.
+- Until the production website includes `/inquiries/:id` and the managed inbox, the monitor may inspect and hold incoming messages but must not send new relays with a nonworking conversation link. Recheck the published build; only resume sending after that prerequisite is verified.
 - Seven isolated database/privacy/inbox tests passed; conversation page bundled successfully. No actual customer test emails sent.
 
 Owner-approved scope, 2026-10-25: screen guest listing inquiries and participant replies; relay routine listing questions between the saved buyer and listing owner. Never expose either participant's email or phone to the other. Do not invent user profiles or impersonate an authenticated buyer. Display first name + last initial and “Relayed by Vendibook.”
