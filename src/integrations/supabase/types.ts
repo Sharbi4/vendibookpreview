@@ -6342,12 +6342,16 @@ export type Database = {
           created_at: string
           email: string
           guest_name: string
+          guest_reply_key: string
           host_id: string
           id: string
           ip_hash: string
           last_activity_at: string
           listing_id: string
+          released_at: string | null
           request_key: string
+          seller_reply_key: string
+          source_lead_id: string | null
           token_expires_at: string
           token_hash: string
           verified_at: string | null
@@ -6358,12 +6362,16 @@ export type Database = {
           created_at?: string
           email: string
           guest_name: string
+          guest_reply_key?: string
           host_id: string
           id?: string
           ip_hash: string
           last_activity_at?: string
           listing_id: string
+          released_at?: string | null
           request_key: string
+          seller_reply_key?: string
+          source_lead_id?: string | null
           token_expires_at: string
           token_hash: string
           verified_at?: string | null
@@ -6374,12 +6382,16 @@ export type Database = {
           created_at?: string
           email?: string
           guest_name?: string
+          guest_reply_key?: string
           host_id?: string
           id?: string
           ip_hash?: string
           last_activity_at?: string
           listing_id?: string
+          released_at?: string | null
           request_key?: string
+          seller_reply_key?: string
+          source_lead_id?: string | null
           token_expires_at?: string
           token_hash?: string
           verified_at?: string | null
@@ -6399,6 +6411,13 @@ export type Database = {
             referencedRelation: "public_listings"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "managed_inquiries_source_lead_id_fkey"
+            columns: ["source_lead_id"]
+            isOneToOne: true
+            referencedRelation: "listing_leads"
+            referencedColumns: ["id"]
+          },
         ]
       }
       managed_inquiry_messages: {
@@ -6409,11 +6428,18 @@ export type Database = {
           hold_reason: string | null
           id: string
           inquiry_id: string
+          provider_email_id: string | null
+          recipient_role: string | null
+          released_body: string | null
           request_key: string
+          review_label: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          send_started_at: string | null
           sender_id: string | null
           sender_role: string
+          sent_at: string | null
+          source_email_id: string | null
         }
         Insert: {
           body: string
@@ -6422,11 +6448,18 @@ export type Database = {
           hold_reason?: string | null
           id?: string
           inquiry_id: string
+          provider_email_id?: string | null
+          recipient_role?: string | null
+          released_body?: string | null
           request_key: string
+          review_label?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          send_started_at?: string | null
           sender_id?: string | null
           sender_role: string
+          sent_at?: string | null
+          source_email_id?: string | null
         }
         Update: {
           body?: string
@@ -6435,11 +6468,18 @@ export type Database = {
           hold_reason?: string | null
           id?: string
           inquiry_id?: string
+          provider_email_id?: string | null
+          recipient_role?: string | null
+          released_body?: string | null
           request_key?: string
+          review_label?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          send_started_at?: string | null
           sender_id?: string | null
           sender_role?: string
+          sent_at?: string | null
+          source_email_id?: string | null
         }
         Relationships: [
           {
@@ -15538,6 +15578,10 @@ export type Database = {
         }
         Returns: string
       }
+      complete_managed_relay: {
+        Args: { p_email_id: string; p_message: string }
+        Returns: undefined
+      }
       confirm_marketplace_updates: { Args: { p_hash: string }; Returns: Json }
       count_purchase_referrals_this_month: {
         Args: { p_referrer_id: string }
@@ -15842,9 +15886,19 @@ export type Database = {
       }
       host_active_listing_limit: { Args: { _user_id: string }; Returns: number }
       host_square_ready: { Args: { _host_id: string }; Returns: boolean }
+      import_managed_lead: { Args: { p_lead: string }; Returns: string }
       increment_referral_counter: {
         Args: { p_owner_id: string }
         Returns: undefined
+      }
+      ingest_managed_reply: {
+        Args: {
+          p_body: string
+          p_inquiry: string
+          p_role: string
+          p_source_email_id: string
+        }
+        Returns: string
       }
       internal_cron_secret: { Args: never; Returns: string }
       invoke_edge_function: {
@@ -16181,6 +16235,15 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      reserve_managed_relay: {
+        Args: {
+          p_body: string
+          p_message: string
+          p_review_label: string
+          p_reviewer?: string
+        }
+        Returns: Json
       }
       reserve_partner_redemption: {
         Args: {
