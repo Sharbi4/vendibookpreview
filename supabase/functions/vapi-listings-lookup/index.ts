@@ -43,6 +43,8 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     console.log('Vapi request:', JSON.stringify(body).substring(0, 500));
+    // Outbound messages (booking link) require Vapi's shared tool credential.
+    const trusted = hasVapiSecret(req);
     
     // Handle Vapi tool-calls format
     const message = body.message;
@@ -51,7 +53,7 @@ Deno.serve(async (req) => {
       if (body.tool_name || body.function_name) {
         const fnName = body.tool_name || body.function_name;
         const args = body.arguments || body.parameters || {};
-        const result = await handleToolCall(supabase, fnName, args);
+        const result = await handleToolCall(supabase, fnName, args, trusted);
         return new Response(
           JSON.stringify({ results: [{ result: JSON.stringify(result) }] }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -82,7 +84,7 @@ Deno.serve(async (req) => {
         case 'get_required_documents':
         case 'lookup_document_help':
         case 'send_booking_link':
-          result = await handleToolCall(supabase, fnName, args);
+          result = await handleToolCall(supabase, fnName, args, trusted);
           break;
         default:
           result = { error: `Unknown function: ${fnName}` };
@@ -109,7 +111,7 @@ Deno.serve(async (req) => {
 
 // --- Helper: route tool calls ---
 
-async function handleToolCall(supabase: any, fnName: string, args: any) {
+async function handleToolCall(supabase: any, fnName: string, args: any, trusted = false) {
   switch (fnName) {
     case 'search_listings':
       return await searchListings(supabase, args);
@@ -130,7 +132,7 @@ async function handleToolCall(supabase: any, fnName: string, args: any) {
     case 'lookup_document_help':
       return await lookupDocumentHelp(args);
     case 'send_booking_link':
-      return await sendBookingLink(supabase, args);
+      return await sendBookingLink(supabase, args, trusted);
     default:
       return { error: `Unknown function: ${fnName}` };
   }
@@ -729,7 +731,15 @@ async function lookupDocumentHelp(args: any) {
 
 // --- Send Booking Link via SMS + Email ---
 
-async function sendBookingLink(supabase: any, args: any) {
+function hasVapiSecret(req: Request): boolean {
+  const secret = Deno.env.get('VAPI_TOOL_SHARED_SECRET') ?? '';
+  const auth = req.headers.get('authorization') ?? '';
+  const presented = (auth.startsWith('Bearer ') ? auth.slice(7) : req.headers.get('x-vapi-secret') ?? '').trim();
+  return !!secret && presented === secret;
+}
+
+async function sendBookingLink(supabase: any, args: any, trusted: boolean) {
+  if (!trusted) return { error: 'Booking links can only be sent during a verified Vendibook call.' };
   const { listing_id, phone, email, name, start_date, end_date } = args;
   
   if (!listing_id) return { error: 'listing_id is required' };

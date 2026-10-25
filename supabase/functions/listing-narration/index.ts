@@ -137,7 +137,9 @@ serve(async (req) => {
       });
     }
 
-    const voice = voice_id || DEFAULT_VOICE_ID;
+    // Server-chosen voice only; caller-supplied voice IDs are ignored.
+    void voice_id;
+    const voice = DEFAULT_VOICE_ID;
     const script = await buildNarrationScript(listing);
     const audio = await tts(script, voice);
 

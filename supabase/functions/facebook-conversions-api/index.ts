@@ -57,6 +57,57 @@ interface EventData {
   };
 }
 
+// Server-chosen bounds: only the standard events this site emits, only our
+// own origins, bounded strings/numbers and a fixed set of custom fields.
+const ALLOWED_EVENTS = new Set([
+  "Purchase", "InitiateCheckout", "Lead", "ViewContent", "AddToWishlist",
+  "Search", "CompleteRegistration", "Contact", "PageView",
+]);
+const ALLOWED_HOSTS = /^(?:www\.)?vendibook\.com$|\.lovable\.app$/;
+const str = (v: unknown, max = 200) =>
+  typeof v === "string" && v.trim() ? v.trim().slice(0, max) : undefined;
+const num = (v: unknown, max = 10_000_000) =>
+  typeof v === "number" && Number.isFinite(v) && v >= 0 && v <= max ? v : undefined;
+
+function sanitizeEvent(raw: any): EventData {
+  if (!raw || typeof raw !== "object" || !ALLOWED_EVENTS.has(raw.event_name)) throw new Error("event");
+  const now = Math.floor(Date.now() / 1000);
+  const t = num(raw.event_time, now + 60);
+  let sourceUrl: string | undefined;
+  try {
+    const u = new URL(String(raw.event_source_url));
+    if (u.protocol === "https:" && ALLOWED_HOSTS.test(u.hostname)) sourceUrl = u.toString().slice(0, 1000);
+  } catch { /* fall back to default */ }
+  const ud = raw.user_data && typeof raw.user_data === "object" ? raw.user_data : {};
+  const cd = raw.custom_data && typeof raw.custom_data === "object" ? raw.custom_data : {};
+  const ids = Array.isArray(cd.content_ids)
+    ? cd.content_ids.map((x: unknown) => str(x, 64)).filter(Boolean).slice(0, 20) as string[]
+    : undefined;
+  const contents = Array.isArray(cd.contents)
+    ? cd.contents.slice(0, 20).map((c: any) => ({
+        id: str(c?.id, 64) ?? "", quantity: num(c?.quantity, 1000) ?? 1, item_price: num(c?.item_price),
+      })).filter((c: { id: string }) => c.id)
+    : undefined;
+  const currency = typeof cd.currency === "string" && /^[A-Z]{3}$/.test(cd.currency) ? cd.currency : undefined;
+  return {
+    event_name: raw.event_name,
+    event_time: t && t > now - 7 * 86400 ? t : undefined,
+    event_source_url: sourceUrl,
+    event_id: str(raw.event_id, 100),
+    user_data: {
+      email: str(ud.email, 254), phone: str(ud.phone, 32), first_name: str(ud.first_name, 100),
+      last_name: str(ud.last_name, 100), city: str(ud.city, 100), state: str(ud.state, 50),
+      zip: str(ud.zip, 20), country: str(ud.country, 2), external_id: str(ud.external_id, 100),
+      fbc: str(ud.fbc, 300), fbp: str(ud.fbp, 300),
+    },
+    custom_data: {
+      value: num(cd.value), currency, content_name: str(cd.content_name), content_category: str(cd.content_category, 100),
+      content_ids: ids, content_type: str(cd.content_type, 50), contents, num_items: num(cd.num_items, 1000),
+      search_string: str(cd.search_string), status: str(cd.status, 50),
+    },
+  };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -77,7 +128,15 @@ serve(async (req) => {
       });
     }
 
-    const eventData: EventData = await req.json();
+    let eventData: EventData;
+    try {
+      eventData = sanitizeEvent(await req.json());
+    } catch {
+      return new Response(JSON.stringify({ success: false, skipped: true, reason: "invalid_event" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
+    }
     logStep("Received event", { event_name: eventData.event_name });
 
     // Get client IP and User Agent from request headers
@@ -137,7 +196,7 @@ serve(async (req) => {
         event_time: eventData.event_time || Math.floor(Date.now() / 1000),
         event_source_url: eventData.event_source_url || "https://vendibook.com",
         event_id: eventData.event_id || crypto.randomUUID(),
-        action_source: eventData.action_source || "website",
+        action_source: "website",
         user_data: userData,
         custom_data: eventData.custom_data || {},
       }],
