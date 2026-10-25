@@ -15140,6 +15140,7 @@ export type Database = {
         Returns: Json
       }
       buyermatch_entitled: { Args: { _user: string }; Returns: boolean }
+      buyermatch_pause_ineligible: { Args: never; Returns: number }
       buyermatch_track_visit: {
         Args: {
           _consent: boolean
