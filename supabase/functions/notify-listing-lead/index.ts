@@ -29,6 +29,9 @@ import { notifyUser } from '../_shared/notify.ts'
 import { hasContactDetails, maskContactDetails } from '../_shared/contactPatterns.ts'
 
 const SUPPORT_INBOX = 'support@vendibook.com'
+// Owner 2026-10-25: all messages relay through Vendibook; alert both relay inboxes, never the seller.
+const RELAY_INBOXES = [SUPPORT_INBOX, 'atlasmom421@gmail.com']
+const GUEST_SOURCES = ['guest_inquiry', 'guest_request_to_buy', 'guest_request_to_book']
 const SITE_URL = 'https://vendibook.com'
 // Only act on fresh leads so old ids can't be replayed.
 const MAX_LEAD_AGE_MS = 15 * 60 * 1000
@@ -104,7 +107,7 @@ Deno.serve(async (req) => {
   const hourAgo = new Date(createdAt - HOUR_MS).toISOString()
   const countLeads = async (by: { email?: boolean; listingId?: string; hostId?: string }, since: string) => {
     let q = supabase.from('listing_leads').select('id', { count: 'exact', head: true })
-      .eq('source', 'guest_inquiry').gte('created_at', since).lte('created_at', lead.created_at)
+      .in('source', GUEST_SOURCES).gte('created_at', since).lte('created_at', lead.created_at)
     if (by.email) q = q.ilike('email', emailPattern)
     if (by.listingId) q = q.eq('listing_id', by.listingId)
     if (by.hostId) q = q.eq('host_id', by.hostId)
@@ -159,20 +162,21 @@ Deno.serve(async (req) => {
   // Once per email per day.
   const { count: priorBuyerLeads } = await supabase
     .from('listing_leads').select('id', { count: 'exact', head: true })
-    .eq('source', 'guest_inquiry').ilike('email', emailPattern)
+    .in('source', GUEST_SOURCES).ilike('email', emailPattern)
     .gte('created_at', dayAgo).lt('created_at', lead.created_at)
   const sendBuyerConfirmation = (priorBuyerLeads ?? 0) === 0
 
   const sends: Promise<{ error?: unknown } | unknown>[] = []
 
   // 1) Concierge inbox: full lead so the team can connect both sides.
-  sends.push(invokeTransactionalEmail({
+  const kindLabel = lead.source === 'guest_request_to_buy' ? 'Guest request to buy' : lead.source === 'guest_request_to_book' ? 'Guest request to book' : 'Guest message'
+  for (const inbox of RELAY_INBOXES) sends.push(invokeTransactionalEmail({
     templateName: 'support-reply',
-    recipientEmail: SUPPORT_INBOX,
-    idempotencyKey: `listing-lead-internal-${lead.id}`,
+    recipientEmail: inbox,
+    idempotencyKey: inbox === SUPPORT_INBOX ? `listing-lead-internal-${lead.id}` : `listing-lead-internal-${lead.id}-relay2`,
     templateData: {
       firstName: 'Vendibook Concierge',
-      subject: `${held ? '[HELD] ' : ''}Guest inquiry: ${title}${price ? ` (${price})` : ''}`,
+      subject: `${held ? '[HELD] ' : ''}${kindLabel}: ${title}${price ? ` (${price})` : ''}`,
       bodyParagraphs: [
         ...(held ? [`HELD: the seller was NOT notified. Review before connecting. Reasons: ${holdReasons.join('; ')}.`] : []),
         `A logged-out buyer asked about ${title}${where ? ` in ${where}` : ''}: ${listingUrl}`,
@@ -187,7 +191,7 @@ Deno.serve(async (req) => {
   }))
 
   // 2) Seller heads-up (question only, no buyer contact details).
-  if (!held && seller?.email) {
+  if (false && !held && seller?.email) {
     const { data: prefs } = await supabase
       .from('notification_preferences')
       .select('sale_email')
@@ -223,9 +227,9 @@ Deno.serve(async (req) => {
       firstName: buyerFirst,
       subject: `We got your question about ${title}`,
       bodyParagraphs: [
-        `Thanks for asking about ${title}. A Vendibook concierge will review your question and follow up within 1 business hour (Mon–Fri, 9am–5pm AZ time).`,
+        `Thanks for asking about ${title}. We'll review your request and follow up within 1 business hour (Mon–Fri, 9am–5pm AZ time).`,
         `Your question: "${question}"`,
-        `Want to chat with the seller directly and make offers? Create a free account: ${SITE_URL}/auth`,
+        `Create a free account to track your requests: ${SITE_URL}/auth`,
       ],
       signedBy: 'Vendibook Concierge',
       signedTitle: 'Concierge Team',
@@ -233,7 +237,7 @@ Deno.serve(async (req) => {
   }))
 
   // 4) In-app notification for the seller.
-  if (!held && sellerId) await notifyUser(supabase, {
+  if (false && !held && sellerId) await notifyUser(supabase, {
     userId: sellerId,
     type: 'listing_lead',
     title: 'New buyer question',

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { SaleCard } from '@/components/listing-detail/sale/SaleCard';
 import { useHostResponseTime } from '@/hooks/useHostResponseTime';
 import { formatLastActive } from '@/hooks/useActivityTracker';
+import MessageHostForm from '@/components/messaging/MessageHostForm';
 
 interface RentalHostCardProps {
   hostId: string;
@@ -22,11 +23,12 @@ interface RentalHostCardProps {
 
 /**
  * Single host surface for the rental detail page: identity, real signals only,
- * without a pre-booking messaging entry point.
+ * plus messaging for guests and signed-in renters.
  */
 export const RentalHostCard = ({
   hostId,
   listingId,
+  listingTitle,
   hostName,
   hostAvatar,
   isVerified = false,
@@ -100,6 +102,11 @@ export const RentalHostCard = ({
         </div>
       )}
 
+      {!isOwner && hostId && (
+        <div id={`listing-message-${listingId}`} className="pt-2">
+          <MessageHostForm listingId={listingId} hostId={hostId} listingTitle={listingTitle} />
+        </div>
+      )}
     </SaleCard>
   );
 };
