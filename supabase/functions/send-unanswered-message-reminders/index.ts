@@ -70,7 +70,7 @@ serve(async (req) => {
     for (let i = 0; i < ids.length; i += 200) {
       const data = await readAllRows<Message>((from, to) => admin
         .from("conversation_messages")
-        .select("id, conversation_id, sender_id, message, created_at")
+        .select("id, conversation_id, sender_id, message, created_at, held_for_relay")
         .in("conversation_id", ids.slice(i, i + 200))
         .order("created_at", { ascending: false }).order("id").range(from, to));
       for (const m of (data ?? []) as Message[]) if (!latest.has(m.conversation_id)) latest.set(m.conversation_id, m);
@@ -79,7 +79,7 @@ serve(async (req) => {
     // Unanswered = last message is from the buyer and old enough for step 1.
     const waiting = conversations.filter((c) => {
       const m = latest.get(c.id);
-      return !!m && m.sender_id === c.shopper_id && now - new Date(m.created_at).getTime() >= FIRST_AFTER_MS;
+      return !!m && !(m as any).held_for_relay && m.sender_id === c.shopper_id && now - new Date(m.created_at).getTime() >= FIRST_AFTER_MS;
     });
     if (!waiting.length) return json({ ok: true, candidates: 0, sent: 0 });
 
