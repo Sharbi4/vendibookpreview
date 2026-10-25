@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { sendTransactionalEmailInternal } from "../_shared/invokeTransactionalEmail.ts";
 import { getCaller, isBackendCaller } from "../_shared/callerGuard.ts";
+import { adminAlertEmails } from "../_shared/adminRecipients.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,18 +13,7 @@ interface NotificationRequest {
   data: Record<string, any>;
 }
 
-// Server-only recipient list. Override with the ADMIN_ALERT_EMAILS secret
-// (comma separated). Never expose these addresses to the browser.
-const DEFAULT_ADMIN_EMAILS = [
-  "support@vendibook.com",
-  "shawnnaharbin@vendibook.com",
-  "atlasmom421@gmail.com",
-];
-const ADMIN_EMAILS = (() => {
-  const raw = Deno.env.get("ADMIN_ALERT_EMAILS") ?? "";
-  const list = raw.split(",").map((e) => e.trim()).filter(Boolean);
-  return [...new Set(list.length ? list : DEFAULT_ADMIN_EMAILS)];
-})();
+const ADMIN_EMAILS = adminAlertEmails();
 
 const keys = (...k: string[]) => new Set(k);
 const BROWSER_TYPES: Record<string, { signedIn: boolean; keys: Set<string> }> = {

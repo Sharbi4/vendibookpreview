@@ -27,10 +27,9 @@ const corsHeaders = {
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 import { notifyUser } from '../_shared/notify.ts'
 import { hasContactDetails, maskContactDetails } from '../_shared/contactPatterns.ts'
+import { adminAlertEmails, adminNoticeKey } from '../_shared/adminRecipients.ts'
 
-const SUPPORT_INBOX = 'support@vendibook.com'
-// Owner 2026-10-25: all messages relay through Vendibook; alert both relay inboxes, never the seller.
-const RELAY_INBOXES = [SUPPORT_INBOX, 'atlasmom421@gmail.com']
+// Owner 2026-10-25: all messages relay through Vendibook; alert the admin team, never the seller.
 const GUEST_SOURCES = ['guest_inquiry', 'guest_request_to_buy', 'guest_request_to_book']
 const SITE_URL = 'https://vendibook.com'
 // Only act on fresh leads so old ids can't be replayed.
@@ -168,12 +167,12 @@ Deno.serve(async (req) => {
 
   const sends: Promise<{ error?: unknown } | unknown>[] = []
 
-  // 1) Concierge inbox: full lead so the team can connect both sides.
+  // 1) Concierge team: full lead so the team can screen and relay it.
   const kindLabel = lead.source === 'guest_request_to_buy' ? 'Guest request to buy' : lead.source === 'guest_request_to_book' ? 'Guest request to book' : 'Guest message'
-  for (const inbox of RELAY_INBOXES) sends.push(invokeTransactionalEmail({
+  for (const recipient of adminAlertEmails()) sends.push(invokeTransactionalEmail({
     templateName: 'support-reply',
-    recipientEmail: inbox,
-    idempotencyKey: inbox === SUPPORT_INBOX ? `listing-lead-internal-${lead.id}` : `listing-lead-internal-${lead.id}-relay2`,
+    recipientEmail: recipient,
+    idempotencyKey: adminNoticeKey(`listing-lead-internal-${lead.id}`, recipient),
     templateData: {
       firstName: 'Vendibook Concierge',
       subject: `${held ? '[HELD] ' : ''}${kindLabel}: ${title}${price ? ` (${price})` : ''}`,
