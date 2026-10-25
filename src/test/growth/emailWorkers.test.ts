@@ -70,6 +70,8 @@ function worker(name: string, rows = fixture(), fail: (table: string, columns: s
     setTimeout: (fn: () => void) => fn(), fetch: provider, readAllRows, pageAll: readAllRows,
     unsubToken: () => "test-token", isInternalCaller: () => true, isMailableAddress: () => true, hasContactDetails,
     maskContactDetails: (v: string) => v, pickListingFixes: () => [],
+    adminAlertEmails: () => ["support@vendibook.com", "owner@vendibook.test"],
+    adminNoticeKey: (base: string, recipient: string) => `${base}:${recipient}`,
     invokeTransactionalEmail: dispatch, SELLER_CONCIERGE_CAMPAIGN_ID: "concierge",
     LISTING_FIX_CAMPAIGN_ID: "listing-fix", MARKETING_FROM: "test", MARKETING_REPLY_TO: "test",
     sellerConciergeSubject: () => "test", buildSellerConciergeHtml: JSON.stringify, buildSellerConciergeText: JSON.stringify,
@@ -219,8 +221,29 @@ describe("unanswered message worker", () => {
     }).mockImplementationOnce(async () => ({ data: null, error: { message: "temporary provider error" } }) as any);
     expect((await w.run()).status).toBe(503);
     expect((await w.run()).body.support_sent).toBe(1);
-    expect(w.dispatch.mock.calls.map(([p]) => p.idempotencyKey)).toEqual(["unanswered-msg-72h-message", "unanswered-msg-concierge-message", "unanswered-msg-concierge-message"]);
-    await w.run(); expect(w.dispatch).toHaveBeenCalledTimes(3);
+    // Only the failed copy is retried; the one that went out is not re-sent.
+    expect(w.dispatch.mock.calls.map(([p]) => p.idempotencyKey)).toEqual([
+      "unanswered-msg-72h-message",
+      "unanswered-msg-concierge-message:support@vendibook.com",
+      "unanswered-msg-concierge-message:owner@vendibook.test",
+      "unanswered-msg-concierge-message:support@vendibook.com",
+    ]);
+    await w.run(); expect(w.dispatch).toHaveBeenCalledTimes(4);
+  });
+  it("escalates to every admin recipient, not only the support inbox", async () => {
+    const rows = fixture(); rows.email_send_log = [{ id: "final", idempotency_key: "unanswered-msg-72h-message", status: "sent", created_at: ago(1) }];
+    const w = worker("send-unanswered-message-reminders", rows);
+    expect((await w.run()).body.support_sent).toBe(1);
+    expect(w.dispatch.mock.calls.map(([p]) => p.recipientEmail)).toEqual(["support@vendibook.com", "owner@vendibook.test"]);
+    await w.run(); expect(w.dispatch).toHaveBeenCalledTimes(2);
+  });
+  it("treats an earlier support-only escalation as already done", async () => {
+    const rows = fixture(); rows.email_send_log = [
+      { id: "final", idempotency_key: "unanswered-msg-72h-message", status: "sent", created_at: ago(30) },
+      { id: "legacy", idempotency_key: "unanswered-msg-concierge-message", status: "suppressed", created_at: ago(30) },
+    ];
+    const w = worker("send-unanswered-message-reminders", rows);
+    await w.run(); expect(w.dispatch).not.toHaveBeenCalled();
   });
   it("does not claim a suppressed reminder was sent or alert support", async () => {
     const rows = fixture(); rows.email_send_log = [{ id: "first", idempotency_key: "unanswered-msg-24h-message", status: "sent", created_at: ago(49) }];

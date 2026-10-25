@@ -1,11 +1,10 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { adminAlertEmails, adminNoticeKey } from '../_shared/adminRecipients.ts'
 
 // Public trigger for the feedback form: validates input and emails the
-// support inbox. The recipient is fixed — nothing from the client can steer
+// admin team. The recipient is fixed — nothing from the client can steer
 // where this goes.
-
-const SUPPORT_INBOX = 'support@vendibook.com'
 
 function json(data: Record<string, unknown>, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -44,10 +43,10 @@ Deno.serve(async (req) => {
   if (!rating) return json({ error: 'rating must be an integer from 1 to 5' }, 400)
   if (!message) return json({ error: 'message is required' }, 400)
 
-  const { error } = await invokeTransactionalEmail({
+  const results = await Promise.all(adminAlertEmails().map((recipient) => invokeTransactionalEmail({
     templateName: 'feedback-received-admin',
-    recipientEmail: SUPPORT_INBOX,
-    idempotencyKey: `feedback-admin-${recordId}`,
+    recipientEmail: recipient,
+    idempotencyKey: adminNoticeKey(`feedback-admin-${recordId}`, recipient),
     templateData: {
       fromEmail: str(body.fromEmail, 200),
       fromName: str(body.fromName, 120),
@@ -59,7 +58,8 @@ Deno.serve(async (req) => {
       businessType: str(body.businessType, 120),
       canShare: body.canShare === true,
     },
-  })
+  })))
+  const error = results.every((r) => r.error) ? results[0]?.error : null
 
   if (error) {
     console.error('feedback admin notification failed', { message: error.message })

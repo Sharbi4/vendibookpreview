@@ -2,15 +2,15 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 import { leadListingFilter, leadMatchLine, rankLeadMatches, type MatchableListing } from '../_shared/leadMatches.ts'
+import { adminAlertEmails, adminNoticeKey } from '../_shared/adminRecipients.ts'
 
 // Public trigger for the concierge lead form: sends the requester a
-// confirmation and notifies the support inbox. Template structure and copy
+// confirmation and notifies the concierge team. Template structure and copy
 // are fixed here — the client only supplies the lead's own details.
 // Buyer/renter requests also get up to 3 matching live listings, so the
 // requester sees real options immediately and the concierge sees what to
 // send (or that supply is missing).
 
-const SUPPORT_INBOX = 'support@vendibook.com'
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const SITE_URL = 'https://vendibook.com'
 const MATCH_UTM = 'utm_source=email&utm_medium=concierge&utm_campaign=lead-confirmation'
@@ -109,12 +109,12 @@ Deno.serve(async (req) => {
     )
   }
 
-  // 2) Internal notification to support
-  sends.push(
+  // 2) Internal notification to the concierge team
+  for (const recipient of adminAlertEmails()) sends.push(
     invokeTransactionalEmail({
       templateName: 'support-reply',
-      recipientEmail: SUPPORT_INBOX,
-      idempotencyKey: `lead-internal-${leadKey}`,
+      recipientEmail: recipient,
+      idempotencyKey: adminNoticeKey(`lead-internal-${leadKey}`, recipient),
       templateData: {
         firstName: 'Vendibook Support',
         subject: `New concierge request: ${intentLabel} · ${categoryLabel} · ${city}`,

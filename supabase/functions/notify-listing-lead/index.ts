@@ -24,8 +24,8 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 import { notifyUser } from '../_shared/notify.ts'
 import { hasContactDetails, maskContactDetails } from '../_shared/contactPatterns.ts'
+import { adminAlertEmails, adminNoticeKey } from '../_shared/adminRecipients.ts'
 
-const SUPPORT_INBOX = 'support@vendibook.com'
 const SITE_URL = 'https://vendibook.com'
 // Only act on fresh leads so old ids can't be replayed.
 const MAX_LEAD_AGE_MS = 15 * 60 * 1000
@@ -162,11 +162,11 @@ Deno.serve(async (req) => {
 
   const sends: Promise<{ error?: unknown } | unknown>[] = []
 
-  // 1) Concierge inbox: full lead so the team can connect both sides.
-  sends.push(invokeTransactionalEmail({
+  // 1) Concierge team: full lead so the team can connect both sides.
+  for (const recipient of adminAlertEmails()) sends.push(invokeTransactionalEmail({
     templateName: 'support-reply',
-    recipientEmail: SUPPORT_INBOX,
-    idempotencyKey: `listing-lead-internal-${lead.id}`,
+    recipientEmail: recipient,
+    idempotencyKey: adminNoticeKey(`listing-lead-internal-${lead.id}`, recipient),
     templateData: {
       firstName: 'Vendibook Concierge',
       subject: `${held ? '[HELD] ' : ''}Guest inquiry: ${title}${price ? ` (${price})` : ''}`,

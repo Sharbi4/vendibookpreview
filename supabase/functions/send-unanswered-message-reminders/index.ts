@@ -29,6 +29,7 @@ import { isInternalCaller, internalOnlyResponse } from "../_shared/internalAuth.
 import { isMailableAddress } from "../_shared/marketingAudience.ts";
 import { maskContactDetails } from "../_shared/contactPatterns.ts";
 import { invokeTransactionalEmail } from "../_shared/invokeTransactionalEmail.ts";
+import { adminAlertEmails, adminNoticeKey } from "../_shared/adminRecipients.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -36,7 +37,6 @@ const corsHeaders = {
 };
 
 const SITE_URL = "https://vendibook.com";
-const SUPPORT_INBOX = "support@vendibook.com";
 const HOUR = 60 * 60 * 1000;
 const FIRST_AFTER_MS = 24 * HOUR;
 const FINAL_AFTER_FIRST_MS = 48 * HOUR;
@@ -120,9 +120,17 @@ serve(async (req) => {
     const listingById = new Map(((listings ?? []) as { id: string; title: string | null; status: string; deleted_at: string | null }[]).map((l) => [l.id, l]));
 
     // Which reminder steps already went out (and when), per buyer message.
+    // Concierge escalations go to every admin recipient. A bare legacy key is
+    // the earlier support@-only send, which still counts as already escalated.
+    const conciergeTeam = adminAlertEmails();
+    const conciergeKeys = (messageId: string) => {
+      const base = `unanswered-msg-concierge-${messageId}`;
+      return [base, ...conciergeTeam.map((r) => adminNoticeKey(base, r))];
+    };
+    const handled = (key: string) => sentAt.has(key) || suppressedKeys.has(key);
     const keys = waiting.flatMap((c) => {
       const m = latest.get(c.id)!;
-      return [keyFor("24h", m.id), keyFor("72h", m.id), `unanswered-msg-concierge-${m.id}`];
+      return [keyFor("24h", m.id), keyFor("72h", m.id), ...conciergeKeys(m.id)];
     });
     const sentAt = new Map<string, number>();
     const suppressedKeys = new Set<string>();
@@ -142,8 +150,12 @@ serve(async (req) => {
       const ageMs = now - new Date(m.created_at).getTime();
       const firstAt = sentAt.get(keyFor("24h", m.id));
       const finalSent = sentAt.has(keyFor("72h", m.id));
-      const supportKey = `unanswered-msg-concierge-${m.id}`;
-      const supportDone = sentAt.has(supportKey) || suppressedKeys.has(supportKey);
+      const supportBase = `unanswered-msg-concierge-${m.id}`;
+      // Retry only the recipients whose copy has not gone out yet.
+      const supportPending = handled(supportBase)
+        ? []
+        : conciergeTeam.filter((r) => !handled(adminNoticeKey(supportBase, r)));
+      const supportDone = supportPending.length === 0;
       if (finalSent && supportDone) continue;
       if (!finalSent && firstAt !== undefined && now - firstAt < FINAL_AFTER_FIRST_MS) continue;
       const step = { key: finalSent || firstAt !== undefined ? "72h" : "24h" } as { key: "24h" | "72h" };
@@ -189,10 +201,10 @@ serve(async (req) => {
         sent++;
       }
       if (final && !supportDone) {
-        const support = await invokeTransactionalEmail({
+        const supportResults = await Promise.all(supportPending.map((recipient) => invokeTransactionalEmail({
           templateName: "support-reply",
-          recipientEmail: SUPPORT_INBOX,
-          idempotencyKey: supportKey,
+          recipientEmail: recipient,
+          idempotencyKey: adminNoticeKey(supportBase, recipient),
           templateData: {
             firstName: "Vendibook Concierge",
             subject: `Buyer waiting ${waitingLabel}: ${title}`,
@@ -204,11 +216,13 @@ serve(async (req) => {
             signedBy: "Vendibook Lead Router",
             signedTitle: "Internal Notification",
           },
-        });
-        if (support.error) {
+        })));
+        const supportError = supportResults.find((r) => r.error)?.error;
+        if (supportError) {
           failed++;
-          console.error("[unanswered-message-reminders] concierge send failed", { conversation: c.id }, support.error);
-        } else if (support.data?.sent === true) supportSent++;
+          console.error("[unanswered-message-reminders] concierge send failed", { conversation: c.id }, supportError);
+        }
+        if (supportResults.some((r) => r.data?.sent === true)) supportSent++;
       }
     }
 
