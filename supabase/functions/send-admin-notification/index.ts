@@ -1,9 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { sendTransactionalEmailInternal } from "../_shared/invokeTransactionalEmail.ts";
+import { getCaller, isBackendCaller } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
 };
 
 interface NotificationRequest {
@@ -24,10 +25,51 @@ const ADMIN_EMAILS = (() => {
   return [...new Set(list.length ? list : DEFAULT_ADMIN_EMAILS)];
 })();
 
+const keys = (...k: string[]) => new Set(k);
+const BROWSER_TYPES: Record<string, { signedIn: boolean; keys: Set<string> }> = {
+  newsletter_signup: { signedIn: false, keys: keys("email", "first_name", "source_page", "source") },
+  freight_quote_request: {
+    signedIn: false,
+    keys: keys("pickup_location", "delivery_location", "equipment_type", "year", "dimensions", "weight",
+      "runs_and_drives", "preferred_pickup", "deliver_by", "contact_name", "contact_email", "contact_phone",
+      "account", "notes", "source_page"),
+  },
+  new_listing: {
+    signedIn: true,
+    keys: keys("listing_id", "listing_title", "title", "category", "mode", "price", "city", "state",
+      "host_email", "host_name", "user_id", "published_at", "listing_url"),
+  },
+  new_user: {
+    signedIn: true,
+    keys: keys("email", "full_name", "first_name", "last_name", "phone_number", "role", "provider", "user_id"),
+  },
+};
+const deny = (status: number) =>
+  new Response(JSON.stringify({ error: status === 401 ? "Unauthorized" : "Forbidden" }), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const { type, data }: NotificationRequest = await req.json();
+    const parsed: NotificationRequest = await req.json();
+    let type = typeof parsed?.type === "string" ? parsed.type : "";
+    let data: Record<string, any> = parsed?.data && typeof parsed.data === "object" ? parsed.data : {};
+
+    // Backend services and DB triggers (service role or x-cron-secret) may
+    // send any alert. Browser callers are limited to the site forms that
+    // legitimately raise alerts, with bounded, allowlisted fields.
+    if (!(await isBackendCaller(req))) {
+      const rule = BROWSER_TYPES[type];
+      if (!rule) return deny(403);
+      if (rule.signedIn && !(await getCaller(req))) return deny(401);
+      data = Object.fromEntries(
+        Object.entries(data)
+          .filter(([k, v]) => rule.keys.has(k) && (typeof v === "string" || typeof v === "number" || typeof v === "boolean"))
+          .map(([k, v]) => [k, String(v).slice(0, 500)]),
+      );
+    }
 
     const subjectMap: Record<string, string> = {
       new_user: "New Vendibook user signed up",
@@ -139,7 +181,7 @@ serve(async (req) => {
     });
   } catch (e: any) {
     console.error("send-admin-notification error", e);
-    return new Response(JSON.stringify({ error: e.message }), {
+    return new Response(JSON.stringify({ error: "Notification failed" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
