@@ -21,7 +21,7 @@ const COPY: Record<Audience, { eyebrow: string; title: string; steps: { icon: ty
     title: 'Book with clarity. Hand off with a record.',
     steps: [
       { icon: ClipboardCheck, title: 'Request your dates', text: 'Share your plans and required documents so the host can review your request.' },
-      { icon: CreditCard, title: 'Pay with PayPal', text: 'Secure checkout by card or PayPal balance. Pay Later where eligible.' },
+      { icon: CreditCard, title: 'Pay securely with Square', text: 'Rental payments are made by card through Square after your request is approved.' },
       { icon: FileSignature, title: 'Rental agreement', text: 'Terms, dates, and requirements are recorded with your booking.' },
       { icon: ShieldCheck, title: 'Documented handoff', text: 'Pickup and return are confirmed in Vendibook with photos and timestamps.' },
     ],
@@ -32,8 +32,8 @@ const COPY: Record<Audience, { eyebrow: string; title: string; steps: { icon: ty
     steps: [
       { icon: ClipboardCheck, title: 'List for free', text: 'Photos, specs, and price in minutes. Buyers reach you through Vendibook messaging.' },
       { icon: FileSignature, title: 'Agree on terms', text: 'Offers, delivery, and handoff details are recorded with the sale.' },
-      { icon: CreditCard, title: 'Buyer pays with PayPal', text: 'Card, PayPal balance, or Pay Later where eligible. Cash sales in person stay free.' },
-      { icon: ShieldCheck, title: 'Handoff, then payout', text: 'After the documented handoff, Vendibook reviews and sends your payout, typically within 24–48 hours.' },
+      { icon: CreditCard, title: 'Buyer pays with PayPal', text: 'Card, PayPal balance, or Pay Later where eligible. Complete your purchase online through Vendibook.' },
+      { icon: ShieldCheck, title: 'Handoff, then payout', text: 'Payout follows buyer confirmation, both signatures and a saved walkthrough video.' },
     ],
   },
   host: {
@@ -41,9 +41,9 @@ const COPY: Record<Audience, { eyebrow: string; title: string; steps: { icon: ty
     title: 'Rent out your equipment with a clear record.',
     steps: [
       { icon: ClipboardCheck, title: 'Set your requirements', text: 'Choose rates, documents, and insurance requirements renters must meet.' },
-      { icon: CreditCard, title: 'Renter pays with PayPal', text: 'Bookings are paid through secure PayPal checkout.' },
+      { icon: CreditCard, title: 'Renter pays with Square', text: 'Bookings are paid by card through secure Square checkout.' },
       { icon: ShieldCheck, title: 'Documented handoff', text: 'Pickup and return are confirmed in Vendibook with photos and timestamps.' },
-      { icon: FileSignature, title: 'Reviewed payouts', text: 'Vendibook reviews and releases payouts, typically 24 hours after the booking starts.' },
+      { icon: FileSignature, title: 'Reviewed payouts', text: 'Payout follows successful rental completion and confirmation.' },
     ],
   },
 };
@@ -81,7 +81,7 @@ export default function TransactionConfidenceSection({ audience, source }: { aud
           <Link to="/how-it-works" className="inline-flex items-center gap-1 text-foreground underline underline-offset-4">How handoffs work <ArrowRight className="h-4 w-4" /></Link>
         </div>
         <p className="mt-6 border-t border-border pt-4 text-xs leading-5 text-muted-foreground">
-          Pay Later offers are subject to PayPal eligibility and terms. Vendibook does not inspect, title-check, or guarantee listings; review each item before you pay.
+          {!rental && 'Pay Later offers are subject to PayPal eligibility and terms. '}Vendibook does not inspect, title-check, or guarantee listings; review each item before you pay.
         </p>
       </section>
       {rental && <FlipInsuranceSection source={source} owner={audience === 'host'} />}

@@ -1,3 +1,4 @@
+import { matchingListingPrice } from '@/lib/monetization/buyerMatchIntelligence';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowUpRight, Copy, Loader2 } from 'lucide-react';
@@ -38,12 +39,12 @@ export default function WorkspaceBuyerMatch() {
     <header className="pb-10">
       <div className="max-w-3xl">
         <p className={bm.eyebrow}>BuyerMatch · Vendibook Pro</p>
-        <h1 className={bm.h1 + ' mt-4'}>Find the buyer for the truck you&rsquo;re selling.</h1>
-        <p className={bm.lead + ' mt-5'}>Our team looks for people shopping for a truck, trailer or cart like yours, contacts them only with documented permission, and logs every step here. Replies come to your Vendibook messages.</p>
+        <h1 className={bm.h1 + ' mt-4'}>Find your next buyer or renter.</h1>
+        <p className={bm.lead + ' mt-5'}>Our team researches demand for equipment and spaces like yours, contacts prospects only with documented permission, and logs verified activity here. Replies come to your Vendibook messages.</p>
       </div>
       <div className="mt-7 flex flex-wrap gap-3">
         <Link to="/dashboard/buyermatch/membership" className={bm.quiet}>Manage membership</Link>
-        {entitled && !!eligible.length && <button type="button" className={bm.primary} onClick={() => setActivate(!activate)}>Start a buyer search</button>}
+        {entitled && !!eligible.length && <button type="button" className={bm.primary} onClick={() => setActivate(!activate)}>Start a matching search</button>}
       </div>
     </header>
 
@@ -58,19 +59,19 @@ export default function WorkspaceBuyerMatch() {
 
       {entitled && !data.config.fulfillment_enabled && <section className="border-l-2 border-[#FF5124] pl-5">
         <h2 className="text-[16px] font-semibold">Searches haven&rsquo;t started yet.</h2>
-        <p className={bm.body + ' mt-1 max-w-2xl'}>You can send listings for review now. Research and outreach begin only after our team approves a listing and confirms the search is running. Nothing is sent to buyers before then.</p>
+        <p className={bm.body + ' mt-1 max-w-2xl'}>You can send listings for review now. Research and outreach begin only after our team approves a listing and confirms the search is running. Nothing is sent to buyers or renters before then.</p>
       </section>}
-      {entitled && !data.config.submissions_enabled && <p className={bm.body}>New buyer searches are paused right now. Existing searches and reports are unchanged.</p>}
+      {entitled && !data.config.submissions_enabled && <p className={bm.body}>New matching searches are paused right now. Existing searches and reports are unchanged.</p>}
 
       {showForm && <section id="activation" aria-labelledby="bm-start" className={bm.card + ' scroll-mt-24 p-6 sm:p-10'}>
-        <h2 id="bm-start" className={bm.h2}>Start a buyer search</h2>
+        <h2 id="bm-start" className={bm.h2}>Start a matching search</h2>
         <p className={bm.body + ' mt-2 max-w-2xl'}>Up to {data.config.max_campaigns} open searches. Sending a listing for review doesn&rsquo;t reserve it or contact anyone.</p>
-        {!eligible.length ? <p className={bm.body + ' mt-6'}>Every published sale listing already has a search.</p> :
+        {!eligible.length ? <p className={bm.body + ' mt-6'}>Every published sale or rental listing already has a search.</p> :
         <form className="mt-8 grid gap-6 lg:grid-cols-2" onSubmit={e => { e.preventDefault(); act('submit', { listing_id: listing, geography, buyer_criteria: criteria }); }}>
           <div className="space-y-6">
-            <label className="block text-[14px] font-semibold">Sale listing<select required value={listing} onChange={e => setListing(e.target.value)} className={bm.field}><option value="">Choose a listing</option>{eligible.map(l => <option key={l.id} value={l.id}>{l.title}</option>)}</select></label>
+            <label className="block text-[14px] font-semibold">Sale or rental listing<select required value={listing} onChange={e => setListing(e.target.value)} className={bm.field}><option value="">Choose a listing</option>{eligible.map(l => <option key={l.id} value={l.id}>{l.title}</option>)}</select></label>
             <label className="block text-[14px] font-semibold">Where should we look? <span className="font-normal text-[#8A847B]">Optional</span><input className={bm.field} maxLength={500} value={geography} onChange={e => setGeography(e.target.value)} placeholder="Arizona and Southern California, or nationwide"/></label>
-            <label className="block text-[14px] font-semibold">Who is the right buyer? <span className="font-normal text-[#8A847B]">Optional</span><textarea className={bm.field + ' min-h-[112px]'} maxLength={2000} value={criteria} onChange={e => setCriteria(e.target.value)} placeholder="First-time owner with about $40k, needs a commissary-ready trailer with a hood system"/></label>
+            <label className="block text-[14px] font-semibold">Who is the right buyer or renter? <span className="font-normal text-[#8A847B]">Optional</span><textarea className={bm.field + ' min-h-[112px]'} maxLength={2000} value={criteria} onChange={e => setCriteria(e.target.value)} placeholder="First-time owner with about $40k, needs a commissary-ready trailer with a hood system"/></label>
             <button type="submit" disabled={!listing || action.isPending || !data.config.submissions_enabled} className={bm.primary}>{action.isPending ? 'Sending…' : 'Send for review'}</button>
           </div>
           {selectedListing ? <ListingCard listing={selectedListing}/> : <div className="hidden rounded-[16px] border border-dashed border-[#E2DBD0] lg:grid lg:place-items-center"><p className={bm.note}>Choose a listing to see what our team will review.</p></div>}
@@ -78,7 +79,7 @@ export default function WorkspaceBuyerMatch() {
       </section>}
 
       {!!campaigns.length && <section aria-labelledby="bm-searches">
-        <h2 id="bm-searches" className={bm.h2}>Your buyer searches</h2>
+        <h2 id="bm-searches" className={bm.h2}>Your matching searches</h2>
         <div className="-mx-4 mt-6 flex snap-x gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0" role="tablist" aria-label="Choose a search">
           {campaigns.length > 1 && <button type="button" role="tab" aria-selected={params.get('campaign') === 'all'} onClick={() => setParams({ campaign: 'all' })} className={'shrink-0 snap-start rounded-full px-4 py-2 text-[14px] font-semibold ' + (params.get('campaign') === 'all' ? 'bg-[#1C1B1A] text-white' : 'bg-white text-[#1C1B1A] shadow-[0_1px_2px_rgba(28,27,26,0.06)]')}>All listings</button>}
           {campaigns.map(c => {
@@ -109,7 +110,7 @@ function ListingCard({ listing: l }: { listing: BuyerMatchListing }) {
     {l.cover_image_url && <img src={l.cover_image_url} alt={l.title} className="aspect-[16/10] w-full object-cover"/>}
     <div className="p-5">
       <h3 className="text-[17px] font-semibold">{l.title}</h3>
-      <p className={bm.body + ' mt-1'}>{[usd(l.price_sale) ?? 'No asking price', place(l), `${photos} photo${photos === 1 ? '' : 's'}`].filter(Boolean).join(' · ')}</p>
+      <p className={bm.body + ' mt-1'}>{[matchingListingPrice(l) ?? 'No asking price', place(l), `${photos} photo${photos === 1 ? '' : 's'}`].filter(Boolean).join(' · ')}</p>
       {l.description && <p className={bm.body + ' mt-3 line-clamp-2'}>{l.description}</p>}
       <Link to={'/listing/' + l.id} className={bm.link + ' mt-4 inline-flex items-center gap-1'}>Check photos and details<ArrowUpRight className="h-3.5 w-3.5"/></Link>
     </div>
@@ -162,7 +163,7 @@ function CampaignDashboard({ campaign: c, live, events, links, reports, entitled
       <div className="p-6 sm:p-9">
         <div className="flex flex-wrap items-center justify-between gap-3"><span className={bm.chip}><span aria-hidden className="h-1.5 w-1.5 rounded-full bg-[#FF5124]"/>{CAMPAIGN_STATUS[c.status] ?? c.status}</span><Link to={'/listing/' + c.listing_id} className={bm.link + ' inline-flex items-center gap-1'}>View listing<ArrowUpRight className="h-3.5 w-3.5"/></Link></div>
         <h3 className="mt-5 font-display text-[26px] leading-tight sm:text-[30px]">{listing.title}</h3>
-        <p className={bm.body + ' mt-1'}>{[usd(listing.price_sale), place(listing), 'sent ' + shortDate(c.created_at)].filter(Boolean).join(' · ')}</p>
+        <p className={bm.body + ' mt-1'}>{[matchingListingPrice(listing), place(listing), 'sent ' + shortDate(c.created_at)].filter(Boolean).join(' · ')}</p>
         <p className="mt-5 text-[15px] leading-7">{STATUS_LINE[c.status] ?? 'Your history stays here.'}</p>
         <Stages c={c}/>
         {(c.geography || c.buyer_criteria) && <dl className="mt-6 space-y-2 border-t border-[#ECE6DD] pt-5 text-[14px]">

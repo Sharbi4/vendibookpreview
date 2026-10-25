@@ -5,10 +5,10 @@ import { bm, shortDate } from './buyerMatchUi';
 const PERIODS = [{ v: '7', l: 'Last 7 days' }, { v: '30', l: 'Last 30 days' }, { v: '90', l: 'Last 90 days' }, { v: 'all', l: 'All time' }];
 /** The search, step by step. Each count is verified buyermatch_events of these types. */
 const STEPS: [string, string[], string][] = [
-  ['Buyers found', ['buyer_opportunity_identified'], 'Public posts from people shopping for equipment like yours'],
+  ['Prospects found', ['buyer_opportunity_identified'], 'Public posts from people looking to buy or rent equipment or space like yours'],
   ['Awaiting approval', ['outreach_proposed', 'outreach_approved'], 'Messages drafted, not sent'],
   ['Contacted', ['outreach_sent'], 'Messages actually sent'],
-  ['Replied', ['buyer_response_received'], 'Buyers who wrote back'],
+  ['Replied', ['buyer_response_received'], 'Buyers and renters who wrote back'],
   ['Qualified', ['inquiry_qualified'], 'Replies our team verified as a real inquiry'],
 ];
 

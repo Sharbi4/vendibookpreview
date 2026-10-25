@@ -111,7 +111,7 @@ export const PRICING_FAQ: PricingFaqEntry[] = [
     id: 'subscriptions-optional',
     question: 'Do I need Pro to sell or rent?',
     answer:
-      'No. You can publish standard listings without Pro. Vendibook Pro adds tools, visibility, a monthly Featured Boost credit, eligible BuyerMatch AI buyer-discovery support. BuyerMatch does not guarantee buyers or sales.',
+      'No. You can publish standard listings without Pro. Vendibook Pro adds tools, visibility, a monthly Featured Boost credit, eligible BuyerMatch AI buyer and renter matching support. BuyerMatch does not guarantee buyers or sales.',
     audiences: ['seller', 'host', 'all'],
     cta: { label: 'Compare plans', href: '/pricing' },
   },

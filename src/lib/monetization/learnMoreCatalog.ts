@@ -98,7 +98,7 @@ const CATALOG: Record<string, LearnMoreEntry> = {
       { icon: TrendingUp, title: 'Featured placement included', body: 'Your listings show above standard results, with visibility measured in your actual listing analytics.' },
       { icon: LineChart, title: 'PricePilot dynamic pricing', body: 'See what similar trucks and kitchens book for and adjust rates without guessing.' },
       { icon: Megaphone, title: 'AI listing rewrite credits', body: 'Rewrite tired copy in one click — headline, description, and highlights tuned for conversion.' },
-      { icon: Zap, title: 'BuyerMatch AI', body: 'Reviewed buyer discovery and priority outreach for eligible sale listings. Campaign activation and capacity apply; sales are not guaranteed.' },
+      { icon: Zap, title: 'BuyerMatch AI', body: 'Reviewed buyer and renter discovery and priority outreach for eligible sale and rental listings. Campaign activation and capacity apply; sales are not guaranteed.' },
       { icon: Users, title: 'Multiple active listings', body: 'Run several units, spaces, or trucks from one dashboard.' },
     ],
     screenshots: [
@@ -186,13 +186,13 @@ CATALOG.host_operator_annual = { ...CATALOG.host_operator, slug: 'host_operator_
 
 CATALOG.vendibook_pro = {
   slug: 'vendibook_pro',
-  promise: 'Your listing deserves more than visibility. Pro helps connect your equipment with potential buyers.',
-  bestFor: 'Eligible equipment sellers seeking reviewed buyer discovery and measurable marketing activity. Activation and capacity apply; no guaranteed leads or sales.',
+  promise: 'Your listing deserves more than visibility. Pro helps connect your equipment with potential buyers and renters.',
+  bestFor: 'Eligible sellers and hosts seeking reviewed buyer and renter discovery and measurable marketing activity. Activation and capacity apply; no guaranteed leads or sales.',
   outcomes: [
-    { icon: Search, title: 'BuyerMatch AI', body: 'Relevant buyer discovery based on equipment, geography, budget, and documented buying intent.' },
+    { icon: Search, title: 'BuyerMatch AI', body: 'Relevant buyer and renter discovery based on equipment, geography, budget, and documented buying or rental intent.' },
     { icon: Megaphone, title: 'Priority Buyer Outreach', body: 'Operator-reviewed research and authorized outreach. Pending activation does not mean research has started.' },
     { icon: BarChart3, title: 'Activity reports', body: 'See real discovered matches, documented contact attempts, actual responses, and qualified conversations separately.' },
-    { icon: TrendingUp, title: 'Your existing Pro benefits', body: 'Included Featured Boost credits, priority visibility, PricePilot, and PermitPath Plus remain available. Separately purchased services stay separate.' },
+    { icon: TrendingUp, title: 'Also included', body: 'Included Featured Boost credits, priority visibility, PricePilot, and PermitPath Plus remain available. Separately purchased services stay separate.' },
   ],
   screenshots: [],
 };

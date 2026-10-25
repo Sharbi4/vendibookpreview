@@ -73,8 +73,8 @@ export const TIER_CATALOG: Record<TierRole, TierFeatureGroups> = {
     audience: 'For active hosts running the show.',
     ctaLabel: 'Go Pro',
     sellers: [
-      'BuyerMatch AI — reviewed buyer discovery and priority outreach',
-      'Activity reports for eligible sale listings, subject to activation and capacity',
+      'BuyerMatch AI — reviewed buyer and renter discovery and priority outreach',
+      'Activity reports for eligible sale and rental listings, subject to activation and capacity',
       '1 Featured Boost credit per paid billing period',
       'Premium tools bundle — PricePilot appraisals and PermitPath Plus',
     ],

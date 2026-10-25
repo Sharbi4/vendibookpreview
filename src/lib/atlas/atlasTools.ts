@@ -38,7 +38,7 @@ export function searchGuideFaq(question: string, limit = 3): GuideFaq[] {
  * service is deliberately absent (owner: no Concierge).
  */
 export const ATLAS_PRODUCTS: Record<string, string> = {
-  vendibook_pro: 'Monthly membership for sellers: BuyerMatch finds buyers for your sale listings, plus a Featured Boost credit every billing period and PricePilot appraisals.',
+  vendibook_pro: 'Monthly membership for sellers and hosts: BuyerMatch helps find buyers and renters for eligible sale and rental listings, plus a Featured Boost credit every billing period and PricePilot appraisals.',
   vendibook_pro_annual: 'Pro billed annually: save $158 (16.7%) at the current $790 yearly price versus $79 monthly; one 30-day Boost credit per annual billing period, no rollover. Cancel renewal anytime.',
   featured_listing_monthly: 'Monthly subscription for one listing. Cancel anytime; automatically cancels when marked sold; rental listings renew until cancelled. No annual option. Applicable tax is shown at checkout.',
   'boost-featured-30': 'Featured badge and a spot in the Featured row on the homepage for 30 days.',

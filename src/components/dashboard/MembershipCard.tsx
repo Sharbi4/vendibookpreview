@@ -79,7 +79,7 @@ const MembershipCard = () => {
               You&apos;re on Free
             </h2>
             <p className="mt-1.5 max-w-md text-[14px] leading-relaxed text-muted-foreground">
-              Vendibook Pro adds BuyerMatch AI with reviewed buyer discovery, a monthly Featured Boost
+              Vendibook Pro adds BuyerMatch AI with reviewed buyer and renter discovery, a monthly Featured Boost
               credit, and unlocks the premium tools — {proPrice.labelWithCadence}. Cancel anytime.
             </p>
           </div>

@@ -27,7 +27,7 @@ describe('BuyerMatch seller experience',()=>{
   mocks.action.mockResolvedValue({id:'campaign'});show();
   expect(screen.getByText('Searches haven’t started yet.')).toBeInTheDocument();
   expect(screen.queryByText('Research underway')).not.toBeInTheDocument();
-  fireEvent.change(screen.getByLabelText('Sale listing'),{target:{value:'listing'}});
+  fireEvent.change(screen.getByLabelText('Sale or rental listing'),{target:{value:'listing'}});
   fireEvent.click(screen.getByRole('button',{name:'Send for review'}));
   await waitFor(()=>expect(mocks.action).toHaveBeenCalledWith('submit',{listing_id:'listing',geography:'',buyer_criteria:''}));
  });
@@ -36,6 +36,14 @@ describe('BuyerMatch seller experience',()=>{
   expect(screen.queryByRole('button',{name:'Send for review'})).not.toBeInTheDocument();
   expect(screen.getByText(/past reports and buyer messages stay available/)).toBeInTheDocument();
   expect(screen.queryByText(/Admin only/)).not.toBeInTheDocument();
+ });
+ it('lets a host request renter matching with the correct rental rate period',async()=>{
+  mocks.data!.listings=[{id:'rental',title:'Shared kitchen',mode:'rent',price_daily:125}];
+  mocks.action.mockResolvedValue({id:'campaign'});show();
+  fireEvent.change(screen.getByLabelText('Sale or rental listing'),{target:{value:'rental'}});
+  expect(screen.getAllByText(/\$125\/day/).length).toBeGreaterThan(0);
+  fireEvent.click(screen.getByRole('button',{name:'Send for review'}));
+  await waitFor(()=>expect(mocks.action).toHaveBeenCalledWith('submit',{listing_id:'rental',geography:'',buyer_criteria:''}));
  });
  it('shows an error rather than inventing empty activity after a failed read',()=>{
   mocks.error=new Error('network');mocks.data=undefined;show();

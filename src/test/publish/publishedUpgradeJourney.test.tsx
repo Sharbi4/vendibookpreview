@@ -12,9 +12,10 @@ it('lets an owner skip each upgrade to reach sharing without purchasing', () => 
  fireEvent.click(screen.getByRole('button', { name: 'Skip upgrades — continue to share kit' }));
  expect(complete).toHaveBeenCalledOnce();
 });
-it('does not sell renter matching as an existing rental benefit', () => {
+it('includes renter matching for hosts while blocking checkout when pricing is unavailable', () => {
  render(<PublishedUpgradeJourney listing={{...listing, mode: 'rent'}} featured={false} onComplete={vi.fn()} />);
- expect(screen.getByText(/renter matching is not included/)).toBeTruthy();
+ expect(screen.getByText('BuyerMatch AI — priority renter matching')).toBeTruthy();
+ expect(screen.queryByText(/renter matching is not included/)).toBeNull();
  expect(screen.getByRole('button', { name: 'Upgrade to Pro' })).toBeDisabled();
 });
 it('skips the Featured pitch for a listing already featured', () => {

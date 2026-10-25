@@ -1,3 +1,4 @@
+import { matchingListingPrice } from '@/lib/monetization/buyerMatchIntelligence';
 import { Link } from 'react-router-dom';
 import { useBuyerMatchSignals, SIGNAL_WINDOW_DAYS, type ListingSignals } from '@/hooks/useBuyerMatchSignals';
 import { CAMPAIGN_STATUS, listingNextStep, type BuyerMatchCampaign, type BuyerMatchListing } from '@/lib/monetization/buyerMatchIntelligence';
@@ -12,24 +13,24 @@ interface Props {
 
 const fmt = (n: number | null | undefined, loading: boolean) => (loading ? '·' : n === null || n === undefined ? '—' : n.toLocaleString('en-US'));
 
-/** The seller's own published sale listings with real buyer activity and one next step each. */
+/** The seller's own published sale or rental listings with real buyer activity and one next step each. */
 export default function BuyerMatchListings({ listings, campaigns, entitled, onStart }: Props) {
   const signals = useBuyerMatchSignals(listings.map(l => l.id));
 
   if (!listings.length) {
     return <section aria-labelledby="bm-listings" className="border-t border-[#ECE6DD] pt-10">
-      <h2 id="bm-listings" className={bm.h2}>Your sale listings</h2>
+      <h2 id="bm-listings" className={bm.h2}>Your sale and rental listings</h2>
       <div className="mt-6 max-w-xl">
-        <p className={bm.lead}>You don&rsquo;t have a published sale listing yet. BuyerMatch works on food trucks, trailers and carts listed for sale.</p>
+        <p className={bm.lead}>You don&rsquo;t have a published sale or rental listing yet. BuyerMatch supports eligible equipment and spaces listed for sale or rent.</p>
         <p className={bm.body + ' mt-3'}>Publish one with an asking price and at least four photos: the exterior, the serving window, the kitchen line and the equipment plates.</p>
-        <div className="mt-6 flex flex-wrap gap-3"><Link to="/list" className={bm.primary}>List equipment for sale</Link><Link to="/dashboard/listings" className={bm.quiet}>Manage listings</Link></div>
+        <div className="mt-6 flex flex-wrap gap-3"><Link to="/list" className={bm.primary}>Create a listing</Link><Link to="/dashboard/listings" className={bm.quiet}>Manage listings</Link></div>
       </div>
     </section>;
   }
 
   return <section aria-labelledby="bm-listings" className="border-t border-[#ECE6DD] pt-10">
     <div className="flex flex-wrap items-end justify-between gap-3">
-      <h2 id="bm-listings" className={bm.h2}>Your sale listings</h2>
+      <h2 id="bm-listings" className={bm.h2}>Your sale and rental listings</h2>
       <p className={bm.note}>Views cover the last {SIGNAL_WINDOW_DAYS} days. The other counts are current totals.</p>
     </div>
     {signals.isError && <p role="alert" className={bm.body + ' mt-4'}>Activity counts couldn&rsquo;t be loaded. Your listings are unchanged. <button type="button" onClick={() => void signals.refetch()} className={bm.link}>Try again</button></p>}
@@ -39,7 +40,7 @@ export default function BuyerMatchListings({ listings, campaigns, entitled, onSt
         const s: ListingSignals | undefined = signals.data?.[l.id];
         const loading = signals.isLoading;
         const step = listingNextStep(l, s, { entitled, inCampaign: !!campaign });
-        const price = usd(l.price_sale);
+        const price = matchingListingPrice(l);
         const photos = Array.isArray(l.image_urls) ? l.image_urls.length : 0;
         return <li key={l.id} className={bm.card + ' grid overflow-hidden md:grid-cols-[240px_minmax(0,1fr)]'}>
           <Link to={'/listing/' + l.id} className="relative block aspect-[16/10] bg-[#F3EEE7] md:aspect-auto md:min-h-full">
@@ -61,7 +62,7 @@ export default function BuyerMatchListings({ listings, campaigns, entitled, onSt
             <div className="mt-6 flex flex-col gap-4 border-t border-[#ECE6DD] pt-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0"><p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[#FF5124]">Next</p><p className="mt-1 text-[15px] font-semibold">{step.label}</p><p className={bm.body}>{step.detail}</p></div>
               {step.action === 'start_buyermatch' && onStart
-                ? <button type="button" onClick={() => onStart(l.id)} className={bm.primary + ' shrink-0'}>Start a buyer search</button>
+                ? <button type="button" onClick={() => onStart(l.id)} className={bm.primary + ' shrink-0'}>Start a matching search</button>
                 : step.to && <Link to={step.to} className={((s?.offersWaiting ?? 0) > 0 ? bm.primary : bm.quiet) + ' shrink-0'}>{step.label}</Link>}
             </div>
           </div>

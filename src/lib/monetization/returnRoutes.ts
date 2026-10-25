@@ -55,7 +55,7 @@ export const RETURN_ROUTES: Record<string, ReturnRoute> = {
   vendibook_pro: buildDashboard(
     'Welcome to Vendibook Pro',
     'Your dashboard confirms membership activation after the payment provider verifies it.',
-    [{title:'Choose an eligible sale listing'},{title:'Add optional buyer preferences'},{title:'Submit your BuyerMatch campaign for operator activation'}],
+    [{title:'Choose an eligible sale or rental listing'},{title:'Add optional buyer or renter preferences'},{title:'Submit your BuyerMatch campaign for operator activation'}],
     'Set up BuyerMatch AI',
     '/dashboard/buyermatch',
     {successPath:'/dashboard/buyermatch?purchase=success',cancelPath:'/pricing?purchase=cancelled'},

@@ -1,4 +1,5 @@
 import { useParams, Navigate, Link } from 'react-router-dom';
+import CityBuyerMatch from '@/components/seo/CityBuyerMatch';
 import { useQuery } from '@tanstack/react-query';
 import { MapPin, Truck, Building2, Warehouse, Search, ArrowRight, ArrowUpRight } from 'lucide-react';
 import Header from '@/components/layout/Header';
@@ -336,7 +337,7 @@ const DynamicCityPage = ({ mode, category }: DynamicCityPageProps) => {
                 </p>
                 <p>
                   Every listing shows the owner's details, specs, and photos. Message the owner directly,
-                  pay through Vendibook checkout, or settle in person when the seller offers it. Equipment
+                  complete your transaction through Vendibook online checkout. Equipment
                   financing is available for eligible buyers through a third-party provider; Vendibook is
                   not the lender.
                 </p>
@@ -344,6 +345,8 @@ const DynamicCityPage = ({ mode, category }: DynamicCityPageProps) => {
             </div>
           </div>
         </section>
+
+        <div className="container max-w-5xl"><CityBuyerMatch city={city.name} /></div>
 
         {/* Closing CTA */}
         <section className="pb-20">

@@ -15,7 +15,7 @@ export function ListingUpgradeOptions({ listingId }: { listingId: string }) {
   const [selected, setSelected] = useState<'featured' | 'pro' | null>(null);
   const isPro = selected === 'pro';
   const benefits = isPro ? [
-    ['BuyerMatch for sale listings', 'Submit eligible equipment for team review, buyer research, and permission-based outreach.'],
+    ['BuyerMatch for sale and rental listings', 'Submit eligible equipment or space for team review, buyer and renter research, and permission-based outreach.'],
     ['Visibility and planning tools', 'Explore Featured Boost credits, priority visibility, PricePilot, and PermitPath Plus included with Pro.'],
     ['Activity you can follow', 'Review verified outreach activity and continue conversations in your Vendibook messages.'],
   ] : [

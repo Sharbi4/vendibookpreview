@@ -133,7 +133,7 @@ const MembershipHeader = () => {
       {isPro && (
         <ul className="mt-4 grid gap-2 sm:grid-cols-3">
           {[
-            'BuyerMatch AI — reviewed buyer discovery and priority outreach',
+            'BuyerMatch AI — reviewed buyer and renter discovery and priority outreach',
             boostCredit
               ? 'Featured Boost credit available this period'
               : 'One Featured Boost credit each billing period',

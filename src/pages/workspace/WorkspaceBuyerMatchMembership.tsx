@@ -1,3 +1,4 @@
+import { matchingListingPrice } from '@/lib/monetization/buyerMatchIntelligence';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
@@ -47,7 +48,7 @@ export default function WorkspaceBuyerMatchMembership() {
           {!billing.accessEndsAt && <p className={bm.note + ' mt-1'}>No renewal date on record. We don&rsquo;t assume an ongoing paid membership.</p>}
         </div>
         <div className="flex flex-wrap gap-3 border-t border-[#ECE6DD] pt-6 sm:col-span-2">
-          {data?.config.entitled ? <Link to="/dashboard/buyermatch?activate=1" className={bm.primary}>Start a buyer search</Link> : <Link to={PLAN_RETURN} className={bm.primary}>Choose a plan</Link>}
+          {data?.config.entitled ? <Link to="/dashboard/buyermatch?activate=1" className={bm.primary}>Start a matching search</Link> : <Link to={PLAN_RETURN} className={bm.primary}>Choose a plan</Link>}
           {billing.provider !== 'none' && <button type="button" className={bm.quiet} onClick={billing.openBilling}>{billing.provider === 'paypal' ? 'Manage payment in PayPal' : 'Payment management'}</button>}
           {billing.hasSubscription && !billing.scheduledCancel && <AlertDialog><AlertDialogTrigger asChild><button type="button" className={bm.quiet} disabled={billing.busy !== null}>Cancel membership</button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Cancel your membership?</AlertDialogTitle><AlertDialogDescription>Future billing stops after your payment provider confirms the cancellation. Paid access continues through the period you already paid for. Past reports stay available, and no listing is removed.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Keep membership</AlertDialogCancel><AlertDialogAction onClick={billing.cancel}>Confirm cancellation</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>}
           {ending && <Link to={PLAN_RETURN} className={bm.quiet}>Review renewal options</Link>}
@@ -57,16 +58,16 @@ export default function WorkspaceBuyerMatchMembership() {
 
       {data && <section className="grid gap-12 md:grid-cols-2">
         <div>
-          <h2 className={bm.h3}>Sale listings that qualify</h2>
-          <p className={bm.note + ' mt-1'}>{data.listings.length} published sale listing{data.listings.length === 1 ? '' : 's'}. Eligibility is checked again when you send one for review.</p>
+          <h2 className={bm.h3}>Sale and rental listings that qualify</h2>
+          <p className={bm.note + ' mt-1'}>{data.listings.length} published sale or rental listing{data.listings.length === 1 ? '' : 's'}. Eligibility is checked again when you send one for review.</p>
           <ul className="mt-4">{data.listings.map(l => <li key={l.id}><Link to={'/listing/' + l.id} className="flex items-center gap-4 border-b border-[#ECE6DD] py-3">
             {l.cover_image_url ? <img src={l.cover_image_url} alt="" className="h-14 w-20 shrink-0 rounded-lg object-cover"/> : <span className="h-14 w-20 shrink-0 rounded-lg bg-[#F3EEE7]"/>}
-            <span className="min-w-0"><span className="block truncate text-[14px] font-semibold">{l.title}</span><span className={bm.note}>{usd(l.price_sale) ?? 'No asking price'}</span></span>
+            <span className="min-w-0"><span className="block truncate text-[14px] font-semibold">{l.title}</span><span className={bm.note}>{matchingListingPrice(l) ?? 'No asking price'}</span></span>
           </Link></li>)}</ul>
           {!data.listings.length && <Link to="/dashboard/listings" className={bm.link + ' mt-4 inline-block'}>Manage your listings</Link>}
         </div>
         <div>
-          <h2 className={bm.h3}>Your buyer searches</h2>
+          <h2 className={bm.h3}>Your matching searches</h2>
           <p className={bm.note + ' mt-1'}>{campaigns.filter(c => c.status === 'researching').length} searching · {campaigns.filter(c => c.status === 'pending_activation').length} waiting for review</p>
           <ul className="mt-4">{campaigns.map(c => <li key={c.id}><Link to={'/dashboard/buyermatch?campaign=' + c.id} className="flex items-center justify-between gap-4 border-b border-[#ECE6DD] py-3"><span className="truncate text-[14px] font-semibold">{c.listing_snapshot.title}</span><span className={bm.note + ' shrink-0'}>{CAMPAIGN_STATUS[c.status] ?? c.status}</span></Link></li>)}</ul>
           {!campaigns.length && <p className={bm.body + ' mt-4'}>No searches yet.</p>}
@@ -75,7 +76,7 @@ export default function WorkspaceBuyerMatchMembership() {
     </div>}
 
     <section id="benefits" className="mt-16 scroll-mt-24 border-t border-[#ECE6DD] pt-10">
-      <h2 className={bm.h2}>What Pro adds for sellers</h2>
+      <h2 className={bm.h2}>What Pro adds for sellers and hosts</h2>
       <ol className="mt-8 grid gap-x-12 gap-y-8 sm:grid-cols-2">{BUYERMATCH_BENEFITS.map((b, i) => <li key={b.title}>
         <p className="font-display text-[18px] text-[#FF5124]">{String(i + 1).padStart(2, '0')}</p>
         <h3 className="mt-2 text-[16px] font-semibold">{b.title}</h3>

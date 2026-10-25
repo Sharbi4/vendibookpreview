@@ -335,7 +335,7 @@ const Pricing = () => {
     <div className="sale-light min-h-screen flex flex-col">
       <SEO
         title="Vendibook Pricing — Free & Vendibook Pro Membership"
-        description="Vendibook Pro adds BuyerMatch AI, priority buyer discovery, reviewed outreach reports, a Featured Boost credit per billing period and premium tools."
+        description="Vendibook Pro adds BuyerMatch AI, priority buyer and renter discovery, reviewed outreach reports, a Featured Boost credit per billing period and premium tools."
         canonical="/pricing"
         image="https://vendibook.com/images/social/vendibook-og-pricing.jpg"
         imageAlt="Vendibook plans and pricing"
@@ -371,7 +371,7 @@ const Pricing = () => {
               </h1>
               <p className="text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
                 Publish for free. Choose Pro when you&rsquo;re
-                ready for buyer discovery, reviewed outreach activity, and the full tool set.
+                ready for buyer and renter discovery, reviewed outreach activity, and the full tool set.
               </p>
               <div className="mt-8 inline-flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
                 <span className="inline-flex items-center gap-1.5"><Check className="h-4 w-4 text-primary" /> Free listing tools</span>

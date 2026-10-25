@@ -92,10 +92,10 @@ export const MembershipInlinePanel: React.FC<MembershipInlinePanelProps> = ({ re
 
         <div className="pr-8">
           <h3 className="font-display text-lg font-semibold text-foreground">
-            Your listing is free. Pro helps find potential buyers.
+            Your listing is free. Pro helps find potential buyers and renters.
           </h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Pro adds BuyerMatch AI for eligible sale listings, with reviewed activity reports. Activation and campaign limits apply. Membership is never required to publish.
+            Pro adds BuyerMatch AI for eligible sale and rental listings, with reviewed activity reports. Activation and campaign limits apply. Membership is never required to publish.
           </p>
         </div>
 

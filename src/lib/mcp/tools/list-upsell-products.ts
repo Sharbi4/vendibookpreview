@@ -41,7 +41,7 @@ export default defineTool({
      */
     const HIGHLIGHTS: Record<string, string[]> = {
       vendibook_pro: [
-        "BuyerMatch AI: reviewed buyer discovery and priority outreach for eligible listings, subject to activation and capacity",
+        "BuyerMatch AI: reviewed buyer and renter discovery and priority outreach for eligible listings, subject to activation and capacity",
         "PricePilot appraisals included",
         "One Featured Boost credit each billing period (does not roll over)",
       ],

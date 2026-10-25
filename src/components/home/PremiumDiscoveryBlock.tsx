@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Crown } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { trackLeadEvent } from '@/lib/leadTracking';
@@ -14,7 +14,7 @@ const PremiumDiscoveryBlock = () => {
     trackLeadEvent('homepage_premium_discovery_click', {
       route: '/',
       source: 'home_premium_discovery',
-      destination: '/pricing',
+      destination: '/pricing#buyermatch-overview',
     });
   };
 
@@ -41,18 +41,18 @@ const PremiumDiscoveryBlock = () => {
           <div className="relative flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-8">
             <div className="flex-1 min-w-0">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-foreground/[0.08] bg-foreground/[0.03] mb-4">
-                <Crown className="h-3.5 w-3.5 text-primary" />
+                <img src="/brand/vendibook-logo-email.png" alt="Vendibook" className="h-5 w-auto" />
                 <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/70">
-                  Vendibook Pro & upgrades
+                  Pro · BuyerMatch AI
                 </span>
               </div>
 
               <h2 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight leading-[1.15] mb-2">
-                More visibility. BuyerMatch AI. Better tools.
+                Find your next buyer or renter with BuyerMatch AI.
               </h2>
 
               <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-2xl">
-                Explore Pro buyer discovery and reviewed outreach reports for eligible listings. Activation and campaign limits apply. Featured Boosts and other upgrades remain available separately.
+                Included with Pro: buyer and renter matching for eligible sale and rental listings, reviewed outreach and real activity reports. Tell us about your equipment or space and who you want to reach. Campaign review and capacity apply; results are not guaranteed.
               </p>
             </div>
 
@@ -64,8 +64,8 @@ const PremiumDiscoveryBlock = () => {
                 className="rounded-2xl px-6 gap-2 whitespace-nowrap"
                 onClick={handleClick}
               >
-                <Link to="/pricing">
-                  See pricing & premium tools
+                <Link to="/pricing#buyermatch-overview">
+                  Explore BuyerMatch AI
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>

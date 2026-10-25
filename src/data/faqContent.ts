@@ -644,7 +644,7 @@ export const faqCategories: FaqCategory[] = [
         id: "tiers-overview",
         question: "What plans are available?",
         answer:
-          "Two: Free (two active listings unless grandfathered, drafts free, core buying, selling and renting) and Vendibook Pro at {{price:vendibook_pro}} (unlimited eligible active listings, one Featured Boost credit each billing period, Premium Tools and analytics including PricePilot, PermitPath Plus, priority visibility and support, eligible BuyerMatch AI buyer-discovery support). PermitPath Plus is also available on its own for {{price:permit_path_plus_monthly}}. See the full comparison on the pricing page.",
+          "Two: Free (two active listings unless grandfathered, drafts free, core buying, selling and renting) and Vendibook Pro at {{price:vendibook_pro}} (unlimited eligible active listings, one Featured Boost credit each billing period, Premium Tools and analytics including PricePilot, PermitPath Plus, priority visibility and support, eligible BuyerMatch AI buyer and renter matching support). PermitPath Plus is also available on its own for {{price:permit_path_plus_monthly}}. See the full comparison on the pricing page.",
         actions: [A.pricing],
       },
       {
@@ -659,7 +659,7 @@ export const faqCategories: FaqCategory[] = [
         id: "pro-benefits",
         question: "What does Pro include?",
         answer:
-          "Pro includes unlimited eligible active listings, a monthly Featured Boost credit, Premium Tools, applicable analytics, PermitPath Plus, priority visibility and support, and eligible BuyerMatch AI buyer-discovery support. Pro does not discount commissions. Campaign timing and results vary; buyers or sales are not guaranteed.",
+          "Pro includes unlimited eligible active listings, a monthly Featured Boost credit, Premium Tools, applicable analytics, PermitPath Plus, priority visibility and support, and eligible BuyerMatch AI buyer and renter matching support. Pro does not discount commissions. Campaign timing and results vary; buyers or sales are not guaranteed.",
         keywords: ["pro", "membership", "benefits", "BuyerMatch", "boost credit"],
         actions: [A.pricing, A.subscription],
       },
@@ -667,7 +667,7 @@ export const faqCategories: FaqCategory[] = [
         id: "buyermatch-what",
         question: "What is BuyerMatch AI?",
         answer:
-          "BuyerMatch AI helps research relevant buyer demand and, where activated, supports reviewed outreach for eligible sale listings based on equipment type, budget, location and documented purchase interest.",
+          "BuyerMatch AI helps research relevant buyer and renter demand and, where activated, supports reviewed outreach for eligible sale and rental listings based on equipment type, budget, location and documented purchase or rental interest.",
         keywords: ["buyermatch", "buyer match", "leads", "outreach"],
         actions: [A.buyerMatch],
       },
