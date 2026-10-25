@@ -12,6 +12,11 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const __cleanReason = (v: unknown, max = 500): string => String(v ?? "")
+  .replace(/https?:\/\/\S+|www\.\S+/gi, "[link removed]")
+  .replace(/[^\s@]+@[^\s@]+\.[^\s@]+/g, "[email removed]")
+  .replace(/[<>]/g, "")
+  .replace(/\s+/g, " ").trim().slice(0, max);
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[RAISE-DISPUTE] ${step}${detailsStr}`);
@@ -222,7 +227,7 @@ serve(async (req) => {
 
     const otherParagraphs = [
       `${disputeRaiser} has raised a dispute for the transaction involving ${listingTitle}.`,
-      `Reason: ${reason}`,
+      `Reason: ${__cleanReason(reason)}`,
       `Payment is now held pending resolution. Our team may contact you for more information.`,
       ...(termsBlock ? [termsBlock] : []),
     ];
