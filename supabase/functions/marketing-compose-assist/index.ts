@@ -1,5 +1,6 @@
 // marketing-compose-assist — AI-generated headlines & insight blurbs via Lovable AI Gateway
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,6 +31,7 @@ async function callAI(messages: any[], tool?: any): Promise<any> {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (!(await isAdminOrBackendCaller(req))) return forbiddenResponse(corsHeaders);
   try {
     const { mode, theme } = await req.json();
 
