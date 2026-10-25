@@ -193,7 +193,7 @@ serve(async (req) => {
             templateData: adminTemplateData,
           });
       } catch (e) {
-        console.error("[spotlight-submit] admin email failed", adminEmail, e);
+        console.error("[spotlight-submit] admin email failed", e instanceof Error ? e.message : "unknown");
       }
     }
 
