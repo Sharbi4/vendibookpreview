@@ -603,6 +603,11 @@ export type Database = {
           booking_id: string
           created_at: string
           held_for_relay: boolean
+          relay_decline_reason: string | null
+          relay_declined_at: string | null
+          relayed_at: string | null
+          relayed_by: string | null
+          relayed_from: string | null
           id: string
           message: string
           read_at: string | null
@@ -615,6 +620,11 @@ export type Database = {
           booking_id: string
           created_at?: string
           held_for_relay?: boolean
+          relay_decline_reason?: string | null
+          relay_declined_at?: string | null
+          relayed_at?: string | null
+          relayed_by?: string | null
+          relayed_from?: string | null
           id?: string
           message: string
           read_at?: string | null
@@ -627,6 +637,11 @@ export type Database = {
           booking_id?: string
           created_at?: string
           held_for_relay?: boolean
+          relay_decline_reason?: string | null
+          relay_declined_at?: string | null
+          relayed_at?: string | null
+          relayed_by?: string | null
+          relayed_from?: string | null
           id?: string
           message?: string
           read_at?: string | null
@@ -2405,6 +2420,11 @@ export type Database = {
           conversation_id: string
           created_at: string
           held_for_relay: boolean
+          relay_decline_reason: string | null
+          relay_declined_at: string | null
+          relayed_at: string | null
+          relayed_by: string | null
+          relayed_from: string | null
           id: string
           message: string
           pii_blocked: boolean | null
@@ -2419,6 +2439,11 @@ export type Database = {
           conversation_id: string
           created_at?: string
           held_for_relay?: boolean
+          relay_decline_reason?: string | null
+          relay_declined_at?: string | null
+          relayed_at?: string | null
+          relayed_by?: string | null
+          relayed_from?: string | null
           id?: string
           message: string
           pii_blocked?: boolean | null
@@ -2433,6 +2458,11 @@ export type Database = {
           conversation_id?: string
           created_at?: string
           held_for_relay?: boolean
+          relay_decline_reason?: string | null
+          relay_declined_at?: string | null
+          relayed_at?: string | null
+          relayed_by?: string | null
+          relayed_from?: string | null
           id?: string
           message?: string
           pii_blocked?: boolean | null

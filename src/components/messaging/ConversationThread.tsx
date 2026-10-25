@@ -1,4 +1,5 @@
 import ThreadListingCard from '@/components/workspace/inbox/ThreadListingCard';
+import RelayStatus from '@/components/messaging/RelayStatus';
 import UnavailableConversation from './UnavailableConversation';
 import MessagingSafety from './MessagingSafety';
 import { useState, useEffect, useRef } from 'react';
@@ -186,6 +187,7 @@ const MessageBubble = ({
           <p className="text-[11.5px] tabular-nums text-muted-foreground" title={format(new Date(message.created_at), 'MMM d, yyyy h:mm a')}>
             {format(new Date(message.created_at), 'h:mm a')}
           </p>
+          <RelayStatus message={message} isOwn={isOwn} />
           <ReadReceipt message={message} isOwn={isOwn} isLastOwnMessage={isLastOwnMessage} />
         </div>
       </div>

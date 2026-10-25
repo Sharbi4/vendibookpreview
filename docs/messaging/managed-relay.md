@@ -36,3 +36,15 @@ Initial seller email was already sent and verified delivered: Resend `01a17476-e
 ## Privacy and audit
 
 The raw `listing_leads` seller SELECT policy is removed. Managed tables are service-only with RLS. The edge function returns no participant emails to guests/sellers, never returns private reply keys, and only shows recipient-visible released text or the viewer's own pending messages. Original content, screened copy, review label/time, sending reservation and provider evidence are stored separately. Sender roles record true provenance; support-authored messages remain labeled support. Every new message is held by a database trigger. Automated email intake never directly publishes a message.
+
+## Member chat screening (signed-in buyers and sellers)
+
+Owner decision 2026-10-25: every message a signed-in member sends in a listing conversation (`conversation_messages`) or a rental booking thread (`booking_messages`) is held. Migration `20261025233000_member_message_relay.sql` records the live hold triggers and adds the relay.
+
+- On insert, `a_hold_for_relay` sets `held_for_relay = true` for any signed-in non-admin sender. The sender still sees their own message, labelled "In review". The other participant does not see it and gets no notification.
+- `z_alert_support_held` emails `adminAlertEmails()` through `send-message-email` (`relay_alert`). The email links to `/admin/messages?conversation=<id>`.
+- To deliver a message, Vendibook relays a reviewed copy. `relay_held_member_message(table, message_id, screened_body, reviewer, include_attachment)` inserts a new, visible message in the same thread under the original sender's account, with `relayed_from` pointing at the original. The copy is labelled "Relayed by Vendibook" for both sides, notifies the recipient through the normal new-message trigger, and replaces the original in the sender's view. The original is marked `relayed_at` and stays hidden from the recipient permanently.
+- The relay re-runs every send guard for the sender (active account, safety holds, blocks, phone/ID gate, rate limits) and refuses any text with contact details, links or payment requests (`message_content_problem`). Attachments are only relayed when the reviewer opts in after opening them. Calling it twice returns the same copy.
+- `decline_held_member_message(table, message_id, reason, reviewer)` closes a message without relaying it. The sender sees "Not delivered".
+- Admins act from `/admin/messages`. Threads waiting on a relay sort first and carry an "N to relay" badge. Each held message has an editable relayed copy, a Relay button and a Decline button. The page calls the `relay-member-message` edge function, which verifies the admin and records them as reviewer.
+- The scheduled monitor may relay routine member messages under the same rules as section 5 above. It finds pending messages with `held_for_relay and relayed_at is null and relay_declined_at is null`, screens the text, and calls `relay_held_member_message(..., null, false)` with the screened body. Escalate the same exceptional cases rather than relaying them.

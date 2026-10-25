@@ -2,6 +2,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
+import { adminAlertEmails, adminNoticeKey } from '../_shared/adminRecipients.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -26,12 +27,14 @@ Deno.serve(async (req) => {
       const { data: sender } = await db.from('profiles').select('full_name, email').eq('id', m.sender_id).maybeSingle();
       const threadId = table === 'booking_messages' ? m.booking_id : m.conversation_id;
       const preview = `[${table === 'booking_messages' ? 'Booking' : 'Conversation'} ${threadId}] From ${sender?.full_name ?? 'member'} (${sender?.email ?? m.sender_id}): ${String(m.message ?? '').slice(0, 2000)}${m.attachment_url ? `\nAttachment: ${m.attachment_url}` : ''}`;
-      for (const to of ['support@vendibook.com', 'atlasmom421@gmail.com']) {
+      // Opens the thread in the admin inbox, where the message is relayed or declined.
+      const linkPath = table === 'booking_messages' ? '/admin/messages' : `/admin/messages?conversation=${threadId}`;
+      for (const to of adminAlertEmails()) {
         const { error } = await invokeTransactionalEmail({
           templateName: 'new-message',
           recipientEmail: to,
-          idempotencyKey: `relay-${id}-${to}`,
-          templateData: { recipientName: 'Vendibook team', senderName: sender?.full_name ?? 'A member', messagePreview: preview, unreadCount: 1, linkPath: '/admin' },
+          idempotencyKey: adminNoticeKey(`relay-${id}`, to),
+          templateData: { recipientName: 'Vendibook team', senderName: sender?.full_name ?? 'A member', messagePreview: preview, unreadCount: 1, linkPath },
         });
         if (error) console.error('[send-message-email] relay alert failed', to, error);
       }

@@ -17,6 +17,10 @@ export interface ConversationMessage {
   attachment_name: string | null;
   attachment_type: string | null;
   attachment_size: number | null;
+  /** Screening (owner 2026-10-25): a member's own message stays held until Vendibook relays a copy. */
+  held_for_relay?: boolean;
+  relayed_from?: string | null;
+  relay_declined_at?: string | null;
 }
 
 export interface ConversationDetails {
@@ -251,7 +255,11 @@ export const useConversationMessages = (conversationId: string | undefined) => {
         },
         (payload) => {
           const newMessage = payload.new as ConversationMessage;
-          setMessages((prev) => {
+          setMessages((current) => {
+            // A relayed copy replaces the sender's held original.
+            const prev = newMessage.relayed_from
+              ? current.filter((msg) => msg.id !== newMessage.relayed_from)
+              : current;
             const exists = prev.some(
               (msg) => msg.id === newMessage.id || 
               (msg.id.startsWith('temp-') && msg.sender_id === newMessage.sender_id && msg.message === newMessage.message)

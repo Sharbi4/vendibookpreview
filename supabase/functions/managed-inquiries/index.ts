@@ -5,6 +5,7 @@ import { template as notice } from '../_shared/transactional-email-templates/gen
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts';
 import { maskContactDetails } from '../_shared/contactPatterns.ts';
 import { relayDisplayName, relayVisible, relayBody } from '../_shared/managedRelayPolicy.ts';
+import { adminAlertEmails, adminNoticeKey } from '../_shared/adminRecipients.ts';
 
 const cors = {'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'authorization, apikey, content-type, x-client-info','Content-Type':'application/json'};
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -27,7 +28,7 @@ Deno.serve(async req=>{
    if(!checked(await db.rpc('message_account_active',{actor})))return json({error:'Account unavailable'},403);
    admin=!!checked(await db.rpc('has_role',{_user_id:actor,_role:'admin'}));
   }
-  const reviewAlert=async(id:string,key:string)=>invokeTransactionalEmail({templateName:'generic-notice',recipientEmail:'support@vendibook.com',idempotencyKey:`managed-review:${key}`,templateData:{heading:'A listing message is awaiting review',paragraphs:['No message has been relayed to the other participant. Review the original, remove private contact details, then release the approved message.'],ctaLabel:'Review conversation',ctaUrl:`https://vendibook.com/inquiries/${id}`}});
+  const reviewAlert=async(id:string,key:string)=>Promise.all(adminAlertEmails().map(to=>invokeTransactionalEmail({templateName:'generic-notice',recipientEmail:to,idempotencyKey:adminNoticeKey(`managed-review:${key}`,to),templateData:{heading:'A listing message is awaiting review',paragraphs:['No message has been relayed to the other participant. Review the original, remove private contact details, then release the approved message.'],ctaLabel:'Review conversation',ctaUrl:`https://vendibook.com/inquiries/${id}`}})));
   if(p.action==='create'){
    if(!uuid.test(p.listing_id)||!uuid.test(p.request_key)||typeof p.email!=='string'||typeof p.name!=='string'||typeof p.message!=='string')return json({error:'Enter your name, email and message.'},400);
    const secret=token();

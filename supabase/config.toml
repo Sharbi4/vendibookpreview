@@ -424,3 +424,7 @@ verify_jwt = false
 
 [functions.managed-inquiries]
 verify_jwt = false
+
+# Admin or backend caller verified inside the handler on every request.
+[functions.relay-member-message]
+verify_jwt = false

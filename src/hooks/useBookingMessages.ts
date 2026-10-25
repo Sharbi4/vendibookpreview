@@ -14,6 +14,10 @@ export interface BookingMessage {
   attachment_url: string | null;
   attachment_name: string | null;
   attachment_type: string | null;
+  /** Screening (owner 2026-10-25): a member's own message stays held until Vendibook relays a copy. */
+  held_for_relay?: boolean;
+  relayed_from?: string | null;
+  relay_declined_at?: string | null;
 }
 
 export const useBookingMessages = (bookingId: string) => {
@@ -131,7 +135,12 @@ export const useBookingMessages = (bookingId: string) => {
           filter: `booking_id=eq.${bookingId}`,
         },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new as BookingMessage]);
+          const newMessage = payload.new as BookingMessage;
+          // A relayed copy replaces the sender's held original.
+          setMessages((prev) => [
+            ...(newMessage.relayed_from ? prev.filter((msg) => msg.id !== newMessage.relayed_from) : prev),
+            newMessage,
+          ]);
         }
       )
       .subscribe();

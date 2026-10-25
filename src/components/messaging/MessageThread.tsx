@@ -1,4 +1,5 @@
 import MessagingSafety from './MessagingSafety';
+import RelayStatus from '@/components/messaging/RelayStatus';
 import React, { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import { Send, Loader2, Paperclip, X, FileText, Image as ImageIcon, Download } from 'lucide-react';
@@ -199,6 +200,7 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
                       <span className="ml-2">• Read</span>
                     )}
                   </span>
+                  <RelayStatus message={message} isOwn={isOwn} />
                 </div>
               );
             })}
