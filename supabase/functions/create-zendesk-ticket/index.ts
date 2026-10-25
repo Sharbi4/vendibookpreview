@@ -1,3 +1,4 @@
+import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const corsHeaders = {
@@ -54,6 +55,8 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  // Zendesk is retired from user flows; only admins/backend may create tickets.
+  if (!(await isAdminOrBackendCaller(req))) return forbiddenResponse(corsHeaders);
 
   try {
     logStep("Function started");
