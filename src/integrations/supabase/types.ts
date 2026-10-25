@@ -602,6 +602,7 @@ export type Database = {
           attachment_url: string | null
           booking_id: string
           created_at: string
+          held_for_relay: boolean
           id: string
           message: string
           read_at: string | null
@@ -613,6 +614,7 @@ export type Database = {
           attachment_url?: string | null
           booking_id: string
           created_at?: string
+          held_for_relay?: boolean
           id?: string
           message: string
           read_at?: string | null
@@ -624,6 +626,7 @@ export type Database = {
           attachment_url?: string | null
           booking_id?: string
           created_at?: string
+          held_for_relay?: boolean
           id?: string
           message?: string
           read_at?: string | null
@@ -2279,6 +2282,7 @@ export type Database = {
           attachment_url: string | null
           conversation_id: string
           created_at: string
+          held_for_relay: boolean
           id: string
           message: string
           pii_blocked: boolean | null
@@ -2292,6 +2296,7 @@ export type Database = {
           attachment_url?: string | null
           conversation_id: string
           created_at?: string
+          held_for_relay?: boolean
           id?: string
           message: string
           pii_blocked?: boolean | null
@@ -2305,6 +2310,7 @@ export type Database = {
           attachment_url?: string | null
           conversation_id?: string
           created_at?: string
+          held_for_relay?: boolean
           id?: string
           message?: string
           pii_blocked?: boolean | null
