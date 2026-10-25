@@ -204,6 +204,20 @@
       "when": 1792890429683,
       "tag": "0028_relay_all_messages_through_vendibook",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1792963613237,
+      "tag": "0029_managed_inquiries",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1792963651809,
+      "tag": "0030_managed_relay_review_gate",
+      "breakpoints": true
     }
   ]
 }
