@@ -602,6 +602,7 @@ export type Database = {
           attachment_url: string | null
           booking_id: string
           created_at: string
+          held_for_relay: boolean
           id: string
           message: string
           read_at: string | null
@@ -613,6 +614,7 @@ export type Database = {
           attachment_url?: string | null
           booking_id: string
           created_at?: string
+          held_for_relay?: boolean
           id?: string
           message: string
           read_at?: string | null
@@ -624,6 +626,7 @@ export type Database = {
           attachment_url?: string | null
           booking_id?: string
           created_at?: string
+          held_for_relay?: boolean
           id?: string
           message?: string
           read_at?: string | null
@@ -2279,6 +2282,7 @@ export type Database = {
           attachment_url: string | null
           conversation_id: string
           created_at: string
+          held_for_relay: boolean
           id: string
           message: string
           pii_blocked: boolean | null
@@ -2292,6 +2296,7 @@ export type Database = {
           attachment_url?: string | null
           conversation_id: string
           created_at?: string
+          held_for_relay?: boolean
           id?: string
           message: string
           pii_blocked?: boolean | null
@@ -2305,6 +2310,7 @@ export type Database = {
           attachment_url?: string | null
           conversation_id?: string
           created_at?: string
+          held_for_relay?: boolean
           id?: string
           message?: string
           pii_blocked?: boolean | null
@@ -5597,6 +5603,39 @@ export type Database = {
             columns: ["purchase_id"]
             isOneToOne: false
             referencedRelation: "monetization_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_sold_declarations: {
+        Row: {
+          declared_at: string
+          listing_id: string
+          seller_id: string
+        }
+        Insert: {
+          declared_at?: string
+          listing_id: string
+          seller_id: string
+        }
+        Update: {
+          declared_at?: string
+          listing_id?: string
+          seller_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_sold_declarations_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_sold_declarations_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "public_listings"
             referencedColumns: ["id"]
           },
         ]
@@ -15644,6 +15683,7 @@ export type Database = {
           owner_id: string
         }[]
       }
+      mark_listing_sold: { Args: { p_listing: string }; Returns: undefined }
       marketplace_updates_audience: {
         Args: { p_role: string; p_topic: string; p_zips?: string[] }
         Returns: {

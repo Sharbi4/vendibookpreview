@@ -1,3 +1,4 @@
+import GuestRequestForm from '@/components/messaging/GuestRequestForm';
 import { isValidRentalDateRange, parseRentalDate, parseRentalSlot, rentalIsInstant, rentalSubmitAllowed, validRentalContact } from '@/lib/rentalCheckoutValidation';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';

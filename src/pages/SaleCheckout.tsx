@@ -1,3 +1,4 @@
+import GuestRequestForm from '@/components/messaging/GuestRequestForm';
 import PurchaseRequestConfirmation from '@/components/commerce/PurchaseRequestConfirmation';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { trackBuyerSeoDownstream } from '@/lib/buyerSeoTracking';
@@ -1216,16 +1217,25 @@ const SaleCheckout = ({ requestOnly = true }: { requestOnly?: boolean }) => {
       >
         {!user && (
           <div className="v2-checkout-section" role="status">
-            <div className="v2-checkout-section-body">
-              <p className="text-sm font-semibold text-foreground">Sign in to complete checkout</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                An account is required to pay securely. Sign in now so we can keep your details when you return.
-              </p>
+            <div className="v2-checkout-section-body space-y-4">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Request to buy as a guest</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Share your contact details and we’ll send your invoice. No payment is collected now.
+                </p>
+              </div>
+              <GuestRequestForm
+                listingId={listingId!}
+                hostId={listing.host_id}
+                kind="buy"
+                details={`Request to buy: ${listing.title} (${formatCurrency(totalPrice)})`}
+                submitLabel="Send Request to Buy"
+              />
               <button
                 onClick={() => navigate(authPath(`${requestOnly ? '/purchase-request' : '/checkout'}/${listingId}`, 'signin'))}
-                className="v2-btn mt-3"
+                className="v2-btn"
               >
-                Sign in / Create account
+                Or sign in / create account
               </button>
             </div>
           </div>

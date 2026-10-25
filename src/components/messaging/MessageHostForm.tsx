@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useConversations } from '@/hooks/useConversations';
 import { useToast } from '@/hooks/use-toast';
 import { trackHostContacted } from '@/lib/analytics';
+import GuestRequestForm from './GuestRequestForm';
 
 const DRAFT_KEY = 'listingMessageDraft';
 
@@ -109,6 +110,14 @@ const MessageHostForm = ({
       sending.current = false;
     }
   };
+
+  if (!user) {
+    return (
+      <div className={className}>
+        <GuestRequestForm listingId={listingId} hostId={hostId} kind="message" defaultMessage={message} />
+      </div>
+    );
+  }
 
   return (
     <div className={`space-y-3 ${className}`}>
