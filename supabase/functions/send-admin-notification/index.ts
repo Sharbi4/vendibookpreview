@@ -37,11 +37,12 @@ const BROWSER_TYPES: Record<string, { signedIn: boolean; keys: Set<string> }> = 
   new_listing: {
     signedIn: true,
     keys: keys("listing_id", "listing_title", "title", "category", "mode", "price", "city", "state",
-      "host_email", "host_name", "user_id", "published_at", "listing_url"),
+      "host_email", "host_name", "user_id", "published_at", "listing_url", "price_daily", "price_sale",
+      "address", "host_id", "source"),
   },
   new_user: {
     signedIn: true,
-    keys: keys("email", "full_name", "first_name", "last_name", "phone_number", "role", "provider", "user_id"),
+    keys: keys("email", "full_name", "first_name", "last_name", "phone_number", "role", "provider", "user_id", "source"),
   },
 };
 const deny = (status: number) =>
