@@ -1,3 +1,4 @@
+import GuestRequestForm from '@/components/messaging/GuestRequestForm';
 import PurchaseRequestConfirmation from '@/components/commerce/PurchaseRequestConfirmation';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { trackBuyerSeoDownstream } from '@/lib/buyerSeoTracking';
