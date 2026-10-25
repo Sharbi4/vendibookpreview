@@ -6335,6 +6335,122 @@ export type Database = {
           },
         ]
       }
+      managed_inquiries: {
+        Row: {
+          access_sent_at: string
+          closed_at: string | null
+          created_at: string
+          email: string
+          guest_name: string
+          host_id: string
+          id: string
+          ip_hash: string
+          last_activity_at: string
+          listing_id: string
+          request_key: string
+          token_expires_at: string
+          token_hash: string
+          verified_at: string | null
+        }
+        Insert: {
+          access_sent_at?: string
+          closed_at?: string | null
+          created_at?: string
+          email: string
+          guest_name: string
+          host_id: string
+          id?: string
+          ip_hash: string
+          last_activity_at?: string
+          listing_id: string
+          request_key: string
+          token_expires_at: string
+          token_hash: string
+          verified_at?: string | null
+        }
+        Update: {
+          access_sent_at?: string
+          closed_at?: string | null
+          created_at?: string
+          email?: string
+          guest_name?: string
+          host_id?: string
+          id?: string
+          ip_hash?: string
+          last_activity_at?: string
+          listing_id?: string
+          request_key?: string
+          token_expires_at?: string
+          token_hash?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "managed_inquiries_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "managed_inquiries_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      managed_inquiry_messages: {
+        Row: {
+          body: string
+          created_at: string
+          held: boolean
+          hold_reason: string | null
+          id: string
+          inquiry_id: string
+          request_key: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sender_id: string | null
+          sender_role: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          held?: boolean
+          hold_reason?: string | null
+          id?: string
+          inquiry_id: string
+          request_key: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sender_id?: string | null
+          sender_role: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          held?: boolean
+          hold_reason?: string | null
+          id?: string
+          inquiry_id?: string
+          request_key?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sender_id?: string | null
+          sender_role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "managed_inquiry_messages_inquiry_id_fkey"
+            columns: ["inquiry_id"]
+            isOneToOne: false
+            referencedRelation: "managed_inquiries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_update_preferences: {
         Row: {
           confirmed_at: string
@@ -15050,6 +15166,16 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      append_managed_inquiry_message: {
+        Args: {
+          p_actor: string
+          p_body: string
+          p_inquiry: string
+          p_request: string
+          p_role: string
+        }
+        Returns: string
+      }
       apply_featured_subscription_period: {
         Args: { p_attempt: string; p_paid_through: string }
         Returns: undefined
@@ -15416,6 +15542,18 @@ export type Database = {
       count_purchase_referrals_this_month: {
         Args: { p_referrer_id: string }
         Returns: number
+      }
+      create_managed_inquiry: {
+        Args: {
+          p_body: string
+          p_email: string
+          p_ip_hash: string
+          p_listing: string
+          p_name: string
+          p_request: string
+          p_token_hash: string
+        }
+        Returns: string
       }
       create_video_walkthrough: {
         Args: {
