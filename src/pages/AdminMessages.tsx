@@ -184,7 +184,7 @@ export default function AdminMessages() {
       .select("id, sender_id, message, created_at, read_at, attachment_name, held_for_relay, relayed_at, relay_declined_at, relay_decline_reason, relayed_from")
       .eq("conversation_id", conversationId)
       .order("created_at", { ascending: true });
-    return data || [];
+    return ((data || []) as unknown) as Message[];
   };
 
   useEffect(() => {
