@@ -45,14 +45,20 @@ afterEach(() => {
 });
 
 describe('MessageHostForm seller routing', () => {
-  it('preserves a guest walkthrough draft for direct messaging after sign-in', () => {
+  it('lets a guest send a message with name, email and phone (no sign-in)', async () => {
+    mocks.insert.mockResolvedValue({ error: null });
+    mocks.invoke.mockResolvedValue({});
     renderForm();
-    fireEvent.change(screen.getByRole('textbox', { name: 'Your message' }), { target: { value: 'Could we see the generator live?' } });
-    fireEvent.click(screen.getByRole('button', { name: /sign in to message the seller/i }));
-    expect(mocks.navigate).toHaveBeenCalledWith('/auth?redirect=%2Flisting%2Flisting-1');
-    expect(JSON.parse(sessionStorage.getItem('listingMessageDraft') || '{}')).toMatchObject({ listingId: 'listing-1', hostId: 'host-1', message: 'Could we see the generator live?' });
-    expect(mocks.insert).not.toHaveBeenCalled();
-    expect(mocks.invoke).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: /send message/i }));
+    expect(mocks.insert).not.toHaveBeenCalled(); // phone + email required
+    fireEvent.change(screen.getByLabelText('Your name'), { target: { value: 'Ana Ruiz' } });
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'ana@example.com' } });
+    fireEvent.change(screen.getByLabelText('Phone'), { target: { value: '602-555-0100' } });
+    fireEvent.click(screen.getByRole('button', { name: /send message/i }));
+    await waitFor(() => expect(mocks.insert).toHaveBeenCalledWith(expect.objectContaining({
+      listing_id: 'listing-1', host_id: 'host-1', email: 'ana@example.com', phone: '602-555-0100', source: 'guest_inquiry',
+    })));
+    expect(mocks.navigate).not.toHaveBeenCalled();
   });
 
   it('keeps the direct-message flow for signed-in users', () => {
