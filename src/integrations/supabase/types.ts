@@ -1601,6 +1601,38 @@ export type Database = {
           },
         ]
       }
+      buyermatch_audit: {
+        Row: {
+          action: string
+          actor_id: string | null
+          campaign_id: string | null
+          id: string
+          occurred_at: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          campaign_id?: string | null
+          id?: string
+          occurred_at?: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          campaign_id?: string | null
+          id?: string
+          occurred_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buyermatch_audit_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "buyermatch_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       buyermatch_campaigns: {
         Row: {
           activated_at: string | null
@@ -1742,6 +1774,50 @@ export type Database = {
           },
         ]
       }
+      buyermatch_imports: {
+        Row: {
+          batch_key: string
+          campaign_id: string
+          id: string
+          records: Json
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string
+          submitted_by: string
+        }
+        Insert: {
+          batch_key: string
+          campaign_id: string
+          id?: string
+          records: Json
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          submitted_by: string
+        }
+        Update: {
+          batch_key?: string
+          campaign_id?: string
+          id?: string
+          records?: Json
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          submitted_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buyermatch_imports_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "buyermatch_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       buyermatch_links: {
         Row: {
           approval_event_id: string
@@ -1801,12 +1877,49 @@ export type Database = {
           },
         ]
       }
+      buyermatch_prospects: {
+        Row: {
+          campaign_id: string
+          prospect_id: string
+          record: Json
+          source_import_id: string
+        }
+        Insert: {
+          campaign_id: string
+          prospect_id: string
+          record: Json
+          source_import_id: string
+        }
+        Update: {
+          campaign_id?: string
+          prospect_id?: string
+          record?: Json
+          source_import_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buyermatch_prospects_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "buyermatch_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buyermatch_prospects_source_import_id_fkey"
+            columns: ["source_import_id"]
+            isOneToOne: false
+            referencedRelation: "buyermatch_imports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       buyermatch_reports: {
         Row: {
           campaign_id: string
           id: string
           metrics: Json
           published_at: string
+          source_import_id: string | null
           summary: string
         }
         Insert: {
@@ -1814,6 +1927,7 @@ export type Database = {
           id?: string
           metrics?: Json
           published_at?: string
+          source_import_id?: string | null
           summary: string
         }
         Update: {
@@ -1821,6 +1935,7 @@ export type Database = {
           id?: string
           metrics?: Json
           published_at?: string
+          source_import_id?: string | null
           summary?: string
         }
         Relationships: [
@@ -1829,6 +1944,13 @@ export type Database = {
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "buyermatch_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buyermatch_reports_source_import_id_fkey"
+            columns: ["source_import_id"]
+            isOneToOne: true
+            referencedRelation: "buyermatch_imports"
             referencedColumns: ["id"]
           },
         ]
@@ -15018,6 +15140,7 @@ export type Database = {
         Returns: Json
       }
       buyermatch_entitled: { Args: { _user: string }; Returns: boolean }
+      buyermatch_pause_ineligible: { Args: never; Returns: number }
       buyermatch_track_visit: {
         Args: {
           _consent: boolean
