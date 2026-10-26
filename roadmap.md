@@ -1,5 +1,8 @@
 # Roadmap
 
+- [open] Focused outbound Atlas correction: truthful followup/opt-out language, processing disclosure, inactive private lookup documentation, same-agent sync/readback; no calls/SMS/publication.
+- [open] Check and correct odd search-filter typography after the site-wide font change.
+
 - [done] Growth Outreach prepare-only: separate agent agent_6701m5wwwxm0f3p8rf0hmmbc54j1 created/read back with ZRM and recording off; admin route and consent/batch/draft service deployed; 21 safety tests and build pass; authenticated provider read verified; live dispatch/SMS return 423. No leads seeded, calls/SMS/jobs or publication.
 - [done] Outbound Atlas update: same agent agent_6701m5wwwxm0f3p8rf0hmmbc54j1 renamed "Atlas — Vendibook Outbound"; new prompt/first message/7 playbooks, 2 shared KB docs, 4 read-only tools (outbound-atlas-tools); inbound agents/phone unchanged on readback; dispatch/SMS still 423.
 - [open] Growth Outreach future activation — requires separate outbound number, independent founder identity/approval, verified owner test number and legally reviewed lead consent, dispatch/opt-out persistence transport, SMS provider/A2P and privacy/data-use review. Import/evidence-to-batch flow not exercised with real leads; no real consented prospect supplied. Dispatch intentionally remains unimplemented and locked off.
