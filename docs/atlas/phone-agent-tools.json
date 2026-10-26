@@ -33,13 +33,11 @@
           },
           "caller_id": {
             "type": "string",
-            "dynamic_variable": "system__caller_id",
-            "description": "The number the caller is calling from."
+            "dynamic_variable": "system__caller_id"
           },
           "conversation_id": {
             "type": "string",
-            "dynamic_variable": "system__conversation_id",
-            "description": "This call's conversation id."
+            "dynamic_variable": "system__conversation_id"
           }
         },
         "required": [
@@ -115,13 +113,11 @@
           },
           "caller_id": {
             "type": "string",
-            "dynamic_variable": "system__caller_id",
-            "description": "The number the caller is calling from."
+            "dynamic_variable": "system__caller_id"
           },
           "conversation_id": {
             "type": "string",
-            "dynamic_variable": "system__conversation_id",
-            "description": "This call's conversation id."
+            "dynamic_variable": "system__conversation_id"
           }
         },
         "required": [
@@ -152,8 +148,7 @@
         "properties": {
           "conversation_id": {
             "type": "string",
-            "dynamic_variable": "system__conversation_id",
-            "description": "This call's conversation id."
+            "dynamic_variable": "system__conversation_id"
           }
         },
         "required": []
@@ -190,13 +185,11 @@
           },
           "caller_id": {
             "type": "string",
-            "dynamic_variable": "system__caller_id",
-            "description": "The number the caller is calling from."
+            "dynamic_variable": "system__caller_id"
           },
           "conversation_id": {
             "type": "string",
-            "dynamic_variable": "system__conversation_id",
-            "description": "This call's conversation id."
+            "dynamic_variable": "system__conversation_id"
           }
         },
         "required": [
@@ -229,8 +222,7 @@
           },
           "conversation_id": {
             "type": "string",
-            "dynamic_variable": "system__conversation_id",
-            "description": "This call's conversation id."
+            "dynamic_variable": "system__conversation_id"
           }
         },
         "required": [
@@ -258,8 +250,7 @@
         "properties": {
           "conversation_id": {
             "type": "string",
-            "dynamic_variable": "system__conversation_id",
-            "description": "This call's conversation id."
+            "dynamic_variable": "system__conversation_id"
           }
         },
         "required": [
@@ -397,13 +388,11 @@
           },
           "caller_id": {
             "type": "string",
-            "dynamic_variable": "system__caller_id",
-            "description": "The number the caller is calling from."
+            "dynamic_variable": "system__caller_id"
           },
           "conversation_id": {
             "type": "string",
-            "dynamic_variable": "system__conversation_id",
-            "description": "This call's conversation id."
+            "dynamic_variable": "system__conversation_id"
           }
         },
         "required": [
@@ -451,13 +440,11 @@
           },
           "caller_id": {
             "type": "string",
-            "dynamic_variable": "system__caller_id",
-            "description": "The number the caller is calling from."
+            "dynamic_variable": "system__caller_id"
           },
           "conversation_id": {
             "type": "string",
-            "dynamic_variable": "system__conversation_id",
-            "description": "This call's conversation id."
+            "dynamic_variable": "system__conversation_id"
           }
         },
         "required": [
@@ -561,8 +548,7 @@
           },
           "conversation_id": {
             "type": "string",
-            "dynamic_variable": "system__conversation_id",
-            "description": "This call's conversation id."
+            "dynamic_variable": "system__conversation_id"
           }
         },
         "required": [
@@ -614,13 +600,11 @@
           },
           "caller_id": {
             "type": "string",
-            "dynamic_variable": "system__caller_id",
-            "description": "The number the caller is calling from."
+            "dynamic_variable": "system__caller_id"
           },
           "conversation_id": {
             "type": "string",
-            "dynamic_variable": "system__conversation_id",
-            "description": "This call's conversation id."
+            "dynamic_variable": "system__conversation_id"
           }
         },
         "required": [
