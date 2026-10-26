@@ -12,7 +12,10 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     // This endpoint is public. Never expose a server or connector credential.
-    const BROWSER_KEY = Deno.env.get("GOOGLE_MAPS_BROWSER_KEY");
+    // Owner-supplied key (billing-enabled, vendibook.com referrers) takes priority
+    // over the auto-managed key, which cannot be overwritten.
+    const BROWSER_KEY =
+      Deno.env.get("VENDIBOOK_MAPS_BROWSER_KEY") || Deno.env.get("GOOGLE_MAPS_BROWSER_KEY");
 
     if (!BROWSER_KEY) {
       return new Response(
