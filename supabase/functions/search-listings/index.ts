@@ -377,6 +377,21 @@ Deno.serve(async (req) => {
       collect(stateRows);
     }
 
+    // Owner decision 2026-10-26: currently featured listings that match the
+    // shopper's other filters appear at the top of location searches even when
+    // they are outside the searched area.
+    const outOfAreaFeaturedIds = new Set<string>();
+    if (hasCoords || hasStructuredLocation) {
+      const { data: featRows, error: featErr } = await buildBaseQuery()
+        .eq('featured_enabled', true)
+        .gt('featured_expires_at', new Date().toISOString())
+        .limit(50);
+      if (featErr) throw featErr;
+      for (const r of featRows ?? []) {
+        if (!rowsById.has(r.id)) { rowsById.set(r.id, r); outOfAreaFeaturedIds.add(r.id); }
+      }
+    }
+
     const listings = [...rowsById.values()];
     void fetchRadius;
 
@@ -547,7 +562,7 @@ Deno.serve(async (req) => {
     // exist or the 500-mile ceiling is reached.
     let effectiveRadius = requestedRadius;
     if (hasCoords && !stateOnlySearch) {
-      const withCoords = filteredListings.filter((l) => l.distance_miles !== null);
+      const withCoords = filteredListings.filter((l) => l.distance_miles !== null && !outOfAreaFeaturedIds.has(l.id));
       const fallbackRows = filteredListings.filter((l) => l.location_text_match);
 
       const countWithin = (radius: number) =>
@@ -564,7 +579,7 @@ Deno.serve(async (req) => {
       }
 
       filteredListings = filteredListings.filter(
-        (l) => (l.distance_miles !== null && l.distance_miles <= effectiveRadius) || l.location_text_match
+        (l) => (l.distance_miles !== null && l.distance_miles <= effectiveRadius) || l.location_text_match || outOfAreaFeaturedIds.has(l.id)
       );
     }
     // A state pick ("California, USA") arrives with the state's centroid as
