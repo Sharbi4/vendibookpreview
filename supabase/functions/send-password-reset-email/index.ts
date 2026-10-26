@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
           },
           ctaLabel: "Reset password",
           ctaUrl: resetLink,
-          footnote: "Need help? Call (725) 755-9598 or email support@vendibook.com.",
+          footnote: "Need help? Call (866) 690-6227 or email support@vendibook.com.",
         },
       });
 

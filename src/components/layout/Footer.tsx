@@ -196,10 +196,10 @@ const Footer = () => {
               The marketplace for mobile food businesses.
             </p>
             <a
-              href="tel:+17257559598"
+              href="tel:+18666906227"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              (725) 755-9598
+              (866) 690-6227
             </a>
           </div>
 

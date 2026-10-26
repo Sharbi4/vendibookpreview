@@ -269,7 +269,7 @@ export function EmailReceiptPreview({
         <div className="text-center mt-6 pt-6 border-t border-border/50">
           <p className="text-xs text-muted-foreground mb-1">
             Need help? Call us at{" "}
-            <a href="tel:+17257559598" className="text-primary hover:underline">(725) 755-9598</a>
+            <a href="tel:+18666906227" className="text-primary hover:underline">(866) 690-6227</a>
             {" "}or email{" "}
             <a href="mailto:support@vendibook.com" className="text-primary hover:underline">support@vendibook.com</a>
           </p>

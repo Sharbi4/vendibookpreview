@@ -353,7 +353,7 @@ export function ReportIssueDialog({ open, onOpenChange, context }: Props) {
           </div>
           <p className="text-sm text-muted-foreground">
             You'll receive an email confirmation. Your work on this page hasn't been changed —
-            you can continue where you left off. For urgent issues, call (725) 755-9598.
+            you can continue where you left off. For urgent issues, call (866) 690-6227.
           </p>
           <DialogFooter>
             <Button onClick={() => onOpenChange(false)}>Close</Button>

@@ -94,7 +94,7 @@ const VendiChatWidget = () => {
         {
           id: `e-${Date.now()}`,
           role: 'assistant',
-          content: "I hit an issue reaching support. Please try again in a moment, or call (725) 755-9598.",
+          content: "I hit an issue reaching support. Please try again in a moment, or call (866) 690-6227.",
         },
       ]);
     } finally {

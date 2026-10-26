@@ -220,7 +220,7 @@ serve(async (req) => {
               ],
               ctaLabel: "Go to Vendibook",
               ctaUrl: "https://vendibook.com/dashboard",
-              footnote: "Questions? Call (725) 755-9598 (Mon–Fri 9am–5pm AZ). We do not promise a fixed response window — urgent reports (fraud, payment problems, safety) get first priority.",
+              footnote: "Questions? Call (866) 690-6227 (Mon–Fri 9am–5pm AZ). We do not promise a fixed response window — urgent reports (fraud, payment problems, safety) get first priority.",
             },
           });
       } catch (e) {

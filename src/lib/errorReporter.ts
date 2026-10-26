@@ -138,7 +138,7 @@ const BASE_MESSAGES: Record<FriendlyContext, string> = {
   upload:
     "We’re sorry, your file did not upload correctly. Please try again, or contact support and we’ll help you finish this.",
   support:
-    "We’re sorry, your message didn’t go through. Please try again or call (725) 755-9598.",
+    "We’re sorry, your message didn’t go through. Please try again or call (866) 690-6227.",
 };
 
 export function friendlyMessage(context: FriendlyContext, referenceCode?: string): string {
