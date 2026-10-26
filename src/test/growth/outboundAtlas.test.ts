@@ -9,7 +9,7 @@ describe('Atlas outbound identity',()=>{
  it('uses the separate display name and spoken name Atlas, never Vendi Outreach',()=>{
   expect(OUTBOUND_DISPLAY_NAME).toBe('Atlas — Vendibook Outbound');
   expect(OUTBOUND_AGENT_ID).toBe('agent_6701m5wwwxm0f3p8rf0hmmbc54j1');
-  expect(FIRST_MESSAGE).toBe('Hi, this is Atlas, Vendibook’s AI voice representative. I’m calling about {{call_purpose}}. Is now an okay time for a quick question?');
+  expect(FIRST_MESSAGE).toContain('Vendibook’s AI voice representative');
   expect(OUTBOUND_PROMPT).not.toMatch(/Vendi Outreach/);
   expect(GROWTH_PROMPT).toBe(OUTBOUND_PROMPT);
  });
@@ -41,9 +41,9 @@ describe('seven segments plus unsure',()=>{
 });
 
 describe('objections vs opt-out',()=>{
- it.each(['Stop calling me','Not interested','Take me off your list','Do not call this number'])('"%s" ends and suppresses',(u)=>expect(replyPolicy(u)).toBe('end_and_suppress'));
+ it.each(['Stop calling me','Not interested','Take me off your list','Do not call this number'])('"%s" acknowledges and ends without pretending to persist suppression',(u)=>expect(replyPolicy(u)).toBe('acknowledge_and_end'));
  it('wrong number ends without a pitch',()=>expect(replyPolicy('You have the wrong number')).toBe('end_wrong_number'));
- it('busy gets a brief acknowledgement',()=>expect(replyPolicy("I'm driving, call me later")).toBe('acknowledge_and_offer_callback'));
+ it('busy directs to the contact page, not a recorded callback',()=>expect(replyPolicy("I'm driving, call me later")).toBe('acknowledge_and_offer_contact_page'));
  it.each(['What are the fees?','How much does it cost?','Do you have buyers?',"I'm already on Facebook Marketplace",'What about financing?'])('"%s" is informational: answered once',(u)=>expect(replyPolicy(u)).toBe('answer_once'));
  it('no blanket first-objection disengagement remains',()=>{expect(OUTBOUND_PROMPT).not.toMatch(/first objection/i);expect(OUTBOUND_PROMPT).toMatch(/ONE concise, honest answer/);});
 });

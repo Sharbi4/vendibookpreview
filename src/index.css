@@ -406,6 +406,12 @@
    Keep code/reference monospace and payment brand lettering intact. */
 body, body :where(*) {
   font-family: var(--font-site) !important;
+  /* Sofia's soft forms need their natural spacing, including legacy headings
+     and compact search filters that previously tightened the letters. */
+  letter-spacing: 0 !important;
+}
+body :where(*)::before, body :where(*)::after {
+  font-family: inherit;
 }
 body :is(code, pre, kbd, samp, .font-mono),
 body :is(code, pre, kbd, samp, .font-mono) :where(*) {
