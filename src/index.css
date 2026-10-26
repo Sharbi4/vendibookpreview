@@ -31,14 +31,15 @@
 
 @font-face {
   font-family: 'SofiaProSoftLight';
-  src: url('/__l5e/assets-v1/5c9bc164-9241-46f4-98fa-bc6ea22ce45e/SofiaProSoftLight.otf') format('opentype');
-  font-weight: 300 700;
+  src: url('https://vendibook.com/__l5e/assets-v1/5c9bc164-9241-46f4-98fa-bc6ea22ce45e/SofiaProSoftLight.otf') format('opentype');
+  font-weight: 300;
   font-style: normal;
   font-display: swap;
 }
 
 @layer base {
   :root {
+    --font-site: 'SofiaProSoftLight', 'Sofia Pro', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     /* Vendibook Brand Colors */
     --vendibook-orange: 14 100% 57%;
     --vendibook-orange-light: 14 100% 95%;
@@ -354,21 +355,20 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    /* Body defaults to the UI face (Manrope). Display face (Sofia Pro) is opt-in via .font-display. */
-    font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--font-site);
     font-feature-settings: 'ss01', 'cv11';
-    letter-spacing: 0.005em;
+    letter-spacing: 0;
     line-height: 1.5;
   }
 
-  /* Typography tokens — two-tier pairing */
+  /* One site-wide face; existing weight utilities retain the visual hierarchy. */
   .font-display {
-    font-family: 'SofiaProSoftLight', 'Sofia Pro', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+    font-family: var(--font-site) !important;
     line-height: 1.15;
-    letter-spacing: -0.01em;
+    letter-spacing: 0;
   }
   .font-ui {
-    font-family: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    font-family: var(--font-site) !important;
   }
   /* Tabular figures — for KPIs, money, counts, dates in data contexts */
   .tabular {
@@ -399,6 +399,20 @@
   ::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--muted-foreground) / 0.4);
   }
+}
+
+/* Override legacy page-specific faces, including portalled menus and dialogs.
+   The supplied face is Light; browsers synthesize heavier requested weights.
+   Keep code/reference monospace and payment brand lettering intact. */
+body, body :where(*) {
+  font-family: var(--font-site) !important;
+}
+body :is(code, pre, kbd, samp, .font-mono),
+body :is(code, pre, kbd, samp, .font-mono) :where(*) {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+}
+body .paypal-card-brands > span {
+  font-family: Arial, sans-serif !important;
 }
 
 @layer components {
