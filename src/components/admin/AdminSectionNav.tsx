@@ -9,6 +9,7 @@ import {
   DollarSign,
   BadgeCheck,
   ClipboardCheck,
+  PhoneOutgoing,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,7 @@ const SECTIONS = [
   { to: "/admin/managed-messaging", label: "Managed messaging", icon: MessagesSquare },
   { to: "/admin/messages", label: "Messages", icon: MessagesSquare },
   { to: "/admin/meta-muse", label: "Lead review", icon: ClipboardCheck },
+  { to: "/admin/outbound-growth", label: "Growth outreach", icon: PhoneOutgoing },
   { to: "/admin/freight", label: "Freight", icon: Truck },
   { to: "/admin/support", label: "Support", icon: Headphones },
   { to: "/admin/finance", label: "Finance", icon: DollarSign },
