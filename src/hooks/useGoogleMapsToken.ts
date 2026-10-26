@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
  * The key is fetched once per browser session (cached in-memory + sessionStorage)
  * so that mounting several maps never re-triggers an edge function round trip.
  */
-const STORAGE_KEY = 'vb_gmaps_browser_key_v2';
+const STORAGE_KEY = 'vb_gmaps_browser_key_v3';
 
 let cachedKey: string | null = null;
 let inFlight: Promise<string | null> | null = null;
