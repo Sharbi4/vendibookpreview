@@ -1,4 +1,4 @@
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { corsHeaders } from '../_shared/jsonError.ts';
 import { z } from 'npm:zod@3.25.76';
 import {getCaller,isAdminUser,serviceRoleClient} from '../_shared/callerGuard.ts';
 import {eligibility,followupDraft,OPENERS,SEGMENTS,OUTCOMES,pilotLimit} from '../_shared/growthOutreach.ts';
