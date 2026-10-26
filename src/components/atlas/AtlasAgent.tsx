@@ -9,7 +9,7 @@ import { asksToPauseNavigation } from '@/lib/atlas/atlasNavigation';
 import { ALLISON_START_EVENT } from '@/lib/atlas/allisonConfig';
 import { handoffBriefing, type AgentHandoff } from '@/lib/atlas/agentHandoff';
 import { ATLAS_PAGE_EVENT, pageOutline } from '@/lib/atlas/atlasPage';
-import { attentionBriefing, currentJourney, journeyBriefing, watchAttention } from '@/lib/atlas/journeyContext';
+import { SCREEN_NOTE_PREFIX, attentionBriefing, createAttentionNudger, currentJourney, journeyBriefing, watchAttention } from '@/lib/atlas/journeyContext';
 import { createAtlasTools, liveListingIds, type AtlasListingCard, type AtlasOfferDraft, type AtlasSellerDraft } from '@/lib/atlas/atlasTools';
 import { useAuth } from '@/contexts/AuthContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -114,6 +114,7 @@ export default function AtlasAgent() {
   const goneRef = useRef<string[]>([]);
   const topicRef = useRef<AtlasTopic | null>(null);
   const pathRef = useRef(location.pathname);
+  const nudgerRef = useRef<ReturnType<typeof createAttentionNudger> | null>(null);
   pathRef.current = location.pathname;
 
   // Re-check the 30-minute window while the page stays open.
@@ -207,6 +208,8 @@ export default function AtlasAgent() {
       if (topic) window.setTimeout(() => conversation.sendContextualUpdate(ATLAS_TOPIC_BRIEFINGS[topic]), 80);
     },
     onMessage: ({ source, message }) => {
+      nudgerRef.current?.activity();
+      if (message?.startsWith(SCREEN_NOTE_PREFIX)) return;
       if (source !== 'ai' && message && asksToPauseNavigation(message)) void tools.set_navigation({ paused: true });
       if (message?.trim()) addTurn({ from: source === 'ai' ? 'atlas' : 'you', text: message.trim() });
     },
@@ -238,9 +241,24 @@ export default function AtlasAgent() {
   // What the buyer points at, focuses or stops scrolling at, only while the call is live.
   useEffect(() => {
     if (!live) return;
-    return watchAttention((item) => conversation.sendContextualUpdate(attentionBriefing(item)));
+    // If they then go quiet on it, Atlas offers help with exactly that.
+    const nudger = createAttentionNudger({
+      isBusy: () => conversation.isSpeaking || Boolean(draftRef.current.trim()) || overlayOpenRef.current,
+      nudge: (text) => conversation.sendUserMessage(text),
+    });
+    nudgerRef.current = nudger;
+    const stop = watchAttention((item) => {
+      conversation.sendContextualUpdate(attentionBriefing(item));
+      nudger.attention(item);
+    });
+    return () => { stop(); nudger.stop(); nudgerRef.current = null; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [live]);
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
+  useEffect(() => { if (draft) nudgerRef.current?.activity(); }, [draft]);
+  const overlayOpenRef = useRef(false);
+  overlayOpenRef.current = Boolean(messageDraft || offerDraft || offerAuthGate || followUpDraft || menuConcept);
 
   // The idle launcher's subtitle follows the page ("Questions about this listing?").
   const [teaser, setTeaser] = useState('Find, compare and negotiate by voice.');

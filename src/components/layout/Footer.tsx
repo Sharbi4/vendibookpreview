@@ -1,7 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { ArrowUpRight, ChevronDown, Facebook, Instagram, Twitter, Linkedin, MessageSquareText, Phone } from 'lucide-react';
-import { VENDIBOOK_FACEBOOK_URL } from '@/components/social/FacebookLink';
+import FacebookLink, { VENDIBOOK_FACEBOOK_URL } from '@/components/social/FacebookLink';
+import vendibookWordmark from '@/assets/vendibook-wordmark-light.png';
+import { inFollowUpHours } from '../../../supabase/functions/_shared/followUpWindow';
 import { PayPalWordmark, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import { cn } from '@/lib/utils';
 import { trackFooterCitiesClicked } from '@/lib/analytics';
@@ -154,18 +156,28 @@ const Footer = () => {
       {/* Brand and support */}
       <div className="vf-wrap vf-top">
         <div className="vf-brand">
-          <Link to="/" aria-label="Vendibook home">
-            <img src="/brand/vendibook-logo-email-white.png" alt="Vendibook" className="vf-logo" loading="lazy" />
+          <Link to="/" aria-label="Vendibook home" className="vf-logo-link">
+            <img src={vendibookWordmark} alt="Vendibook" width={1000} height={293} className="vf-logo" loading="lazy" />
           </Link>
           <p className="vf-tagline">The marketplace for mobile food businesses. Built by food entrepreneurs, for food entrepreneurs.</p>
+          <div className="vf-follow">
+            <span className="vf-eyebrow">Follow Vendibook</span>
+            <FacebookLink size={40} />
+          </div>
         </div>
+
         <div className="vf-support">
-          <p className="vf-eyebrow">Support, every step of the way</p>
-          <a href="tel:+18666906227" className="vf-phone">(866) 690-6227</a>
+          <div className="vf-support-glow" aria-hidden />
+          <p className="vf-live">
+            <span className={cn('vf-live-dot', inFollowUpHours(new Date()) && 'is-open')} aria-hidden />
+            {inFollowUpHours(new Date()) ? 'Our team is in now' : 'Line answered 24/7'}
+          </p>
+          <p className="vf-support-title">Talk to a real person</p>
+          <a href="tel:+18666906227" className="vf-phone">(866)&nbsp;690&#8209;6227</a>
           <div className="vf-support-actions">
-            <a href="tel:+18666906227" className="vf-pill"><Phone className="h-3.5 w-3.5" aria-hidden /> Call</a>
-            <a href="sms:+18666906227" className="vf-pill"><MessageSquareText className="h-3.5 w-3.5" aria-hidden /> Text</a>
-            <Link to="/contact" className="vf-pill is-solid">Contact us <ArrowUpRight className="h-3.5 w-3.5" aria-hidden /></Link>
+            <a href="tel:+18666906227" className="vf-pill"><Phone className="h-4 w-4" aria-hidden /> Call</a>
+            <a href="sms:+18666906227" className="vf-pill"><MessageSquareText className="h-4 w-4" aria-hidden /> Text</a>
+            <Link to="/contact" className="vf-pill is-solid">Contact us <ArrowUpRight className="h-4 w-4" aria-hidden /></Link>
           </div>
           <p className="vf-hours">Answered 24/7 · Team callbacks Mon–Fri, 8 AM–8 PM ET</p>
         </div>

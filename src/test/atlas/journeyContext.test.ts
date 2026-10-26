@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { currentJourney, journeyBriefing, watchAttention, type AttentionItem } from '@/lib/atlas/journeyContext';
+import { NUDGE_QUIET_MS, createAttentionNudger, currentJourney, journeyBriefing, watchAttention, type AttentionItem } from '@/lib/atlas/journeyContext';
 import { ATLAS_DEFAULT_OPENING, ATLAS_FIRST_MESSAGE } from '@/lib/atlas/atlasConfig';
 import { ALLISON_FIRST_MESSAGE } from '@/lib/atlas/allisonConfig';
 
@@ -104,5 +104,41 @@ describe('attention: what the user points at', () => {
     vi.advanceTimersByTime(61000);
     hover(btn); vi.advanceTimersByTime(1500);
     expect(seen).toHaveLength(1);
+  });
+});
+
+describe('speaking up about what the user is looking at', () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+  const item = { kind: 'pointing at' as const, label: '"Delivery options"' };
+
+  it('offers help after the user goes quiet on something, once per item', () => {
+    const nudge = vi.fn();
+    const n = createAttentionNudger({ isBusy: () => false, nudge });
+    vi.advanceTimersByTime(NUDGE_QUIET_MS);
+    n.attention(item);
+    vi.advanceTimersByTime(NUDGE_QUIET_MS);
+    expect(nudge).toHaveBeenCalledTimes(1);
+    expect(nudge.mock.calls[0][0]).toMatch(/^\[Screen note from the website, not words the user said: they paused, pointing at "Delivery options"/);
+    vi.advanceTimersByTime(60000);
+    n.attention(item);
+    vi.advanceTimersByTime(NUDGE_QUIET_MS);
+    expect(nudge).toHaveBeenCalledTimes(1);
+  });
+
+  it('stays quiet while anyone is talking or typing', () => {
+    const nudge = vi.fn();
+    let busy = true;
+    const n = createAttentionNudger({ isBusy: () => busy, nudge });
+    vi.advanceTimersByTime(NUDGE_QUIET_MS);
+    n.attention(item);
+    vi.advanceTimersByTime(NUDGE_QUIET_MS);
+    expect(nudge).not.toHaveBeenCalled();
+    busy = false;
+    n.attention({ kind: 'reading', label: 'the "Photos" section' });
+    vi.advanceTimersByTime(3000);
+    n.activity();
+    vi.advanceTimersByTime(NUDGE_QUIET_MS);
+    expect(nudge).not.toHaveBeenCalled();
   });
 });

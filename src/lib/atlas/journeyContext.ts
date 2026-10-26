@@ -320,3 +320,56 @@ export function watchAttention(report: (item: AttentionItem) => void): () => voi
 /** Contextual update for one attention item. The agent does not reply to these by itself. */
 export const attentionBriefing = (a: AttentionItem) =>
   `Attention: the user is ${a.kind} ${a.label}. Use this only if it helps (they go quiet, ask "what's this", or it answers their question).`;
+
+// ── Speaking up: offer help with what they're looking at ───────────────────────
+
+/** How long the conversation must be quiet after the user settles on something before the agent offers help. */
+export const NUDGE_QUIET_MS = 7000;
+const NUDGE_GAP_MS = 45000;
+const NUDGE_MAX_PER_CALL = 4;
+export const SCREEN_NOTE_PREFIX = '[Screen note';
+
+/**
+ * Sent as a user-turn so the agent actually speaks (contextual updates are
+ * silent). Marked as a website note so the agent never treats it as the
+ * user's words.
+ */
+export const attentionNudge = (a: AttentionItem) =>
+  `${SCREEN_NOTE_PREFIX} from the website, not words the user said: they paused, ${a.kind} ${a.label}. In one short, friendly sentence, say you see what they're looking at and offer help with it or say what you can do there. Then wait for them.]`;
+
+/**
+ * When the user rests on something and nobody has said anything for
+ * NUDGE_QUIET_MS, the agent offers help with it ("I see you're looking at the
+ * delivery options. Want me to walk you through them?"). At most one offer
+ * every 45 seconds, four per call, once per item; never while the agent is
+ * talking or the user is typing.
+ */
+export function createAttentionNudger(opts: { isBusy: () => boolean; nudge: (text: string) => void }) {
+  let lastActivity = Date.now();
+  let lastNudge = 0;
+  let count = 0;
+  let timer = 0;
+  const offered = new Set<string>();
+  return {
+    /** Anyone said something (or the user is typing): restart the quiet clock. */
+    activity() {
+      lastActivity = Date.now();
+    },
+    attention(item: AttentionItem) {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        const now = Date.now();
+        if (count >= NUDGE_MAX_PER_CALL || offered.has(item.label) || opts.isBusy()) return;
+        if (now - lastNudge < NUDGE_GAP_MS || now - lastActivity < NUDGE_QUIET_MS) return;
+        lastNudge = now;
+        lastActivity = now;
+        count += 1;
+        offered.add(item.label);
+        opts.nudge(attentionNudge(item));
+      }, NUDGE_QUIET_MS);
+    },
+    stop() {
+      window.clearTimeout(timer);
+    },
+  };
+}

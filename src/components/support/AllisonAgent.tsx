@@ -10,7 +10,7 @@ import { asksToPauseNavigation } from '@/lib/atlas/atlasNavigation';
 import { ATLAS_START_EVENT } from '@/lib/atlas/atlasFlag';
 import { handoffBriefing, type AgentHandoff } from '@/lib/atlas/agentHandoff';
 import { pageOutline } from '@/lib/atlas/atlasPage';
-import { attentionBriefing, currentJourney, journeyBriefing, watchAttention } from '@/lib/atlas/journeyContext';
+import { SCREEN_NOTE_PREFIX, attentionBriefing, createAttentionNudger, currentJourney, journeyBriefing, watchAttention } from '@/lib/atlas/journeyContext';
 import { Button } from '@/components/ui/button';
 import { MakeOfferModal } from '@/components/offers/MakeOfferModal';
 import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
@@ -41,6 +41,7 @@ export default function AllisonAgent() {
   const generation = useRef(0);
   const handoff = useRef<AgentHandoff>();
   const question = useRef('');
+  const nudgerRef = useRef<ReturnType<typeof createAttentionNudger> | null>(null);
   const salesTransfer = useRef<(summary: string, paused: boolean) => Promise<void>>(async () => {});
   const tools = useMemo(() => createAtlasTools({ navigate, showResults: setCards, openOffer: setOffer, openMessage: setMessage, currentListingId: () => window.location.pathname.match(/^\/listing\/([^/]+)/)?.[1] ?? null, currentUserId: () => userRef.current?.id ?? null, onNavigationChange: setPaused, transferToSales: (summary, paused) => salesTransfer.current(summary, paused) }), [navigate]);
   const clientTools = useMemo(() => Object.fromEntries(ALLISON_TOOL_NAMES.map(name => [name, async (params: Record<string, unknown>) => {
@@ -61,6 +62,8 @@ export default function AllisonAgent() {
       question.current = '';
     },
     onMessage: ({ source, message }) => {
+      nudgerRef.current?.activity();
+      if (message?.startsWith(SCREEN_NOTE_PREFIX)) return;
       if (mode === 'text' && message?.trim()) setTurns(previous => [...previous, { source, message: message.trim() }].slice(-40));
       if (source !== 'ai' && asksToPauseNavigation(message ?? '')) void tools.set_navigation({ paused: true });
     },
@@ -84,8 +87,23 @@ export default function AllisonAgent() {
   }, [location.pathname, location.search, live]);
   useEffect(() => {
     if (!live) return;
-    return watchAttention((item) => sessionRef.current.sendContextualUpdate(attentionBriefing(item)));
+    // If they then go quiet on it, Allison offers help with exactly that.
+    const nudger = createAttentionNudger({
+      isBusy: () => sessionRef.current.isSpeaking || Boolean(textRef.current.trim()) || Boolean(ticketRef.current),
+      nudge: (note) => sessionRef.current.sendUserMessage(note),
+    });
+    nudgerRef.current = nudger;
+    const stop = watchAttention((item) => {
+      sessionRef.current.sendContextualUpdate(attentionBriefing(item));
+      nudger.attention(item);
+    });
+    return () => { stop(); nudger.stop(); nudgerRef.current = null; };
   }, [live]);
+  const textRef = useRef(text);
+  textRef.current = text;
+  useEffect(() => { if (text) nudgerRef.current?.activity(); }, [text]);
+  const ticketRef = useRef(ticket);
+  ticketRef.current = ticket;
   useEffect(() => {
     const start = async (event: Event) => {
       if (starting.current || sessionRef.current.status === 'connected') return;
