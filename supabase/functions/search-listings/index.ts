@@ -377,6 +377,21 @@ Deno.serve(async (req) => {
       collect(stateRows);
     }
 
+    // Owner decision 2026-10-26: currently featured listings that match the
+    // shopper's other filters appear at the top of location searches even when
+    // they are outside the searched area.
+    const outOfAreaFeaturedIds = new Set<string>();
+    if (hasCoords || hasStructuredLocation) {
+      const { data: featRows, error: featErr } = await buildBaseQuery()
+        .eq('featured_enabled', true)
+        .gt('featured_expires_at', new Date().toISOString())
+        .limit(50);
+      if (featErr) throw featErr;
+      for (const r of featRows ?? []) {
+        if (!rowsById.has(r.id)) { rowsById.set(r.id, r); outOfAreaFeaturedIds.add(r.id); }
+      }
+    }
+
     const listings = [...rowsById.values()];
     void fetchRadius;
 
@@ -547,7 +562,7 @@ Deno.serve(async (req) => {
     // exist or the 500-mile ceiling is reached.
     let effectiveRadius = requestedRadius;
     if (hasCoords && !stateOnlySearch) {
-      const withCoords = filteredListings.filter((l) => l.distance_miles !== null);
+      const withCoords = filteredListings.filter((l) => l.distance_miles !== null && !outOfAreaFeaturedIds.has(l.id));
       const fallbackRows = filteredListings.filter((l) => l.location_text_match);
 
       const countWithin = (radius: number) =>
@@ -564,7 +579,7 @@ Deno.serve(async (req) => {
       }
 
       filteredListings = filteredListings.filter(
-        (l) => (l.distance_miles !== null && l.distance_miles <= effectiveRadius) || l.location_text_match
+        (l) => (l.distance_miles !== null && l.distance_miles <= effectiveRadius) || l.location_text_match || outOfAreaFeaturedIds.has(l.id)
       );
     }
     // A state pick ("California, USA") arrives with the state's centroid as
@@ -595,23 +610,12 @@ Deno.serve(async (req) => {
     };
 
 
-    // Explicit shopper sorts (price/distance/newest/relevance) are honored
-    // STRICTLY — pinning featured listings above them would misrepresent the
-    // requested order. Featured inventory is instead returned in `sponsored`
-    // for a labeled strip above the results. Only the default `featured`
-    // discovery sort pins featured listings first.
-    const isExplicitSort =
-      sort_by === 'price_low' ||
-      sort_by === 'price_high' ||
-      sort_by === 'newest' ||
-      (sort_by === 'relevance' && !!query?.trim()) ||
-      (sort_by === 'distance' && latitude !== undefined && longitude !== undefined);
-    const sponsored = isExplicitSort
-      ? filteredListings
-          .filter((l) => isFeatured(l))
-          .sort((a, b) => rotKey(a) - rotKey(b))
-          .slice(0, 4)
-      : [];
+    // Owner decision 2026-10-26: featured listings are pinned to the top of
+    // EVERY sort (price, newest, distance, relevance) and every location tier,
+    // including featured listings outside the searched area. Within the
+    // featured group and the regular group, the shopper's chosen sort still
+    // applies. The separate sponsored strip is retired (would duplicate).
+    const sponsored: any[] = [];
 
     // Apply sorting
     if (sort_by === 'distance' && latitude !== undefined && longitude !== undefined) {
@@ -672,6 +676,15 @@ Deno.serve(async (req) => {
       });
     }
 
+
+    // Featured-first across every sort and tier (stable sort keeps the
+    // chosen order inside each group; featured rotate fairly by day).
+    {
+      const feat = filteredListings.filter((l) => isFeatured(l));
+      const rest = filteredListings.filter((l) => !isFeatured(l));
+      if (sort_by === 'featured' || !sort_by) feat.sort((a, b) => rotKey(a) - rotKey(b));
+      filteredListings = [...feat, ...rest];
+    }
 
     // A listing shown in the Sponsored strip must not also appear in the
     // main results below it — the same truck would render twice on the page.
