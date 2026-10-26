@@ -9143,6 +9143,42 @@ export type Database = {
         }
         Relationships: []
       }
+      phone_agent_verifications: {
+        Row: {
+          attempts: number
+          channel: string
+          code_hash: string
+          conversation_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          attempts?: number
+          channel: string
+          code_hash: string
+          conversation_id: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          attempts?: number
+          channel?: string
+          code_hash?: string
+          conversation_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       pricepilot_market_comparables: {
         Row: {
           asset_category: string
@@ -15713,6 +15749,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      dispatch_agent_contact_report: { Args: never; Returns: undefined }
       dispatch_native_push_jobs: { Args: never; Returns: undefined }
       dispatch_square_reconcile: { Args: never; Returns: undefined }
       equipment_reservation_status: {
