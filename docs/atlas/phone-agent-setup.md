@@ -22,6 +22,15 @@ The phone line uses Allison, the support agent, on ElevenLabs. It is a separate 
    - **Email:** a reply from support@vendibook.com.
    - **Meeting:** a Calendly "Customer Success Meeting" (30 min, Zoom).
 
+6. **Listings:** Allison can do most of what the website assistants do by phone:
+   - search live listings (`search_listings`, the website's own search) and read details (`get_listing`);
+   - text or email listing links (`send_listing_links`);
+   - message a seller through the reviewed relay (`message_seller`): it uses the same managed inquiry as website guests, the caller confirms their email, and Vendibook reviews the message before the seller sees it;
+   - start a free listing draft (`start_listing_draft`), then text or email the private finish link (`send_listing_draft_link`). Verified callers get the draft on their account. Everyone else gets a guest draft, and the link `/create-listing/<id>#draft=<token>` opens it in their browser.
+
+   Payments, photos and Publish always stay with the customer on the website.
+7. **Expert knowledge:** `knowledge/vendibook-operator-permit-guide.md` covers permits and licensing in 16 states, commissaries, fire and propane, build standards, buying a used unit, shared kitchens and 2025–26 law changes. Add it to the knowledge base of **all three agents** (Atlas, website Allison and phone Allison). Every agent offers to go into more detail when it would help.
+
 Files:
 
 - `phone-agent-system-prompt.txt`: the prompt.

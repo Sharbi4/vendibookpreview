@@ -267,5 +267,363 @@
         ]
       }
     }
+  },
+  {
+    "type": "webhook",
+    "name": "search_listings",
+    "description": "Search live Vendibook listings (the same search as the website). Returns up to 5 with listing_id, title, price and city.",
+    "response_timeout_secs": 25,
+    "api_schema": {
+      "url": "https://nbrehbwfsmedbelzntqs.supabase.co/functions/v1/phone-support-tools?tool=search_listings",
+      "method": "POST",
+      "request_headers": {
+        "x-vendibook-tool-secret": {
+          "secret": "PHONE_AGENT_TOOL_SECRET"
+        }
+      },
+      "request_body_schema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Free-text keywords, e.g. 'taco truck' or 'trailer with hood'."
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "food_truck",
+              "food_trailer",
+              "ghost_kitchen",
+              "vendor_lot",
+              "vendor_space"
+            ],
+            "description": "What they're looking for or listing. ghost_kitchen = shared or commercial kitchen."
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "rent",
+              "sale"
+            ],
+            "description": "Rent or buy."
+          },
+          "location": {
+            "type": "string",
+            "description": "City and state or ZIP, e.g. 'Houston, TX'."
+          },
+          "max_price": {
+            "type": "number",
+            "description": "Budget: daily rate for rentals, sale price for purchases."
+          },
+          "instant_book_only": {
+            "type": "boolean",
+            "description": "Only rentals they can book instantly."
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  {
+    "type": "webhook",
+    "name": "get_listing",
+    "description": "Details of one live listing from search_listings: price, deposit, location, condition, size, equipment and description.",
+    "response_timeout_secs": 20,
+    "api_schema": {
+      "url": "https://nbrehbwfsmedbelzntqs.supabase.co/functions/v1/phone-support-tools?tool=get_listing",
+      "method": "POST",
+      "request_headers": {
+        "x-vendibook-tool-secret": {
+          "secret": "PHONE_AGENT_TOOL_SECRET"
+        }
+      },
+      "request_body_schema": {
+        "type": "object",
+        "properties": {
+          "listing_id": {
+            "type": "string",
+            "description": "listing_id from search_listings."
+          }
+        },
+        "required": [
+          "listing_id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "webhook",
+    "name": "send_listing_links",
+    "description": "Text (to the calling number, after the text disclosure and a yes) or email the caller links to listings, or to the free listing page.",
+    "response_timeout_secs": 20,
+    "api_schema": {
+      "url": "https://nbrehbwfsmedbelzntqs.supabase.co/functions/v1/phone-support-tools?tool=send_listing_links",
+      "method": "POST",
+      "request_headers": {
+        "x-vendibook-tool-secret": {
+          "secret": "PHONE_AGENT_TOOL_SECRET"
+        }
+      },
+      "request_body_schema": {
+        "type": "object",
+        "properties": {
+          "listing_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Up to 5 listing_ids from search_listings."
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "text",
+              "email"
+            ]
+          },
+          "email": {
+            "type": "string",
+            "description": "Their email, spelled back, for email links."
+          },
+          "text_consent": {
+            "type": "boolean",
+            "description": "True only after reading the text disclosure and the caller said yes."
+          },
+          "include_listing_start": {
+            "type": "boolean",
+            "description": "Also include the link to list equipment for free."
+          },
+          "caller_id": {
+            "type": "string",
+            "dynamic_variable": "system__caller_id",
+            "description": "The number the caller is calling from."
+          },
+          "conversation_id": {
+            "type": "string",
+            "dynamic_variable": "system__conversation_id",
+            "description": "This call's conversation id."
+          }
+        },
+        "required": [
+          "method",
+          "conversation_id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "webhook",
+    "name": "message_seller",
+    "description": "Send the caller's message to a listing's seller through Vendibook's reviewed relay. Needs their name and email; they get a private conversation link by email.",
+    "response_timeout_secs": 20,
+    "api_schema": {
+      "url": "https://nbrehbwfsmedbelzntqs.supabase.co/functions/v1/phone-support-tools?tool=message_seller",
+      "method": "POST",
+      "request_headers": {
+        "x-vendibook-tool-secret": {
+          "secret": "PHONE_AGENT_TOOL_SECRET"
+        }
+      },
+      "request_body_schema": {
+        "type": "object",
+        "properties": {
+          "listing_id": {
+            "type": "string",
+            "description": "listing_id from search_listings."
+          },
+          "message": {
+            "type": "string",
+            "description": "The exact message the caller approved."
+          },
+          "name": {
+            "type": "string",
+            "description": "Caller's first and last name."
+          },
+          "email": {
+            "type": "string",
+            "description": "Caller's email, spelled back."
+          },
+          "caller_confirmed_exact_message": {
+            "type": "boolean",
+            "description": "True only after reading the exact message back and the caller said to send it."
+          },
+          "caller_id": {
+            "type": "string",
+            "dynamic_variable": "system__caller_id",
+            "description": "The number the caller is calling from."
+          },
+          "conversation_id": {
+            "type": "string",
+            "dynamic_variable": "system__conversation_id",
+            "description": "This call's conversation id."
+          }
+        },
+        "required": [
+          "listing_id",
+          "message",
+          "caller_confirmed_exact_message",
+          "conversation_id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "webhook",
+    "name": "start_listing_draft",
+    "description": "Start a free listing draft from the call. Verified callers get it on their account; others get a private finish link. Never publishes.",
+    "response_timeout_secs": 20,
+    "api_schema": {
+      "url": "https://nbrehbwfsmedbelzntqs.supabase.co/functions/v1/phone-support-tools?tool=start_listing_draft",
+      "method": "POST",
+      "request_headers": {
+        "x-vendibook-tool-secret": {
+          "secret": "PHONE_AGENT_TOOL_SECRET"
+        }
+      },
+      "request_body_schema": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "food_truck",
+              "food_trailer",
+              "ghost_kitchen",
+              "vendor_lot",
+              "vendor_space"
+            ],
+            "description": "What they're looking for or listing. ghost_kitchen = shared or commercial kitchen."
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "rent",
+              "sale"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "description": "Short title, e.g. '2019 Ford 18 ft food truck with full kitchen'."
+          },
+          "city": {
+            "type": "string",
+            "description": "City."
+          },
+          "state": {
+            "type": "string",
+            "description": "State, e.g. TX."
+          },
+          "description": {
+            "type": "string",
+            "description": "What the caller said about it, in plain sentences. No phone numbers or emails."
+          },
+          "price_daily": {
+            "type": "number",
+            "description": "Rental daily price."
+          },
+          "price_weekly": {
+            "type": "number",
+            "description": "Rental weekly price."
+          },
+          "price_monthly": {
+            "type": "number",
+            "description": "Rental monthly price."
+          },
+          "deposit_amount": {
+            "type": "number",
+            "description": "Rental security deposit."
+          },
+          "price_sale": {
+            "type": "number",
+            "description": "Sale price."
+          },
+          "condition": {
+            "type": "string",
+            "enum": [
+              "new",
+              "like_new",
+              "good",
+              "fair",
+              "needs_work"
+            ],
+            "description": "Condition the seller states."
+          },
+          "equipment": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Key equipment, e.g. 'fryer', 'flat-top griddle', 'hood with fire suppression'."
+          },
+          "conversation_id": {
+            "type": "string",
+            "dynamic_variable": "system__conversation_id",
+            "description": "This call's conversation id."
+          }
+        },
+        "required": [
+          "category",
+          "mode",
+          "title",
+          "city",
+          "state",
+          "conversation_id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "webhook",
+    "name": "send_listing_draft_link",
+    "description": "Text or email the private link to finish the draft started on this call (add photos, check details, publish).",
+    "response_timeout_secs": 20,
+    "api_schema": {
+      "url": "https://nbrehbwfsmedbelzntqs.supabase.co/functions/v1/phone-support-tools?tool=send_listing_draft_link",
+      "method": "POST",
+      "request_headers": {
+        "x-vendibook-tool-secret": {
+          "secret": "PHONE_AGENT_TOOL_SECRET"
+        }
+      },
+      "request_body_schema": {
+        "type": "object",
+        "properties": {
+          "listing_id": {
+            "type": "string",
+            "description": "listing_id from start_listing_draft."
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "text",
+              "email"
+            ]
+          },
+          "email": {
+            "type": "string",
+            "description": "Their email, spelled back."
+          },
+          "text_consent": {
+            "type": "boolean",
+            "description": "True only after reading the text disclosure and the caller said yes."
+          },
+          "caller_id": {
+            "type": "string",
+            "dynamic_variable": "system__caller_id",
+            "description": "The number the caller is calling from."
+          },
+          "conversation_id": {
+            "type": "string",
+            "dynamic_variable": "system__conversation_id",
+            "description": "This call's conversation id."
+          }
+        },
+        "required": [
+          "listing_id",
+          "method",
+          "conversation_id"
+        ]
+      }
+    }
   }
 ]

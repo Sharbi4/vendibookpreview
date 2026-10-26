@@ -4,7 +4,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { PublishWizard } from '@/components/listing-wizard/PublishWizard';
-import { getGuestDraft } from '@/lib/guestDraft';
+import { getGuestDraft, saveGuestDraft } from '@/lib/guestDraft';
 import { supabase } from '@/integrations/supabase/client';
 
 const EditListing: React.FC = () => {
@@ -20,6 +20,14 @@ const EditListing: React.FC = () => {
       if (!listingId) {
         navigate('/dashboard');
         return;
+      }
+
+      // A private finish link from the phone line (#draft=<token>) hands the
+      // guest draft to this browser, then the token is removed from the URL.
+      const linkToken = new URLSearchParams(location.hash.replace(/^#/, '')).get('draft');
+      if (linkToken && /^[0-9a-f-]{36}$/i.test(linkToken)) {
+        saveGuestDraft(listingId, linkToken);
+        window.history.replaceState(null, '', `${location.pathname}${location.search}`);
       }
 
       // If user is logged in, they can access their own listings

@@ -30,6 +30,8 @@ import { followUpDueAt, formatEt, inFollowUpHours } from "../_shared/followUpWin
 import { checkRateLimit } from "../_shared/rateLimit.ts";
 import { normalizeNanpToE164, SMS_POLICY_VERSION } from "../_shared/smsConsent.ts";
 import { phoneToolSecret } from "../_shared/phoneLine.ts";
+import { sendGuardedSms } from "../_shared/smsGuard.ts";
+import { maskContactDetails } from "../_shared/contactPatterns.ts";
 import { adminAlertEmails, adminNoticeKey } from "../_shared/adminRecipients.ts";
 import { FEE_CONFIG } from "../_shared/feeConfig.ts";
 
@@ -489,6 +491,344 @@ async function getPricing(): Promise<Response> {
   });
 }
 
+// ---- Listings: search, details, links, seller messages and new drafts ----
+
+const SITE = "https://vendibook.com";
+const CATEGORIES = ["food_truck", "food_trailer", "ghost_kitchen", "vendor_lot", "vendor_space"] as const;
+const CATEGORY_LABEL: Record<string, string> = {
+  food_truck: "food truck", food_trailer: "food trailer", ghost_kitchen: "shared or ghost kitchen",
+  vendor_lot: "vendor lot", vendor_space: "vendor space",
+};
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const money = (v: unknown) => (Number(v) > 0 ? `$${Number(v).toLocaleString("en-US", { maximumFractionDigits: 0 })}` : null);
+
+type ListingRow = Record<string, unknown>;
+function priceLine(l: ListingRow): string {
+  if (l.mode === "sale") return money(l.price_sale) ? `${money(l.price_sale)} to buy` : "price on request";
+  const parts = [
+    money(l.price_daily) && `${money(l.price_daily)} a day`,
+    money(l.price_weekly) && `${money(l.price_weekly)} a week`,
+    money(l.price_monthly) && `${money(l.price_monthly)} a month`,
+  ].filter(Boolean);
+  return parts.length ? parts.join(", ") : "price on request";
+}
+const place = (l: ListingRow) => [l.city, l.state].filter(Boolean).join(", ") || "location on request";
+
+/** Public listings through the same search the website uses (canonical visibility filters included). */
+async function searchListings(body: Record<string, unknown>): Promise<Response> {
+  const category = (CATEGORIES as readonly string[]).includes(String(body.category)) ? String(body.category) : undefined;
+  const mode = body.mode === "rent" || body.mode === "sale" ? body.mode : undefined;
+  const maxPrice = Number(body.max_price) > 0 ? Number(body.max_price) : undefined;
+  const location = text(body.location, 120);
+  const query = text(body.query, 120);
+  const res = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/search-listings`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      Authorization: `Bearer ${Deno.env.get("SUPABASE_ANON_KEY") ?? ""}`,
+    },
+    body: JSON.stringify({
+      query: query || undefined, category, mode, max_price: maxPrice,
+      location_text: location || undefined, instant_book_only: body.instant_book_only === true || undefined,
+      page: 1, page_size: 5,
+    }),
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!res.ok) return json({ error: "Listing search is unavailable right now. Offer to text or email them a link to vendibook.com/search." }, 502);
+  const data = await res.json().catch(() => ({}));
+  const rows = ((data?.listings ?? []) as ListingRow[]).slice(0, 5);
+  return json({
+    total_found: Number(data?.total_count ?? rows.length),
+    listings: rows.map((l) => ({
+      listing_id: l.id,
+      title: maskContactDetails(String(l.title ?? "Listing")),
+      type: CATEGORY_LABEL[String(l.category)] ?? l.category,
+      for: l.mode === "sale" ? "sale" : "rent",
+      price: priceLine(l),
+      location: place(l),
+      miles_away: Number.isFinite(Number(l.distance_miles)) ? Math.round(Number(l.distance_miles)) : null,
+      instant_book: l.mode === "rent" ? l.instant_book === true : undefined,
+    })),
+    note: rows.length
+      ? "Read at most three at a time: title, price and city. Keep listing_id to look one up, text or email links, or message the seller. Never read listing IDs aloud."
+      : "Nothing matched. Offer to widen the area or price, or to save the request so the team can source one (request_live_follow_up).",
+  });
+}
+
+const DETAIL_COLUMNS =
+  "id, title, description, category, mode, status, deleted_at, city, state, condition, price_daily, price_weekly, price_monthly, price_sale, deposit_amount, rental_min_days, instant_book, fulfillment_type, delivery_fee, delivery_radius_miles, highlights, amenities, length_inches, width_inches, weight_lbs";
+
+async function loadPublicListing(db: ReturnType<typeof svc>, id: string) {
+  if (!UUID.test(id)) return null;
+  const { data } = await db.from("listings").select(DETAIL_COLUMNS).eq("id", id).maybeSingle();
+  if (!data || data.status !== "published" || data.deleted_at) return null;
+  return data as ListingRow;
+}
+
+async function getListing(body: Record<string, unknown>): Promise<Response> {
+  const listing = await loadPublicListing(svc(), text(body.listing_id, 40));
+  if (!listing) return json({ error: "That listing isn't available any more. Offer to search again." }, 404);
+  const feet = (inches: unknown) => (Number(inches) > 0 ? `${Math.round(Number(inches) / 12)} ft` : null);
+  return json({
+    listing_id: listing.id,
+    title: maskContactDetails(String(listing.title ?? "")),
+    type: CATEGORY_LABEL[String(listing.category)] ?? listing.category,
+    for: listing.mode === "sale" ? "sale" : "rent",
+    price: priceLine(listing),
+    security_deposit: listing.mode === "rent" ? money(listing.deposit_amount) : undefined,
+    minimum_rental_days: listing.mode === "rent" ? listing.rental_min_days ?? null : undefined,
+    instant_book: listing.mode === "rent" ? listing.instant_book === true : undefined,
+    location: place(listing),
+    condition: listing.condition ?? "not stated by the seller",
+    size: [feet(listing.length_inches) && `${feet(listing.length_inches)} long`, feet(listing.width_inches) && `${feet(listing.width_inches)} wide`].filter(Boolean).join(", ") || null,
+    pickup_or_delivery: listing.fulfillment_type ?? null,
+    highlights: Array.isArray(listing.highlights) ? (listing.highlights as string[]).slice(0, 6) : [],
+    equipment: Array.isArray(listing.amenities) ? (listing.amenities as string[]).slice(0, 12) : [],
+    description: maskContactDetails(String(listing.description ?? "")).slice(0, 900),
+    note: "Only state what is listed here. Equipment listed is what the seller says; it is not a health or fire approval. Booking, buying and payment happen on the website: offer to text or email the link. Never share or ask for the seller's contact details; offer message_seller instead.",
+  });
+}
+
+async function sendListingLinks(body: Record<string, unknown>): Promise<Response> {
+  const conversationId = text(body.conversation_id, 120);
+  const method = body.method === "email" ? "email" : body.method === "text" ? "text" : null;
+  const ids = (Array.isArray(body.listing_ids) ? body.listing_ids : [body.listing_id]).map((v) => text(v, 40)).filter((v) => UUID.test(v)).slice(0, 5);
+  if (!conversationId) return json({ error: "Missing conversation reference." }, 400);
+  if (!method) return json({ error: "Ask whether they want the links by text or by email." }, 400);
+  if (!(await checkRateLimit("phone_listing_links", conversationId, 4, 60))) {
+    return json({ error: "Several links were already sent on this call. Tell them to check their messages." }, 429);
+  }
+  const db = svc();
+  const listings = (await Promise.all(ids.map((id) => loadPublicListing(db, id)))).filter(Boolean) as ListingRow[];
+  const extraPage = body.include_listing_start === true ? `${SITE}/list` : null;
+  if (!listings.length && !extraPage) return json({ error: "Those listings aren't available. Search again first." }, 404);
+  const lines = listings.map((l) => `${maskContactDetails(String(l.title))} (${priceLine(l)}, ${place(l)}): ${SITE}/listing/${l.id}`);
+  if (extraPage) lines.push(`List your equipment for free: ${extraPage}`);
+
+  if (method === "text") {
+    const callerId = normalizeNanpToE164(text(body.caller_id, 30));
+    if (!callerId) return json({ error: "We can only text the number they're calling from, and it isn't available. Offer email." }, 400);
+    if (body.text_consent !== true) {
+      return json({ error: `Read this to the caller and ask if that is okay: "${TEXT_DISCLOSURE}" Only text the links if they say yes.` }, 400);
+    }
+    const blocked = await enrolTextFollowUp(db, callerId, conversationId);
+    if (blocked) return json({ error: blocked }, 409);
+    const result = await sendGuardedSms({
+      recipientPhone: callerId,
+      category: "customer_care",
+      templateId: "phone_listing_links",
+      businessPurpose: `phone_call:${conversationId}`,
+      body: `Vendibook: here are the links from your call.\n${lines.join("\n")}\nReply STOP to opt out.`.slice(0, 1500),
+      idempotencyKey: `phone-links-${conversationId}-${ids.join(",")}`.slice(0, 80),
+    });
+    if (!result.ok) return json({ error: "The text couldn't be sent. Offer to email the links instead." }, 502);
+    return json({ sent: true, say_this: "I just texted you the links from 866-690-6227." });
+  }
+
+  const typedEmail = text(body.email, 120).toLowerCase();
+  const email = EMAIL_RE.test(typedEmail) ? typedEmail : (await callTicket(db, conversationId))?.customer_email ?? "";
+  if (!email) return json({ error: "Ask for their email address and spell it back to confirm." }, 400);
+  const { error } = await invokeTransactionalEmail({
+    templateName: "generic-notice",
+    recipientEmail: email,
+    idempotencyKey: `phone-links-${conversationId}-${await sha256(`${email}:${ids.join(",")}:${extraPage ?? ""}`)}`,
+    templateData: {
+      subject: "Your Vendibook links from today's call",
+      kicker: "Vendibook phone support",
+      heading: "The links you asked for",
+      paragraphs: ["Thanks for calling Vendibook. Here are the links from your call. Booking, buying and listing all happen securely on vendibook.com.", ...lines],
+      ctaLabel: listings.length ? "Open the first listing" : "Start your listing",
+      ctaUrl: listings.length ? `${SITE}/listing/${listings[0].id}` : extraPage!,
+      footnote: "You received this because you asked for it on a call with Vendibook. No marketing subscription was created.",
+    },
+  });
+  if (error) return json({ error: "The email couldn't be sent. Offer a text instead." }, 502);
+  return json({ sent: true, say_this: `I just emailed the links to ${email}.` });
+}
+
+/** A reviewed message to a seller, through the same managed relay as website guest inquiries. */
+async function messageSeller(body: Record<string, unknown>): Promise<Response> {
+  const conversationId = text(body.conversation_id, 120);
+  const db = svc();
+  const saved = await callTicket(db, conversationId);
+  const name = text(body.name, 80) || saved?.customer_name || "";
+  const typedEmail = text(body.email, 120).toLowerCase();
+  const email = EMAIL_RE.test(typedEmail) ? typedEmail : saved?.customer_email ?? "";
+  const message = typeof body.message === "string" ? body.message.trim().slice(0, 2000) : "";
+  const listingId = text(body.listing_id, 40);
+  if (!conversationId) return json({ error: "Missing conversation reference." }, 400);
+  if (!name) return json({ error: "Ask for the caller's first and last name first." }, 400);
+  if (!email) return json({ error: "A seller message needs their email so they can read the reply. Ask for it and spell it back." }, 400);
+  if (!message) return json({ error: "Help them word the message, then read it back exactly." }, 400);
+  if (body.caller_confirmed_exact_message !== true) {
+    return json({ error: "Read the exact message back to the caller and ask 'Shall I send that?' Only continue if they say yes." }, 400);
+  }
+  if (!(await loadPublicListing(db, listingId))) return json({ error: "That listing isn't available any more. Offer to search again." }, 404);
+
+  const access = Array.from(crypto.getRandomValues(new Uint8Array(32)), (b) => b.toString(16).padStart(2, "0")).join("");
+  const key = await sha256(`phone-inquiry:${conversationId}:${listingId}`);
+  const requestKey = `${key.slice(0, 8)}-${key.slice(8, 12)}-4${key.slice(13, 16)}-a${key.slice(17, 20)}-${key.slice(20, 32)}`;
+  const { data: inquiryId, error } = await db.rpc("create_managed_inquiry", {
+    p_listing: listingId,
+    p_email: email,
+    p_name: name,
+    p_body: message,
+    p_token_hash: await sha256(access),
+    p_request: requestKey,
+    p_ip_hash: await sha256(`phone-line:${normalizeNanpToE164(text(body.caller_id, 30)) ?? conversationId}`),
+  });
+  if (error || !inquiryId) {
+    const why = String(error?.message ?? "");
+    if (/already saved/i.test(why)) return json({ sent: true, say_this: "That message is already with our team. Check your email for your private conversation link." });
+    if (/wait/i.test(why)) return json({ error: "A couple of messages were just sent from this email. Ask them to try again in an hour, or offer a team follow-up." }, 429);
+    throw new Error(`managed inquiry failed: ${why}`);
+  }
+  const sent = await invokeTransactionalEmail({
+    templateName: "generic-notice",
+    recipientEmail: email,
+    idempotencyKey: `managed-access:${inquiryId}`,
+    templateData: {
+      kicker: "Your private conversation",
+      heading: "Confirm your email for your listing inquiry",
+      paragraphs: [
+        "Open your secure conversation to verify your email. Vendibook reviews every message before relaying it. The seller is notified only after an approved message is sent.",
+        "Neither participant receives the other’s email or phone number.",
+      ],
+      ctaLabel: "Open my conversation",
+      ctaUrl: `${SITE}/inquiries/${inquiryId}#access=${access}`,
+      footnote: "This private link expires in seven days. Do not forward it. No marketing subscription was created.",
+    },
+  });
+  return json({
+    sent: true,
+    email_sent: !sent.error,
+    say_this: `Done. I emailed you a private link at ${email}. Open it to confirm your email. Our team reviews every message before it goes to the seller, and replies come back to that same private conversation. Your phone and email are never shared with the seller.`,
+  });
+}
+
+// Ties a phone-started draft to its call: only that call can send its finish link.
+const draftKey = (conversationId: string) => `phone:${conversationId}`.slice(0, 80);
+
+/**
+ * Starts a listing from the call. A caller verified with a code gets a draft
+ * on their own account; anyone else gets a guest draft and a private link to
+ * finish it. Photos and Publish always stay with the seller on the website.
+ */
+async function startListingDraft(body: Record<string, unknown>): Promise<Response> {
+  const conversationId = text(body.conversation_id, 120);
+  const category = (CATEGORIES as readonly string[]).includes(String(body.category)) ? String(body.category) : null;
+  const mode = body.mode === "rent" || body.mode === "sale" ? body.mode : null;
+  const title = text(body.title, 120);
+  const description = typeof body.description === "string" ? body.description.trim().slice(0, 4000) : "";
+  const city = text(body.city, 80);
+  const state = text(body.state, 30);
+  if (!conversationId) return json({ error: "Missing conversation reference." }, 400);
+  if (!category || !mode) return json({ error: "Ask what they're listing (food truck, food trailer, shared kitchen, vendor lot or vendor space) and whether it's for rent or for sale." }, 400);
+  if (!title || !city || !state) return json({ error: "Ask for a short title and the city and state where it's located." }, 400);
+  if (!(await checkRateLimit("phone_listing_draft", conversationId, 2, 60))) {
+    return json({ error: "A draft was already started on this call. Send them the link to finish it." }, 429);
+  }
+  const price = (v: unknown) => (Number(v) > 0 && Number(v) < 10_000_000 ? Math.round(Number(v) * 100) / 100 : null);
+  const db = svc();
+  const userId = await verifiedAccount(db, conversationId);
+  const sessionKey = draftKey(conversationId);
+  const { data: existing } = await db.from("listings").select("id, host_id, guest_draft_token")
+    .eq("creation_session_key", sessionKey).eq("status", "draft").limit(1).maybeSingle();
+  if (existing) {
+    return json({ created: false, listing_id: existing.id, on_account: !!existing.host_id, next: "A draft was already started on this call. Offer to text or email the finish link with send_listing_draft_link." });
+  }
+  const guestToken = userId ? null : crypto.randomUUID();
+  const { data, error } = await db.from("listings").insert({
+    creation_session_key: sessionKey,
+    title,
+    description: description || `${title} in ${city}, ${state}. Details to be added by the seller.`,
+    category,
+    mode,
+    city,
+    state,
+    status: "draft",
+    fulfillment_type: "pickup",
+    host_id: userId,
+    guest_draft_token: guestToken,
+    price_daily: mode === "rent" ? price(body.price_daily) : null,
+    price_weekly: mode === "rent" ? price(body.price_weekly) : null,
+    price_monthly: mode === "rent" ? price(body.price_monthly) : null,
+    deposit_amount: mode === "rent" ? price(body.deposit_amount) : null,
+    price_sale: mode === "sale" ? price(body.price_sale) : null,
+    condition: ["new", "like_new", "good", "fair", "needs_work"].includes(String(body.condition)) ? String(body.condition) : null,
+    amenities: Array.isArray(body.equipment) ? body.equipment.map((v) => text(v, 60)).filter(Boolean).slice(0, 30) : null,
+  }).select("id").single();
+  if (error || !data) {
+    if (/verify your mobile number/i.test(String(error?.message))) {
+      return json({ error: "Their account needs its mobile number verified before it can list. Ask them to sign in at vendibook.com and verify their phone, or offer a team follow-up." }, 409);
+    }
+    throw new Error(`listing draft failed: ${error?.message ?? "unknown"}`);
+  }
+  const link = userId ? `${SITE}/create-listing/${data.id}` : `${SITE}/create-listing/${data.id}#draft=${guestToken}`;
+  return json({
+    created: true,
+    listing_id: data.id,
+    on_account: !!userId,
+    finish_link: link,
+    next: "Offer to text or email the finish link with send_listing_draft_link. Explain that they add photos, check the details and press Publish themselves; nothing goes live until they do.",
+  });
+}
+
+async function sendListingDraftLink(body: Record<string, unknown>): Promise<Response> {
+  const conversationId = text(body.conversation_id, 120);
+  const listingId = text(body.listing_id, 40);
+  const db = svc();
+  if (!UUID.test(listingId)) return json({ error: "Start the listing draft first." }, 400);
+  const { data: draft } = await db.from("listings").select("id, title, status, host_id, guest_draft_token, creation_session_key").eq("id", listingId).maybeSingle();
+  if (!draft || draft.status !== "draft") return json({ error: "That draft isn't available. Start a new one." }, 404);
+  if (!conversationId) return json({ error: "Missing conversation reference." }, 400);
+  if (!(await checkRateLimit("phone_listing_draft_owner", `${conversationId}:${listingId}`, 3, 60))) {
+    return json({ error: "That link was already sent. Ask them to check their messages." }, 429);
+  }
+  if (draft.creation_session_key !== draftKey(conversationId)) return json({ error: "That draft wasn't started on this call." }, 403);
+  const link = draft.host_id ? `${SITE}/create-listing/${draft.id}` : `${SITE}/create-listing/${draft.id}#draft=${draft.guest_draft_token}`;
+  const line = `Finish your listing "${maskContactDetails(String(draft.title))}": add photos, check the details and press Publish: ${link}`;
+  if (body.method === "text") {
+    const callerId = normalizeNanpToE164(text(body.caller_id, 30));
+    if (!callerId) return json({ error: "We can only text the number they're calling from. Offer email." }, 400);
+    if (body.text_consent !== true) {
+      return json({ error: `Read this to the caller and ask if that is okay: "${TEXT_DISCLOSURE}" Only text the link if they say yes.` }, 400);
+    }
+    const blocked = await enrolTextFollowUp(db, callerId, conversationId);
+    if (blocked) return json({ error: blocked }, 409);
+    const result = await sendGuardedSms({
+      recipientPhone: callerId, category: "customer_care", templateId: "phone_listing_draft_link",
+      businessPurpose: `phone_call:${conversationId}`, body: `Vendibook: ${line} The link is private, so don't share it. Reply STOP to opt out.`,
+      idempotencyKey: `phone-draft-${draft.id}`.slice(0, 80),
+    });
+    if (!result.ok) return json({ error: "The text couldn't be sent. Offer email instead." }, 502);
+    return json({ sent: true, say_this: "I just texted you a private link to finish your listing." });
+  }
+  const typedEmail = text(body.email, 120).toLowerCase();
+  const email = EMAIL_RE.test(typedEmail) ? typedEmail : (await callTicket(db, conversationId))?.customer_email ?? "";
+  if (!email) return json({ error: "Ask for their email address and spell it back to confirm." }, 400);
+  const { error } = await invokeTransactionalEmail({
+    templateName: "generic-notice",
+    recipientEmail: email,
+    idempotencyKey: `phone-draft-${draft.id}-${await sha256(email)}`,
+    templateData: {
+      subject: "Finish your Vendibook listing",
+      kicker: "Started on your call with Vendibook",
+      heading: "Your listing draft is ready",
+      paragraphs: [
+        `We saved "${maskContactDetails(String(draft.title))}" as a draft. Add photos, check the details and press Publish when you're ready. Nothing goes live until you publish.`,
+        draft.host_id ? "Sign in to your Vendibook account to finish it." : "This link is private to you, so please don't forward it. You can create a free account while finishing.",
+      ],
+      ctaLabel: "Finish my listing",
+      ctaUrl: link,
+      footnote: "You received this because you asked for it on a call with Vendibook. No marketing subscription was created.",
+    },
+  });
+  if (error) return json({ error: "The email couldn't be sent. Offer a text instead." }, 502);
+  return json({ sent: true, say_this: `I just emailed the link to ${email}.` });
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
   const secret = await phoneToolSecret();
@@ -503,6 +843,12 @@ Deno.serve(async (req) => {
     if (tool === "get_my_account_summary") return await getMyAccountSummary(body);
     if (tool === "request_live_follow_up") return await requestLiveFollowUp(body);
     if (tool === "get_pricing") return await getPricing();
+    if (tool === "search_listings") return await searchListings(body);
+    if (tool === "get_listing") return await getListing(body);
+    if (tool === "send_listing_links") return await sendListingLinks(body);
+    if (tool === "message_seller") return await messageSeller(body);
+    if (tool === "start_listing_draft") return await startListingDraft(body);
+    if (tool === "send_listing_draft_link") return await sendListingDraftLink(body);
     return json({ error: "Unknown tool" }, 404);
   } catch (e) {
     console.error("[phone-support-tools] error", e);

@@ -14,6 +14,14 @@ const CONV = "conv_test_1";
 // Minimal PostgREST-style builder over in-memory tables.
 function fakeDb(tables: Record<string, Row[]>) {
   return {
+    rpc: async (fn: string, args: Row) => {
+      if (fn !== "create_managed_inquiry") return { data: null, error: { message: `unknown rpc ${fn}` } };
+      const rows = (tables.managed_inquiries ??= []);
+      if (rows.some((r) => r.request_key === args.p_request)) return { data: null, error: { message: "Request already saved. Check your email." } };
+      const id = crypto.randomUUID();
+      rows.push({ id, request_key: args.p_request, listing_id: args.p_listing, email: args.p_email, body: args.p_body });
+      return { data: id, error: null };
+    },
     from(table: string) {
       const rows = (tables[table] ??= []);
       const filters: Array<(r: Row) => boolean> = [];
@@ -58,9 +66,11 @@ function fakeDb(tables: Record<string, Row[]>) {
   };
 }
 
-function loadTools(tables: Record<string, Row[]>) {
-  const emails = vi.fn(async () => ({ data: { sent: true }, error: null }));
-  const fetchMock = vi.fn(async () => new Response(JSON.stringify({ sid: "SM1" })));
+function loadTools(tables: Record<string, Row[]>, searchRows: Row[] = []) {
+  const emails = vi.fn(async (_input: Row) => ({ data: { sent: true }, error: null }));
+  const sms = vi.fn(async (_input: Row) => ({ ok: true }));
+  const fetchMock = vi.fn(async (url: string) =>
+    new Response(JSON.stringify(String(url).includes("search-listings") ? { listings: searchRows, total_count: searchRows.length } : { sid: "SM1" })));
   let handler!: (req: Request) => Promise<Response>;
   const source = fs.readFileSync("supabase/functions/phone-support-tools/index.ts", "utf8");
   const compiled = ts.transpileModule(source, {
@@ -84,6 +94,8 @@ function loadTools(tables: Record<string, Row[]>) {
     adminNoticeKey: (b: string, r: string) => `${b}:${r}`,
     FEE_CONFIG,
     phoneToolSecret: async () => SECRET,
+    sendGuardedSms: sms,
+    maskContactDetails: (v: string) => v,
     fetch: fetchMock,
     Response, URL, TextEncoder, Uint8Array, Uint32Array, Array, JSON, Date, Math, Number, String, Object, Promise, Set, RegExp, AbortSignal, URLSearchParams,
     crypto: globalThis.crypto, console: { error: vi.fn(), log: vi.fn() },
@@ -94,10 +106,14 @@ function loadTools(tables: Record<string, Row[]>) {
     }));
     return { status: res.status, body: await res.json() };
   };
-  return { call, emails, fetchMock, tables };
+  return { call, emails, sms, fetchMock, tables };
 }
 
+const LISTING = "11111111-2222-4333-8444-555555555555";
+const live = (over: Row = {}) => ({ id: LISTING, title: "2020 Taco Truck", category: "food_truck", mode: "sale", status: "published", deleted_at: null, price_sale: 45000, city: "Houston", state: "TX", ...over });
+
 const base = () => ({
+  listings: [live()] as Row[], managed_inquiries: [] as Row[],
   support_tickets: [] as Row[], user_roles: [{ user_id: "admin-1", role: "admin" }], notifications: [] as Row[],
   sms_suppressions: [] as Row[], sms_preferences: [] as Row[], sms_consent_events: [] as Row[],
   phone_agent_verifications: [] as Row[],
@@ -163,6 +179,67 @@ describe("phone support tools", () => {
     expect(res.status).toBe(200);
     expect(res.body.say_this).toMatch(/If that matches a Vendibook account/);
     expect(t.tables.phone_agent_verifications).toHaveLength(0);
+  });
+});
+
+describe("phone listing tools", () => {
+  it("searches through the website search and returns speakable results", async () => {
+    const t = loadTools(base(), [live({ distance_miles: 4.4 })]);
+    const res = await t.call("search_listings", { category: "food_truck", mode: "sale", location: "Houston, TX" });
+    expect(res.status).toBe(200);
+    expect(res.body.listings[0]).toMatchObject({ listing_id: LISTING, price: "$45,000 to buy", location: "Houston, TX", miles_away: 4 });
+    const sent = JSON.parse(String((t.fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body));
+    expect(sent).toMatchObject({ category: "food_truck", mode: "sale", location_text: "Houston, TX", page_size: 5 });
+  });
+
+  it("only shows published listings", async () => {
+    const tables = base();
+    tables.listings[0].status = "draft";
+    expect((await loadTools(tables).call("get_listing", { listing_id: LISTING })).status).toBe(404);
+  });
+
+  it("messages a seller only after the exact message is confirmed, through the reviewed relay", async () => {
+    const t = loadTools(base());
+    const args = { listing_id: LISTING, message: "Is it still available?", name: "Sam Lee", email: "sam@example.com", conversation_id: CONV, caller_id: CALLER };
+    expect((await t.call("message_seller", args)).status).toBe(400);
+    expect((await t.call("message_seller", { ...args, email: "", caller_confirmed_exact_message: true })).status).toBe(400);
+    const ok = await t.call("message_seller", { ...args, caller_confirmed_exact_message: true });
+    expect(ok.body.sent).toBe(true);
+    expect(t.tables.managed_inquiries).toHaveLength(1);
+    expect(String((t.emails.mock.calls[0][0] as Row).templateData.ctaUrl)).toMatch(/\/inquiries\/.+#access=[0-9a-f]{64}$/);
+    // Same call, same listing: no duplicate inquiry.
+    expect((await t.call("message_seller", { ...args, caller_confirmed_exact_message: true })).body.sent).toBe(true);
+    expect(t.tables.managed_inquiries).toHaveLength(1);
+  });
+
+  it("starts a guest draft with a private finish link that only this call can send", async () => {
+    const t = loadTools(base());
+    const draft = await t.call("start_listing_draft", { category: "food_trailer", mode: "rent", title: "16 ft trailer", city: "Austin", state: "TX", price_daily: 250, conversation_id: CONV });
+    expect(draft.body).toMatchObject({ created: true, on_account: false });
+    const row = t.tables.listings.find((l) => l.id === draft.body.listing_id)!;
+    expect(row).toMatchObject({ status: "draft", host_id: null, creation_session_key: `phone:${CONV}`, price_daily: 250, price_sale: null });
+    expect(draft.body.finish_link).toBe(`https://vendibook.com/create-listing/${row.id}#draft=${row.guest_draft_token}`);
+    expect((await t.call("send_listing_draft_link", { listing_id: row.id, method: "email", email: "sam@example.com", conversation_id: "other_call" })).status).toBe(403);
+    const sent = await t.call("send_listing_draft_link", { listing_id: row.id, method: "email", email: "sam@example.com", conversation_id: CONV });
+    expect(sent.body.sent).toBe(true);
+  });
+
+  it("puts a verified caller's draft on their own account", async () => {
+    const tables = base();
+    tables.phone_agent_verifications.push({ conversation_id: CONV, user_id: "user-1", verified_at: new Date().toISOString() });
+    const t = loadTools(tables);
+    const draft = await t.call("start_listing_draft", { category: "food_truck", mode: "sale", title: "Truck", city: "Dallas", state: "TX", price_sale: 60000, conversation_id: CONV });
+    expect(draft.body).toMatchObject({ created: true, on_account: true });
+    expect(t.tables.listings.find((l) => l.id === draft.body.listing_id)).toMatchObject({ host_id: "user-1", guest_draft_token: null });
+  });
+
+  it("texts listing links only after consent", async () => {
+    const t = loadTools(base());
+    const args = { listing_ids: [LISTING], method: "text", caller_id: CALLER, conversation_id: CONV };
+    expect((await t.call("send_listing_links", args)).status).toBe(400);
+    const ok = await t.call("send_listing_links", { ...args, text_consent: true });
+    expect(ok.body.sent).toBe(true);
+    expect(String((t.sms.mock.calls[0][0] as Row).body)).toContain(`https://vendibook.com/listing/${LISTING}`);
   });
 });
 
