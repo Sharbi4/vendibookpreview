@@ -677,6 +677,15 @@ Deno.serve(async (req) => {
     }
 
 
+    // Featured-first across every sort and tier (stable sort keeps the
+    // chosen order inside each group; featured rotate fairly by day).
+    {
+      const feat = filteredListings.filter((l) => isFeatured(l));
+      const rest = filteredListings.filter((l) => !isFeatured(l));
+      if (sort_by === 'featured' || !sort_by) feat.sort((a, b) => rotKey(a) - rotKey(b));
+      filteredListings = [...feat, ...rest];
+    }
+
     // A listing shown in the Sponsored strip must not also appear in the
     // main results below it — the same truck would render twice on the page.
     // Exclude sponsored ids from the result list (order-independent, so this
