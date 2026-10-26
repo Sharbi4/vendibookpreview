@@ -3763,7 +3763,12 @@ export type Database = {
           contact_phone: string
           created_at: string
           deliver_by_date: string | null
+          delivery_city: string | null
           delivery_location: string
+          delivery_property_type: string | null
+          delivery_state: string | null
+          delivery_street: string | null
+          delivery_zip: string | null
           equipment_type: string
           height_ft: string | null
           id: string
@@ -3771,8 +3776,13 @@ export type Database = {
           notes: string | null
           paypal_invoice_id: string | null
           paypal_invoice_url: string | null
+          pickup_city: string | null
           pickup_date: string | null
           pickup_location: string
+          pickup_property_type: string | null
+          pickup_state: string | null
+          pickup_street: string | null
+          pickup_zip: string | null
           quote_amount_cents: number | null
           quote_notes: string | null
           quote_sent_at: string | null
@@ -3782,6 +3792,7 @@ export type Database = {
           runs_and_drives: string | null
           source_page: string | null
           status: string
+          transport_type: string | null
           updated_at: string
           user_id: string | null
           weight_lbs: string | null
@@ -3795,7 +3806,12 @@ export type Database = {
           contact_phone: string
           created_at?: string
           deliver_by_date?: string | null
+          delivery_city?: string | null
           delivery_location: string
+          delivery_property_type?: string | null
+          delivery_state?: string | null
+          delivery_street?: string | null
+          delivery_zip?: string | null
           equipment_type: string
           height_ft?: string | null
           id?: string
@@ -3803,8 +3819,13 @@ export type Database = {
           notes?: string | null
           paypal_invoice_id?: string | null
           paypal_invoice_url?: string | null
+          pickup_city?: string | null
           pickup_date?: string | null
           pickup_location: string
+          pickup_property_type?: string | null
+          pickup_state?: string | null
+          pickup_street?: string | null
+          pickup_zip?: string | null
           quote_amount_cents?: number | null
           quote_notes?: string | null
           quote_sent_at?: string | null
@@ -3814,6 +3835,7 @@ export type Database = {
           runs_and_drives?: string | null
           source_page?: string | null
           status?: string
+          transport_type?: string | null
           updated_at?: string
           user_id?: string | null
           weight_lbs?: string | null
@@ -3827,7 +3849,12 @@ export type Database = {
           contact_phone?: string
           created_at?: string
           deliver_by_date?: string | null
+          delivery_city?: string | null
           delivery_location?: string
+          delivery_property_type?: string | null
+          delivery_state?: string | null
+          delivery_street?: string | null
+          delivery_zip?: string | null
           equipment_type?: string
           height_ft?: string | null
           id?: string
@@ -3835,8 +3862,13 @@ export type Database = {
           notes?: string | null
           paypal_invoice_id?: string | null
           paypal_invoice_url?: string | null
+          pickup_city?: string | null
           pickup_date?: string | null
           pickup_location?: string
+          pickup_property_type?: string | null
+          pickup_state?: string | null
+          pickup_street?: string | null
+          pickup_zip?: string | null
           quote_amount_cents?: number | null
           quote_notes?: string | null
           quote_sent_at?: string | null
@@ -3846,6 +3878,7 @@ export type Database = {
           runs_and_drives?: string | null
           source_page?: string | null
           status?: string
+          transport_type?: string | null
           updated_at?: string
           user_id?: string | null
           weight_lbs?: string | null

@@ -2,7 +2,11 @@
 // JSON actions (admin session required): readiness, token, intent, history.
 // Twilio webhooks (X-Twilio-Signature required): /voice, /status.
 // Never touches the inbound number configuration. Recording is always off.
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+};
 import { z } from "npm:zod@3.25.76";
 import { getCaller, isAdminUser, serviceRoleClient } from "../_shared/callerGuard.ts";
 import {

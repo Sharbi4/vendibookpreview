@@ -116,7 +116,8 @@ serve(async (req) => {
         callback_phone_source: "customer_entered",
         submission_channel: source,
         first_response_due_at: due.toISOString(),
-        page_url: pageUrl || null,
+        page_url: pageUrl || req.headers.get("referer")?.slice(0, 300) || null,
+        browser_info: req.headers.get("user-agent")?.slice(0, 300) ?? null,
         request_id: `callback-${crypto.randomUUID()}`,
       })
       .select("id, reference_code")

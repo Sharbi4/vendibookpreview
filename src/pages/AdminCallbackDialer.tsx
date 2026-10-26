@@ -126,7 +126,7 @@ const AdminCallbackDialer = () => {
           <Label htmlFor="dial-to">Customer number</Label>
           <Input id="dial-to" inputMode="tel" autoComplete="off" placeholder="+16025551234" value={to}
             onChange={(e) => setTo(e.target.value.replace(/[^\d+]/g, "").slice(0, 12))} disabled={busy} className="text-base" />
-          {to && !valid.ok && <p className="text-xs text-destructive">{valid.reason}</p>}
+          {to && !valid.ok && <p className="text-xs text-destructive">{"reason" in valid ? valid.reason : null}</p>}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button onClick={startCall} disabled={!valid.ok || busy || !readiness?.ready}>
