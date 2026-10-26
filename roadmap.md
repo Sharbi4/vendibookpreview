@@ -1,7 +1,7 @@
 # Roadmap
 
 - [done] Focused outbound Atlas prompt/source/docs corrected and synced to same ID; protected agent/phone readback unchanged. Further outbound work stopped at owner request; no calls/SMS/publication.
-- [open] Check and correct odd search-filter typography; ensure top headings and all proportional text use Sofia Pro Soft consistently.
+- [done] Sofia Pro Soft confirmed across proportional text and top headings; removed cramped legacy spacing, verified actual heading font and desktop/mobile search filters without overflow. Preview only.
 
 - [done] Growth Outreach prepare-only: separate agent agent_6701m5wwwxm0f3p8rf0hmmbc54j1 created/read back with ZRM and recording off; admin route and consent/batch/draft service deployed; 21 safety tests and build pass; authenticated provider read verified; live dispatch/SMS return 423. No leads seeded, calls/SMS/jobs or publication.
 - [done] Outbound Atlas update: same agent agent_6701m5wwwxm0f3p8rf0hmmbc54j1 renamed "Atlas — Vendibook Outbound"; new prompt/first message/7 playbooks, 2 shared KB docs, 4 read-only tools (outbound-atlas-tools); inbound agents/phone unchanged on readback; dispatch/SMS still 423.
