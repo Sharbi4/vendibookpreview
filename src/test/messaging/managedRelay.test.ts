@@ -2,7 +2,7 @@ import { PGlite } from '@electric-sql/pglite';
 import { readFileSync } from 'node:fs';
 import { Blob as NodeBlob } from 'node:buffer';
 import { beforeAll,afterAll,it,expect } from 'vitest';
-import { relayDisplayName,relayVisible,relayBody } from '../../../supabase/functions/_shared/managedRelayPolicy';
+import { relayDisplayName,relayVisible,relayBody,relayEmailContent } from '../../../supabase/functions/_shared/managedRelayPolicy';
 let db:PGlite;
 const seller='11111111-1111-4111-8111-111111111111', listing='22222222-2222-4222-8222-222222222222';
 async function query(sql:string,args:any[]=[]){return (await db.query<any>(sql,args)).rows;}
@@ -58,6 +58,20 @@ it('email replies are held, deduplicated, and cannot move to another thread',asy
  expect((await query('select ingest_managed_reply($1,$2,$3,$4) id',args))[0].id).toBe(first);
  expect((await query('select held,sent_at from managed_inquiry_messages where id=$1',[first]))[0]).toEqual({held:true,sent_at:null});
  await expect(query('select ingest_managed_reply($1,$2,$3,$4)',[b.inquiry_id,...args.slice(1)])).rejects.toThrow('another participant');
+});
+it('approved guest reply is included directly and uses the guest private return address',()=>{
+ const email=relayEmailContent('guest','Lionel Y.','Yes, that day is available.','thread-fixture','guest-key');
+ expect(email.text.split('\n\n')[1]).toBe('Yes, that day is available.');
+ expect(email.props.paragraphs[0]).toBe('Yes, that day is available.');
+ expect(email.props.ctaUrl).toBeUndefined();
+ expect(email.replyTo).toBe('relay-guest-key@updates.vendibook.com');
+});
+it('guest email replies enter the private review queue without participant delivery',async()=>{
+ const a=await message(await lead());
+ const id=(await query('select ingest_managed_reply($1,$2,$3,$4) id',[a.inquiry_id,'guest','Thank you, I would like October 29.','resend:guest-reply-fixture']))[0].id;
+ const m=(await query('select * from managed_inquiry_messages where id=$1',[id]))[0];
+ expect(m.held).toBe(true);expect(m.sent_at).toBeNull();
+ expect(relayVisible(m,'seller')).toBe(false);
 });
 it('participant visibility and display never expose raw released content',()=>{
  expect(relayDisplayName('Sean Coe')).toBe('Sean C.');
