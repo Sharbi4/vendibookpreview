@@ -19,6 +19,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, ShieldAlert, Inbox } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
+import SupportLineActions from "@/components/admin/SupportLineActions";
 
 type TicketRow = {
   id: string;
@@ -50,6 +51,8 @@ type TicketRow = {
   created_at: string;
   updated_at: string;
   source?: "in_app" | "tawkto" | "email" | "system" | null;
+  callback_phone_e164?: string | null;
+  customer_name?: string | null;
 };
 
 type MessageRow = {
@@ -362,6 +365,10 @@ export default function AdminSupportTickets() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <p className="text-sm whitespace-pre-wrap">{selected.description}</p>
+
+                  {selected.callback_phone_e164 && (
+                    <SupportLineActions ticketId={selected.id} customerPhone={selected.callback_phone_e164} />
+                  )}
 
                   <div className="grid gap-2 md:grid-cols-2 text-xs">
                     <div><span className="text-muted-foreground">Category:</span> {selected.category.replace(/_/g, " ")}</div>

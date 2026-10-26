@@ -432,3 +432,11 @@ verify_jwt = false
 # ElevenLabs phone agent webhook tools; shared secret header verified in the handler.
 [functions.phone-support-tools]
 verify_jwt = false
+
+# Admin verified inside the handler on every request.
+[functions.admin-phone-actions]
+verify_jwt = false
+
+# Cron secret or admin verified inside the handler.
+[functions.agent-contact-report]
+verify_jwt = false

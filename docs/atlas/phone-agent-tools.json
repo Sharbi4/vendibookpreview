@@ -1,0 +1,271 @@
+[
+  {
+    "type": "webhook",
+    "name": "save_caller_details",
+    "description": "Save the caller's first and last name, call-back number and optional email as soon as you have them, before anything else, so the team can call back if the call drops.",
+    "response_timeout_secs": 20,
+    "api_schema": {
+      "url": "https://nbrehbwfsmedbelzntqs.supabase.co/functions/v1/phone-support-tools?tool=save_caller_details",
+      "method": "POST",
+      "request_headers": {
+        "x-vendibook-tool-secret": {
+          "secret": "PHONE_AGENT_TOOL_SECRET"
+        }
+      },
+      "request_body_schema": {
+        "type": "object",
+        "properties": {
+          "first_name": {
+            "type": "string",
+            "description": "Caller's first name."
+          },
+          "last_name": {
+            "type": "string",
+            "description": "Caller's last name."
+          },
+          "callback_phone": {
+            "type": "string",
+            "description": "Best call-back number they confirmed. Leave empty to use the number they are calling from."
+          },
+          "email": {
+            "type": "string",
+            "description": "Optional email address, spelled back and confirmed."
+          },
+          "caller_id": {
+            "type": "string",
+            "dynamic_variable": "system__caller_id",
+            "description": "The number the caller is calling from."
+          },
+          "conversation_id": {
+            "type": "string",
+            "dynamic_variable": "system__conversation_id",
+            "description": "This call's conversation id."
+          }
+        },
+        "required": [
+          "first_name",
+          "last_name",
+          "caller_id",
+          "conversation_id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "webhook",
+    "name": "request_live_follow_up",
+    "description": "Set up a follow-up from a real person on the Vendibook team, due within 2 business hours (Mon-Fri 8 AM-8 PM ET). Use the caller's preferred method.",
+    "response_timeout_secs": 20,
+    "api_schema": {
+      "url": "https://nbrehbwfsmedbelzntqs.supabase.co/functions/v1/phone-support-tools?tool=request_live_follow_up",
+      "method": "POST",
+      "request_headers": {
+        "x-vendibook-tool-secret": {
+          "secret": "PHONE_AGENT_TOOL_SECRET"
+        }
+      },
+      "request_body_schema": {
+        "type": "object",
+        "properties": {
+          "first_name": {
+            "type": "string",
+            "description": "Caller's first name."
+          },
+          "last_name": {
+            "type": "string",
+            "description": "Caller's last name."
+          },
+          "preferred_method": {
+            "type": "string",
+            "enum": [
+              "phone_call",
+              "text",
+              "email",
+              "meeting"
+            ],
+            "description": "How they want the team to reach them."
+          },
+          "phone": {
+            "type": "string",
+            "description": "Call-back or text number, if different from the saved one."
+          },
+          "email": {
+            "type": "string",
+            "description": "Email, required for the email method."
+          },
+          "best_time": {
+            "type": "string",
+            "description": "When is best to reach them."
+          },
+          "time_zone": {
+            "type": "string",
+            "description": "Their time zone."
+          },
+          "topic": {
+            "type": "string",
+            "description": "A few words on what it's about."
+          },
+          "summary": {
+            "type": "string",
+            "description": "A short summary of what they need."
+          },
+          "text_consent": {
+            "type": "boolean",
+            "description": "True only after they said yes to the text disclosure."
+          },
+          "caller_id": {
+            "type": "string",
+            "dynamic_variable": "system__caller_id",
+            "description": "The number the caller is calling from."
+          },
+          "conversation_id": {
+            "type": "string",
+            "dynamic_variable": "system__conversation_id",
+            "description": "This call's conversation id."
+          }
+        },
+        "required": [
+          "preferred_method",
+          "topic",
+          "summary",
+          "caller_id",
+          "conversation_id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "webhook",
+    "name": "get_pricing",
+    "description": "Current Vendibook fees and active upgrade prices. Call before quoting any fee or price.",
+    "response_timeout_secs": 20,
+    "api_schema": {
+      "url": "https://nbrehbwfsmedbelzntqs.supabase.co/functions/v1/phone-support-tools?tool=get_pricing",
+      "method": "POST",
+      "request_headers": {
+        "x-vendibook-tool-secret": {
+          "secret": "PHONE_AGENT_TOOL_SECRET"
+        }
+      },
+      "request_body_schema": {
+        "type": "object",
+        "properties": {
+          "conversation_id": {
+            "type": "string",
+            "dynamic_variable": "system__conversation_id",
+            "description": "This call's conversation id."
+          }
+        },
+        "required": []
+      }
+    }
+  },
+  {
+    "type": "webhook",
+    "name": "start_account_verification",
+    "description": "Send a 6-digit verification code to the phone or email on the caller's Vendibook account.",
+    "response_timeout_secs": 20,
+    "api_schema": {
+      "url": "https://nbrehbwfsmedbelzntqs.supabase.co/functions/v1/phone-support-tools?tool=start_account_verification",
+      "method": "POST",
+      "request_headers": {
+        "x-vendibook-tool-secret": {
+          "secret": "PHONE_AGENT_TOOL_SECRET"
+        }
+      },
+      "request_body_schema": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "enum": [
+              "text",
+              "email"
+            ],
+            "description": "Where to send the code."
+          },
+          "email": {
+            "type": "string",
+            "description": "The email on their account, for the email option or to find the account."
+          },
+          "caller_id": {
+            "type": "string",
+            "dynamic_variable": "system__caller_id",
+            "description": "The number the caller is calling from."
+          },
+          "conversation_id": {
+            "type": "string",
+            "dynamic_variable": "system__conversation_id",
+            "description": "This call's conversation id."
+          }
+        },
+        "required": [
+          "channel",
+          "caller_id",
+          "conversation_id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "webhook",
+    "name": "check_account_code",
+    "description": "Check the 6-digit code the caller reads back.",
+    "response_timeout_secs": 20,
+    "api_schema": {
+      "url": "https://nbrehbwfsmedbelzntqs.supabase.co/functions/v1/phone-support-tools?tool=check_account_code",
+      "method": "POST",
+      "request_headers": {
+        "x-vendibook-tool-secret": {
+          "secret": "PHONE_AGENT_TOOL_SECRET"
+        }
+      },
+      "request_body_schema": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "The 6 digits they read."
+          },
+          "conversation_id": {
+            "type": "string",
+            "dynamic_variable": "system__conversation_id",
+            "description": "This call's conversation id."
+          }
+        },
+        "required": [
+          "code",
+          "conversation_id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "webhook",
+    "name": "get_my_account_summary",
+    "description": "After verification only: the caller's own bookings, orders, listings and support tickets.",
+    "response_timeout_secs": 20,
+    "api_schema": {
+      "url": "https://nbrehbwfsmedbelzntqs.supabase.co/functions/v1/phone-support-tools?tool=get_my_account_summary",
+      "method": "POST",
+      "request_headers": {
+        "x-vendibook-tool-secret": {
+          "secret": "PHONE_AGENT_TOOL_SECRET"
+        }
+      },
+      "request_body_schema": {
+        "type": "object",
+        "properties": {
+          "conversation_id": {
+            "type": "string",
+            "dynamic_variable": "system__conversation_id",
+            "description": "This call's conversation id."
+          }
+        },
+        "required": [
+          "conversation_id"
+        ]
+      }
+    }
+  }
+]
