@@ -21,7 +21,7 @@ The only imported Twilio number is outbound-capable but assigned to the existing
 6. Publish frontend only upon owner approval. No publication occurred during this setup.
 
 ## Facts
-Current fee constants read from `_shared/feeConfig.ts`: new equipment-sale seller 8.7%, rental host/renter 12.9% each. These are not spoken quotes. Membership prices are not embedded in the agent; current details link to /pricing. Listing creation is free; paid concierge routes are retired, so scripts do not sell concierge products. Existing payments unchanged.
+Current fee constants read from `_shared/feeConfig.ts`: new equipment-sale seller 8.7%, rental host/renter 12.9% each. Live monetization catalog confirmed Pro $79/month, Pro annual $790, recurring Featured $49/month on 2026-10-26. These are not spoken quotes. Membership prices are not embedded in the agent; current details link to /pricing. Listing creation is free; paid concierge routes are retired, so scripts do not sell concierge products. Existing payments unchanged.
 
 ## Sources
 - https://www.fcc.gov/document/fcc-confirms-tcpa-applies-ai-technologies-generate-human-voices
