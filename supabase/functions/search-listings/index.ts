@@ -595,23 +595,12 @@ Deno.serve(async (req) => {
     };
 
 
-    // Explicit shopper sorts (price/distance/newest/relevance) are honored
-    // STRICTLY — pinning featured listings above them would misrepresent the
-    // requested order. Featured inventory is instead returned in `sponsored`
-    // for a labeled strip above the results. Only the default `featured`
-    // discovery sort pins featured listings first.
-    const isExplicitSort =
-      sort_by === 'price_low' ||
-      sort_by === 'price_high' ||
-      sort_by === 'newest' ||
-      (sort_by === 'relevance' && !!query?.trim()) ||
-      (sort_by === 'distance' && latitude !== undefined && longitude !== undefined);
-    const sponsored = isExplicitSort
-      ? filteredListings
-          .filter((l) => isFeatured(l))
-          .sort((a, b) => rotKey(a) - rotKey(b))
-          .slice(0, 4)
-      : [];
+    // Owner decision 2026-10-26: featured listings are pinned to the top of
+    // EVERY sort (price, newest, distance, relevance) and every location tier,
+    // including featured listings outside the searched area. Within the
+    // featured group and the regular group, the shopper's chosen sort still
+    // applies. The separate sponsored strip is retired (would duplicate).
+    const sponsored: any[] = [];
 
     // Apply sorting
     if (sort_by === 'distance' && latitude !== undefined && longitude !== undefined) {
