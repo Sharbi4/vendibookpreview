@@ -4,7 +4,7 @@ import { renderAsync } from 'npm:@react-email/components@0.0.22';
 import { template as notice } from '../_shared/transactional-email-templates/generic-notice.tsx';
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts';
 import { maskContactDetails } from '../_shared/contactPatterns.ts';
-import { relayDisplayName, relayVisible, relayBody } from '../_shared/managedRelayPolicy.ts';
+import { relayDisplayName, relayVisible, relayBody, relayEmailContent } from '../_shared/managedRelayPolicy.ts';
 import { adminAlertEmails, adminNoticeKey } from '../_shared/adminRecipients.ts';
 
 const cors = {'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'authorization, apikey, content-type, x-client-info','Content-Type':'application/json'};
@@ -90,12 +90,13 @@ Deno.serve(async req=>{
    const screened=maskContactDetails(typeof p.message==='string'?p.message:m.body).trim();
    const sender=m.sender_role==='guest'?relayDisplayName(thread.guest_name):m.sender_role==='seller'?relayDisplayName(profile.full_name??'','Seller'):'Vendibook support';
    const subject=`New message from ${sender} [VB-${thread.id}]`;
-   const component=React.createElement(notice.component,{kicker:'Relayed by Vendibook',heading:`${sender} sent you a message`,paragraphs:[screened,'Reply to this email or open your conversation. Vendibook reviews replies before relaying them. Your email and phone number are never shared with the other participant.'],ctaLabel:'View conversation',ctaUrl:`https://vendibook.com/inquiries/${thread.id}`,footnote:`Conversation reference: VB-${thread.id}. Payments stay online through Vendibook.`});
-   const html=await renderAsync(component);const plain=await renderAsync(component,{plainText:true});
+   const replyKey=m.recipient_role==='guest'?thread.guest_reply_key:thread.seller_reply_key;
+   const email=relayEmailContent(m.recipient_role,sender,screened,thread.id,replyKey);
+   const component=React.createElement(notice.component,email.props);
+   const html=await renderAsync(component);const plain=email.text;
    const reservation=checked(await db.rpc('reserve_managed_relay',{p_message:m.id,p_body:screened,p_review_label:'Vendibook administrator',p_reviewer:actor}));
    if(reservation.status!=='reserved')return json({error:'This message is already being sent or has been sent.'},409);
-   const replyKey=m.recipient_role==='guest'?thread.guest_reply_key:thread.seller_reply_key;
-   const sent=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json','Idempotency-Key':`managed-relay-${m.id}`},body:JSON.stringify({from:'Vendibook Concierge <hello@updates.vendibook.com>',to:[recipient],reply_to:`relay-${replyKey}@updates.vendibook.com`,subject,html,text:plain})});
+   const sent=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json','Idempotency-Key':`managed-relay-${m.id}`},body:JSON.stringify({from:'Vendibook Concierge <hello@updates.vendibook.com>',to:[recipient],reply_to:email.replyTo,subject,html,text:plain})});
    const result=await sent.json();
    if(!sent.ok||!result.id)return json({error:'Email dispatch could not be confirmed. Message remains private; check Resend before retrying.'},502);
    checked(await db.rpc('complete_managed_relay',{p_message:m.id,p_email_id:result.id}));
