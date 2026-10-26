@@ -3,7 +3,8 @@ import { z } from 'npm:zod@3.25.76';
 import {getCaller,isAdminUser,serviceRoleClient} from '../_shared/callerGuard.ts';
 import {eligibility,followupDraft,OPENERS,SEGMENTS,OUTCOMES,pilotLimit} from '../_shared/growthOutreach.ts';
 import {FEE_CONFIG} from '../_shared/feeConfig.ts';
-const AGENT_ID='agent_6701m5wwwxm0f3p8rf0hmmbc54j1';
+import {OUTBOUND_AGENT_ID,OUTBOUND_DISPLAY_NAME} from '../_shared/outboundAtlas.ts';
+const AGENT_ID=OUTBOUND_AGENT_ID;
 const text=z.string().trim().max(1000);
 const leadSchema=z.object({record_id:z.string().trim().min(1).max(100),phone:z.string().regex(/^\+1\d{10}$/),prospect_name:text.default(''),business_name:text.default(''),market:text.default(''),segment:z.enum(SEGMENTS),state:z.string().regex(/^[A-Z]{2}$/),timezone:z.string().min(1).max(80),asset_type:text.optional(),lead_context:text.optional(),last_inquiry:text.optional(),matched_listing_url:text.optional(),matched_listing_title:text.optional(),relationship_context:text.optional(),eligibility_status:text.optional(),ai_call_consent_status:text.optional(),ai_call_consent_at:text.optional(),ai_call_consent_source:text.optional(),sms_marketing_consent_status:text.optional()});
 const schema=z.discriminatedUnion('action',[
@@ -36,7 +37,7 @@ Deno.serve(async(req)=>{
    const agent=await get('/convai/agents/'+AGENT_ID),phones=await get('/convai/phone-numbers');
    const {data:jobs,error}=await db.from('growth_outreach_batches').select('provider_batch_id').not('provider_batch_id','is',null).limit(10);if(error)throw new Error('Batch records unavailable');
    const statuses=[];for(const job of jobs??[]){if(!/^[a-zA-Z0-9_-]+$/.test(job.provider_batch_id))continue;const status=await get('/convai/batch-calling/'+job.provider_batch_id);statuses.push({id:job.provider_batch_id,status:status.status});}
-   return json({key_set:true,agent_id:agent.agent_id,name:agent.name,record_voice:agent.platform_settings?.privacy?.record_voice,zero_retention_mode:agent.platform_settings?.privacy?.zero_retention_mode,auth_enabled:agent.platform_settings?.auth?.enable_auth,phones:(Array.isArray(phones)?phones:phones.phone_numbers??[]).map((p:any)=>({id:p.phone_number_id,label:'Imported phone • redacted',supports_outbound:p.supports_outbound,assigned_agent_id:p.assigned_agent?.agent_id??null,separate_available:p.supports_outbound===true&&!p.assigned_agent})),batch_statuses:statuses,calling_enabled:false});
+   return json({key_set:true,agent_id:agent.agent_id,name:agent.name,expected_name:OUTBOUND_DISPLAY_NAME,first_message:agent.conversation_config?.agent?.first_message??null,knowledge_base:(agent.conversation_config?.agent?.prompt?.knowledge_base??[]).map((k:any)=>k.name),tool_count:(agent.conversation_config?.agent?.prompt?.tool_ids??[]).length,record_voice:agent.platform_settings?.privacy?.record_voice,zero_retention_mode:agent.platform_settings?.privacy?.zero_retention_mode,auth_enabled:agent.platform_settings?.auth?.enable_auth,phones:(Array.isArray(phones)?phones:phones.phone_numbers??[]).map((p:any)=>({id:p.phone_number_id,label:'Imported phone • redacted',supports_outbound:p.supports_outbound,assigned_agent_id:p.assigned_agent?.agent_id??null,separate_available:p.supports_outbound===true&&!p.assigned_agent})),batch_statuses:statuses,calling_enabled:false});
   }
   if(b.action==='snapshot'){
    const [leads,consents,batches,followups]=await Promise.all([read('growth_outreach_leads'),read('growth_outreach_consent'),read('growth_outreach_batches'),read('growth_outreach_followups')]);
