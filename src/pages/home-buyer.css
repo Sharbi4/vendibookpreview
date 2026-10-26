@@ -203,9 +203,26 @@
 }
 .hb-tile img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .5s cubic-bezier(.22, 1, .36, 1); }
 .hb-tile::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, hsl(var(--hb-night) / .82) 100%); }
-.hb-tile:hover img { transform: scale(1.05); }
-.hb-tile-label { position: absolute; z-index: 1; left: 12px; right: 12px; bottom: 10px; font-size: 13.5px; font-weight: 750; line-height: 1.25; }
+.hb-tile:hover img, .hb-tile:focus-visible img { transform: scale(1.06); }
+/* Hover: the photo stays and Vendibook orange fills in from the bottom (multiplied, so the truck shows through). */
+.hb-tile::before {
+  content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: linear-gradient(0deg, hsl(var(--hb-orange)) 0%, hsl(14 100% 62%) 100%);
+  mix-blend-mode: multiply; transform: scaleY(0); transform-origin: bottom;
+  transition: transform .55s cubic-bezier(.2, .8, .2, 1);
+}
+.hb-tile:hover::before, .hb-tile:focus-visible::before { transform: scaleY(1); }
+.hb-tile::after { transition: opacity .4s ease; }
+.hb-tile:hover::after, .hb-tile:focus-visible::after { opacity: .55; }
+.hb-tile-label {
+  position: absolute; z-index: 2; left: 12px; right: 12px; bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  font-size: 13.5px; font-weight: 750; line-height: 1.25; transition: transform .45s cubic-bezier(.2, .8, .2, 1);
+}
+.hb-tile-label svg { flex: none; width: 18px; height: 18px; opacity: 0; transform: translate(-6px, 6px); transition: opacity .35s ease, transform .45s cubic-bezier(.2, .8, .2, 1); }
+.hb-tile:hover .hb-tile-label, .hb-tile:focus-visible .hb-tile-label { transform: translateY(-4px); }
+.hb-tile:hover .hb-tile-label svg, .hb-tile:focus-visible .hb-tile-label svg { opacity: 1; transform: none; }
 .hb-tile:focus-visible { outline: 3px solid hsl(var(--hb-orange)); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .hb-tile::before, .hb-tile img, .hb-tile-label, .hb-tile-label svg { transition: none; } }
 @media (min-width: 900px) {
   .hb-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
   .hb-tile-label { left: 18px; bottom: 14px; font-size: 16px; }

@@ -258,7 +258,7 @@ export function HomeCategoryTiles() {
                 onClick={() => trackLeadEvent('homepage_premium_discovery_click', { source: 'home_category_tiles', destination: tile.href })}
               >
                 <img src={tile.img} alt="" width={640} height={480} loading="lazy" decoding="async" />
-                <span className="hb-tile-label">{tile.label}</span>
+                <span className="hb-tile-label">{tile.label}<ArrowUpRight aria-hidden="true" /></span>
               </Link>
             </li>
           ))}
