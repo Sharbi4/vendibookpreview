@@ -149,7 +149,7 @@ export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
     // only with marketing consent. Stable event id dedupes Pixel + CAPI.
     try {
       const key = `fb_rental_purchase_${id}`;
-      if (hasMarketingConsent() && !localStorage.getItem(key) && config?.amount_cents) {
+      if (hasMarketingConsent() && !localStorage.getItem(key) && config?.provider === 'square' && config.amount_cents) {
         localStorage.setItem(key, '1');
         void trackFacebookEvent({
           eventName: 'Purchase',
