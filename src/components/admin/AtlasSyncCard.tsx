@@ -6,8 +6,27 @@ import { supabase } from '@/integrations/supabase/client';
 import { ATLAS_FIRST_MESSAGE, ATLAS_SYSTEM_PROMPT, ATLAS_TOOL_DEFINITIONS } from '@/lib/atlas/atlasConfig';
 import { ALLISON_FIRST_MESSAGE, ALLISON_SYSTEM_PROMPT, ALLISON_TOOL_DEFINITIONS } from '@/lib/atlas/allisonConfig';
 
-type ToolResult = { name: string; ok: boolean; status: number };
-type SyncResult = { agent_updated?: boolean; tools?: ToolResult[]; error?: string };
+type ToolResult = { name: string; ok: boolean; status: number; error?: unknown };
+type SyncResult = { agent_updated?: boolean; tools?: ToolResult[]; error?: string; detail?: string };
+
+/** The function's JSON body on a non-2xx reply, so a failed sync says why instead of "non-2xx". */
+async function failureBody(error: unknown): Promise<SyncResult> {
+  const message = error instanceof Error ? error.message : 'Request failed';
+  const context = (error as { context?: Response } | null)?.context;
+  if (!context || typeof context.clone !== 'function') return { error: message };
+  try {
+    const body = await context.clone().json();
+    const detail = body?.agent_error ?? body?.unmanaged_inline ?? body?.message ?? body?.body ?? undefined;
+    return {
+      error: `${body?.error ?? message} (HTTP ${context.status}${body?.step ? `, step ${body.step}` : ''})`,
+      tools: Array.isArray(body?.tools) ? body.tools : undefined,
+      agent_updated: body?.agent_updated,
+      detail: detail === undefined ? undefined : typeof detail === 'string' ? detail : JSON.stringify(detail).slice(0, 1500),
+    };
+  } catch {
+    return { error: `${message} (HTTP ${context.status})` };
+  }
+}
 
 /**
  * Pushes Atlas's prompt, first message and client tools (src/lib/atlas/atlasConfig.ts)
@@ -25,7 +44,10 @@ export default function AtlasSyncCard({ agent = 'atlas' }: { agent?: 'atlas' | '
     setBusy(true);
     try {
       const { data, error } = await supabase.functions.invoke('elevenlabs-agent-configure', { body: { action: 'status', agent } });
-      setLiveSetup(error ? `Inspection failed: ${error.message}` : JSON.stringify(data, null, 2));
+      if (error) {
+        const why = await failureBody(error);
+        setLiveSetup(`Inspection failed: ${why.error}${why.detail ? `\n${why.detail}` : ''}`);
+      } else setLiveSetup(JSON.stringify(data, null, 2));
     } catch { setLiveSetup('Could not inspect the live setup.'); }
     finally { setBusy(false); }
   };
@@ -42,8 +64,8 @@ export default function AtlasSyncCard({ agent = 'atlas' }: { agent?: 'atlas' | '
         tools: definitions,
       },
     });
+    setResult(error ? await failureBody(error) : (data as SyncResult));
     setBusy(false);
-    setResult(error ? { error: error.message } : (data as SyncResult));
   };
 
   const failed = result?.tools?.filter((t) => !t.ok) ?? [];
@@ -79,8 +101,14 @@ export default function AtlasSyncCard({ agent = 'atlas' }: { agent?: 'atlas' | '
                 : result.error
                   ? `Sync failed: ${result.error}`
                   : `Agent ${result.agent_updated ? 'updated' : 'not updated'}${failed.length ? `; tools that failed: ${failed.map((t) => t.name).join(', ')}` : ''}.`}
+              {!ok && failed.length > 0 && result.error && ` Tools that failed: ${failed.map((t) => t.name).join(', ')}.`}
             </p>
           </div>
+        )}
+        {result && !ok && (result.detail || failed.some((t) => t.error)) && (
+          <pre className="max-h-60 overflow-auto whitespace-pre-wrap rounded-xl border p-3 text-xs" aria-label={`${name} sync error details`}>
+            {[result.detail, ...failed.filter((t) => t.error).map((t) => `${t.name} (HTTP ${t.status}): ${JSON.stringify(t.error).slice(0, 600)}`)].filter(Boolean).join('\n\n')}
+          </pre>
         )}
       </CardContent>
     </Card>
