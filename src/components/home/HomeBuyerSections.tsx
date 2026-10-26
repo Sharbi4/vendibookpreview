@@ -172,10 +172,10 @@ export function HomeGuaranteeVideo() {
 /* ── Four photo cards ── */
 
 const FEATURED_CARDS = [
-  { key: 'sale', img: cardSaleImg, title: 'For sale', sub: 'Food trucks and trailers from owners across the country', href: SALE_SEARCH_HREF },
-  { key: 'rent', img: cardRentImg, title: 'For rent', sub: 'Trucks and trailers by the day, week or month', href: RENT_SEARCH_HREF },
-  { key: 'kitchens', img: cardKitchenImg, title: 'Commissary kitchens', sub: 'Licensed prep space near where you vend', href: '/shared-kitchens-for-rent' },
-  { key: 'financing', img: cardFinancingImg, title: 'Financing', sub: 'Apply with Equinox Funding before you make an offer', href: '/financing' },
+  { key: 'sale', img: cardSaleImg, title: 'For sale', sub: 'Food trucks and trailers from owners across the country', cta: 'Shop for sale', href: SALE_SEARCH_HREF },
+  { key: 'rent', img: cardRentImg, title: 'For rent', sub: 'Trucks and trailers by the day, week or month', cta: 'Browse rentals', href: RENT_SEARCH_HREF },
+  { key: 'kitchens', img: cardKitchenImg, title: 'Commissary kitchens', sub: 'Licensed prep space near where you vend', cta: 'Find a kitchen', href: '/shared-kitchens-for-rent' },
+  { key: 'financing', img: cardFinancingImg, title: 'Financing', sub: 'Apply with Equinox Funding before you make an offer', cta: 'See financing', href: '/financing' },
 ] as const;
 
 export function HomeFeaturedCards() {
@@ -198,6 +198,7 @@ export function HomeFeaturedCards() {
                 <span className="hb-card-text">
                   <strong>{card.title}<ArrowUpRight aria-hidden="true" /></strong>
                   <small>{card.sub}</small>
+                  <span className="hb-card-cta" aria-hidden="true">{card.cta}<ArrowRight /></span>
                 </span>
               </Link>
             </li>

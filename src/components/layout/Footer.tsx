@@ -167,7 +167,6 @@ const Footer = () => {
         </div>
 
         <div className="vf-support">
-          <div className="vf-support-glow" aria-hidden />
           <p className="vf-live">
             <span className={cn('vf-live-dot', inFollowUpHours(new Date()) && 'is-open')} aria-hidden />
             {inFollowUpHours(new Date()) ? 'Our team is in now' : 'Line answered 24/7'}
@@ -175,9 +174,9 @@ const Footer = () => {
           <p className="vf-support-title">Talk to a real person</p>
           <a href="tel:+18666906227" className="vf-phone">(866)&nbsp;690&#8209;6227</a>
           <div className="vf-support-actions">
-            <a href="tel:+18666906227" className="vf-pill"><Phone className="h-4 w-4" aria-hidden /> Call</a>
-            <a href="sms:+18666906227" className="vf-pill"><MessageSquareText className="h-4 w-4" aria-hidden /> Text</a>
-            <Link to="/contact" className="vf-pill is-solid">Contact us <ArrowUpRight className="h-4 w-4" aria-hidden /></Link>
+            <a href="tel:+18666906227" className="vf-pill"><Phone className="h-3.5 w-3.5" aria-hidden /> Call</a>
+            <a href="sms:+18666906227" className="vf-pill"><MessageSquareText className="h-3.5 w-3.5" aria-hidden /> Text</a>
+            <Link to="/contact" className="vf-pill is-solid">Contact us <ArrowUpRight className="h-3.5 w-3.5" aria-hidden /></Link>
           </div>
           <p className="vf-hours">Answered 24/7 · Team callbacks Mon–Fri, 8 AM–8 PM ET</p>
         </div>
