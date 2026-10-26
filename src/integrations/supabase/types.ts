@@ -606,6 +606,11 @@ export type Database = {
           id: string
           message: string
           read_at: string | null
+          relay_decline_reason: string | null
+          relay_declined_at: string | null
+          relayed_at: string | null
+          relayed_by: string | null
+          relayed_from: string | null
           sender_id: string
         }
         Insert: {
@@ -618,6 +623,11 @@ export type Database = {
           id?: string
           message: string
           read_at?: string | null
+          relay_decline_reason?: string | null
+          relay_declined_at?: string | null
+          relayed_at?: string | null
+          relayed_by?: string | null
+          relayed_from?: string | null
           sender_id: string
         }
         Update: {
@@ -630,6 +640,11 @@ export type Database = {
           id?: string
           message?: string
           read_at?: string | null
+          relay_decline_reason?: string | null
+          relay_declined_at?: string | null
+          relayed_at?: string | null
+          relayed_by?: string | null
+          relayed_from?: string | null
           sender_id?: string
         }
         Relationships: [
@@ -638,6 +653,13 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "booking_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_messages_relayed_from_fkey"
+            columns: ["relayed_from"]
+            isOneToOne: true
+            referencedRelation: "booking_messages"
             referencedColumns: ["id"]
           },
         ]
@@ -2409,6 +2431,11 @@ export type Database = {
           message: string
           pii_blocked: boolean | null
           read_at: string | null
+          relay_decline_reason: string | null
+          relay_declined_at: string | null
+          relayed_at: string | null
+          relayed_by: string | null
+          relayed_from: string | null
           sender_id: string
         }
         Insert: {
@@ -2423,6 +2450,11 @@ export type Database = {
           message: string
           pii_blocked?: boolean | null
           read_at?: string | null
+          relay_decline_reason?: string | null
+          relay_declined_at?: string | null
+          relayed_at?: string | null
+          relayed_by?: string | null
+          relayed_from?: string | null
           sender_id: string
         }
         Update: {
@@ -2437,6 +2469,11 @@ export type Database = {
           message?: string
           pii_blocked?: boolean | null
           read_at?: string | null
+          relay_decline_reason?: string | null
+          relay_declined_at?: string | null
+          relayed_at?: string | null
+          relayed_by?: string | null
+          relayed_from?: string | null
           sender_id?: string
         }
         Relationships: [
@@ -2445,6 +2482,13 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_messages_relayed_from_fkey"
+            columns: ["relayed_from"]
+            isOneToOne: true
+            referencedRelation: "conversation_messages"
             referencedColumns: ["id"]
           },
         ]
@@ -15660,6 +15704,15 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      decline_held_member_message: {
+        Args: {
+          p_declined_by?: string
+          p_message: string
+          p_reason: string
+          p_table: string
+        }
+        Returns: undefined
+      }
       dispatch_native_push_jobs: { Args: never; Returns: undefined }
       dispatch_square_reconcile: { Args: never; Returns: undefined }
       equipment_reservation_status: {
@@ -16144,6 +16197,16 @@ export type Database = {
       refresh_sale_release_requirements: {
         Args: { _payment_record_id: string }
         Returns: undefined
+      }
+      relay_held_member_message: {
+        Args: {
+          p_body?: string
+          p_include_attachment?: boolean
+          p_message: string
+          p_relayed_by?: string
+          p_table: string
+        }
+        Returns: string
       }
       release_seller_verification_retry: {
         Args: { _user_id: string }
