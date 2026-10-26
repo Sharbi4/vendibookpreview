@@ -42,3 +42,4 @@
 - [open] The live phone-support agent prompt on ElevenLabs still quotes the old number — repo copies are updated; syncing the deployed prompt needs owner go-ahead.
 
 - [done] Mobile search UI audit: both search entry points checked at 320/390/430px; header, touch targets, filter sheet, duplicate bottom controls, titles and pagination improved; no search or payment logic changes.
+- [ ] Ad images: rebuild with the real website Vendibook logo (owner request 2026-10-26)
