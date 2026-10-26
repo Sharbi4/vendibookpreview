@@ -75,7 +75,8 @@ This setup needs no new Supabase secrets. The tool secret is derived from `ELEVE
 3. **Agent.**
    1. Duplicate Allison.
    2. Replace its prompt and first message with the files above.
-   3. Add the webhook tools from `phone-agent-tools.json`, with the `x-vendibook-tool-secret` header referencing that workspace secret, plus the system `end_call` tool. Keep the Calendly tools.
+   3. Keep only the Calendly tools that read meeting types and open times or book a meeting: `list_event_types`, `get_event_type`, `list_event_type_available_times` and `create_event_invitee`. Remove `list_events`, `list_events_by_invitee`, `get_event` and `cancel_event`, because on a public phone line they would let any caller read or cancel other people's bookings.
+   4. Add the webhook tools from `phone-agent-tools.json`, with the `x-vendibook-tool-secret` header referencing that workspace secret, plus the system `end_call` tool. Keep the Calendly tools.
 4. **Number.** Assign `phnum_9001m5tnf446f4sbmch182jzvfq1` to the new agent.
 5. **Check.** Call `admin-phone-actions` with `{"action": "phone_line_status"}`. It should show the new agent and `tool_secret_registered: true`.
 
