@@ -1,3 +1,4 @@
+import '@/components/search/mobileSearch.css';
 import { illustrativeFinancingNote } from '@/lib/financing/calculator';
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { ImpressionTracker } from '@/components/analytics/ImpressionTracker';
@@ -24,7 +25,6 @@ import { EmptyStateEmailCapture } from '@/components/search/EmptyStateEmailCaptu
 import GetAlertsCard from '@/components/search/GetAlertsCard';
 import RequestAssetCTA from '@/components/search/RequestAssetCTA';
 import ReferralBrowseStrip from '@/components/referrals/ReferralBrowseStrip';
-import MobileStickyBar from '@/components/search/MobileStickyBar';
 import SaveSearchButton from '@/components/search/SaveSearchButton';
 import { CategoryPillStrip } from '@/components/search/CategoryPillStrip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -897,7 +897,7 @@ const Search = () => {
     // `sale-light` is the same warm-ivory theme scope the For Sale listing
     // detail page uses — white surfaces, charcoal type, soft hairlines, orange
     // reserved for actions. Search now reads as the same product family.
-    <div className="sale-light min-h-screen flex flex-col bg-background">
+    <div data-mobile-search className="sale-light min-h-screen flex flex-col bg-background">
 
       <SEO
         title={seoTitle}
@@ -942,17 +942,17 @@ const Search = () => {
                     aria-label="Search inventory by keyword"
                     value={searchQuery}
                     onChange={(e) => handleSearch(e.target.value)}
-                    className="h-12 rounded-2xl border-0 bg-transparent pl-11 pr-9 text-base shadow-none placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-sm"
+                    className="h-12 rounded-2xl border-0 bg-transparent pl-11 pr-12 text-base shadow-none placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-sm"
                   />
                   {searchQuery && (
-                    <button
+                    <Button
                       type="button"
                       onClick={() => handleSearch('')}
-                      className="absolute right-3 flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
+                      variant="ghost" size="icon" className="absolute right-1 h-11 w-11 rounded-full text-muted-foreground"
                       aria-label="Clear keyword"
                     >
                       <X className="h-3.5 w-3.5" />
-                    </button>
+                    </Button>
                   )}
                 </div>
 
@@ -968,7 +968,7 @@ const Search = () => {
                     onLocationSelect={handleLocationSelect}
                     selectedCoordinates={locationCoords}
                     placeholder="Where? City, state, or ZIP"
-                    className="w-full [&>div:first-child]:w-full [&_input]:h-12 [&_input]:rounded-2xl [&_input]:border-0 [&_input]:bg-transparent [&_input]:pl-11 [&_input]:text-base [&_input]:shadow-none [&_input]:focus-visible:ring-0 [&_input]:focus-visible:ring-offset-0 sm:[&_input]:text-sm"
+                    className="w-full [&>div:first-child]:w-full [&_input]:h-12 [&_input]:rounded-2xl [&_input]:border-0 [&_input]:bg-transparent [&_input]:pl-11 [&_input]:pr-24 [&_button]:h-10 [&_button]:w-10 [&_input]:text-base [&_input]:shadow-none [&_input]:focus-visible:ring-0 [&_input]:focus-visible:ring-offset-0 sm:[&_input]:text-sm"
                   />
                 </div>
 
@@ -1188,7 +1188,7 @@ const Search = () => {
             </aside>
 
             {/* Results Grid */}
-            <div className="flex-1" ref={resultsRef}>
+            <div className="min-w-0 flex-1 scroll-mt-36" ref={resultsRef}>
 
               {/* Results header — confident context, then sort / view / save.
                   Fixed min-height so the row never jumps between fetches. */}
@@ -1233,7 +1233,7 @@ const Search = () => {
                   )}
                 </div>
 
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <SaveSearchButton
                     category={category !== 'all' ? category : undefined}
                     mode={mode !== 'all' ? mode : undefined}
@@ -1251,16 +1251,16 @@ const Search = () => {
                     onValueChange={(value) => value && setViewMode(value as 'grid' | 'map' | 'split' | 'list')}
                     className="rounded-xl border border-[#1b1714]/[0.12] bg-card p-0.5"
                   >
-                    <ToggleGroupItem value="grid" aria-label="Grid view" title="Grid view" className="h-8 rounded-lg px-2 text-muted-foreground transition-colors data-[state=on]:bg-foreground data-[state=on]:text-background">
+                    <ToggleGroupItem value="grid" aria-label="Grid view" title="Grid view" className="h-11 w-11 rounded-lg px-2 text-muted-foreground transition-colors data-[state=on]:bg-foreground data-[state=on]:text-background">
                       <LayoutGrid className="h-3.5 w-3.5" />
                     </ToggleGroupItem>
-                    <ToggleGroupItem value="list" aria-label="List view" title="List view" className="h-8 rounded-lg px-2 text-muted-foreground transition-colors data-[state=on]:bg-foreground data-[state=on]:text-background">
+                    <ToggleGroupItem value="list" aria-label="List view" title="List view" className="h-11 w-11 rounded-lg px-2 text-muted-foreground transition-colors data-[state=on]:bg-foreground data-[state=on]:text-background">
                       <Rows3 className="h-3.5 w-3.5" />
                     </ToggleGroupItem>
-                    <ToggleGroupItem value="split" aria-label="Split view" title="Split view (list + map)" className="hidden h-8 rounded-lg px-2 text-muted-foreground transition-colors data-[state=on]:bg-foreground data-[state=on]:text-background md:flex">
+                    <ToggleGroupItem value="split" aria-label="Split view" title="Split view (list + map)" className="hidden h-11 w-11 rounded-lg px-2 text-muted-foreground transition-colors data-[state=on]:bg-foreground data-[state=on]:text-background md:flex">
                       <Columns className="h-3.5 w-3.5" />
                     </ToggleGroupItem>
-                    <ToggleGroupItem value="map" aria-label="Map view" title="Map view" className="h-8 rounded-lg px-2 text-muted-foreground transition-colors data-[state=on]:bg-foreground data-[state=on]:text-background">
+                    <ToggleGroupItem value="map" aria-label="Map view" title="Map view" className="h-11 w-11 rounded-lg px-2 text-muted-foreground transition-colors data-[state=on]:bg-foreground data-[state=on]:text-background">
                       <Map className="h-3.5 w-3.5" />
                     </ToggleGroupItem>
                   </ToggleGroup>
@@ -1279,7 +1279,7 @@ const Search = () => {
                       onClick={() => handleRadiusChange(r)}
                       aria-pressed={searchRadius === r}
                       className={cn(
-                        'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30',
+                        'min-h-11 rounded-full border px-3 py-2 text-xs font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30',
                         searchRadius === r
                           ? 'border-foreground bg-foreground text-background'
                           : 'border-[#1b1714]/[0.12] bg-card text-muted-foreground hover:text-foreground'
@@ -1452,7 +1452,7 @@ const Search = () => {
                     {totalPages > 1 && (
                       <div className="mt-8 mb-4">
                         <Pagination>
-                          <PaginationContent>
+                          <PaginationContent className="flex-wrap">
                             <PaginationItem>
                               <PaginationPrevious onClick={() => page > 1 && handlePageChange(page - 1)} className={page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} />
                             </PaginationItem>
@@ -1540,7 +1540,7 @@ const Search = () => {
                   {totalPages > 1 && (
                     <div className="mt-8">
                       <Pagination>
-                        <PaginationContent>
+                        <PaginationContent className="flex-wrap">
                           <PaginationItem>
                             <PaginationPrevious onClick={() => page > 1 && handlePageChange(page - 1)} className={page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'} />
                           </PaginationItem>
@@ -1690,7 +1690,7 @@ const Search = () => {
                   {totalPages > 1 && (
                     <div className="mt-8">
                       <Pagination>
-                        <PaginationContent>
+                        <PaginationContent className="flex-wrap">
                           <PaginationItem>
                             <PaginationPrevious 
                               onClick={() => page > 1 && handlePageChange(page - 1)}
@@ -1747,28 +1747,7 @@ const Search = () => {
         initialEndDate={dateRange?.to}
       />
 
-      {/* Mobile floating Map/List toggle */}
-      <button
-        type="button"
-        onClick={() => setViewMode(viewMode === 'map' ? 'list' : 'map')}
-        className="md:hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 rounded-full bg-foreground text-background px-4 py-2.5 text-xs font-semibold shadow-lg"
-        aria-label={viewMode === 'map' ? 'Show list' : 'Show map'}
-      >
-        {viewMode === 'map' ? <Rows3 className="h-4 w-4" /> : <Map className="h-4 w-4" />}
-        {viewMode === 'map' ? 'List' : 'Map'}
-      </button>
 
-
-      {/* Mobile Sticky Bar */}
-      <MobileStickyBar
-        activeFiltersCount={activeFiltersCount}
-        sortBy={sortBy}
-        onSortChange={handleSortChange}
-        onFiltersClick={() => setIsFiltersOpen(true)}
-        hasLocation={!!locationCoords}
-        hasSearchQuery={!!searchQuery.trim()}
-        showPriceSorts={mode !== 'all'}
-      />
     </div>
   );
 };
@@ -1783,10 +1762,11 @@ const SortControl = ({ sortBy, options, onChange }: {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button
+        <Button
+          variant="outline"
           type="button"
           aria-label={`Sort results, currently ${current}`}
-          className="inline-flex items-center gap-2 h-9 pl-3.5 pr-3 rounded-full border border-border/50 bg-background/70 backdrop-blur text-sm text-foreground hover:border-border transition-colors duration-200 shrink-0"
+          className="inline-flex items-center gap-2 h-11 pl-3.5 pr-3 rounded-full border border-border/50 bg-background/70 backdrop-blur text-sm text-foreground hover:border-border transition-colors duration-200 shrink-0"
         >
           <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="whitespace-nowrap">
@@ -1794,7 +1774,7 @@ const SortControl = ({ sortBy, options, onChange }: {
             <span className="font-semibold">{current}</span>
           </span>
           <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-        </button>
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56 rounded-xl">
         {options.map((o) => (

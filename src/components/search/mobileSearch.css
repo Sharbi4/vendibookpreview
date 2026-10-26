@@ -1,0 +1,15 @@
+/* Scope floating-assistant sizing to search screens; keep its call behavior unchanged. */
+@media (max-width: 767px) {
+  body:has([data-mobile-search]) .atlas-orb-btn {
+    width: 50px;
+    height: 50px;
+    padding: 4px;
+    justify-content: center;
+  }
+  body:has([data-mobile-search]) .atlas-launcher-label {
+    display: none;
+  }
+  [data-mobile-search] main {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+  }
+}

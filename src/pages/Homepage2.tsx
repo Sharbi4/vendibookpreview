@@ -1,3 +1,4 @@
+import '@/components/search/mobileSearch.css';
 import React, { useState, useEffect, useCallback, useRef } from 'react'; // v2
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -235,7 +236,7 @@ const Homepage2 = () => {
   };
 
   return (
-    <div className="min-h-screen relative overflow-x-hidden scroll-smooth">
+    <div data-mobile-search className="min-h-screen relative overflow-x-hidden scroll-smooth pb-20 md:pb-0">
       {/* ══ FULL-PAGE GRADIENT BACKGROUND ══ */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 bg-background" />
@@ -245,7 +246,7 @@ const Homepage2 = () => {
       </div>
 
       {/* ══ CUSTOM HEADER WITH INTEGRATED SEARCH ══ */}
-      <header className="sticky top-5 z-50 w-[calc(100%-1rem)] lg:w-fit lg:max-w-[calc(100%-2rem)] mx-auto rounded-2xl shadow-lg shadow-black/10 mb-3">
+      <header className="sticky top-0 lg:top-5 z-50 w-[calc(100%-1rem)] lg:w-fit lg:max-w-[calc(100%-2rem)] mx-auto rounded-2xl shadow-lg shadow-black/10 mb-3">
         <div className="relative rounded-2xl">
           {/* Header gradient */}
           <div className="absolute inset-0 bg-gradient-to-r from-[hsl(14,100%,57%)] via-[hsl(20,90%,50%)] to-[hsl(40,100%,49%)] rounded-2xl overflow-hidden" />
@@ -254,21 +255,22 @@ const Homepage2 = () => {
           {/* Glass overlay */}
           <div className="absolute inset-0 backdrop-blur-md bg-black/5 rounded-2xl" />
 
-          <div className="relative max-w-7xl mx-auto px-4">
+          <div className="relative max-w-7xl mx-auto px-3 lg:px-4">
             {/* Top row: Logo + Search + Actions */}
-            <div className="flex items-center justify-between gap-3 h-14">
+            <div className="flex flex-wrap items-center justify-between gap-2 py-2 lg:flex-nowrap lg:gap-3 lg:h-14 lg:py-0">
               {/* Favicon / Logo */}
               <Link to="/" className="shrink-0 flex items-center gap-2 relative">
                 <div
-                  className="absolute -inset-x-2 -inset-y-1 pointer-events-none rounded-[50%] overflow-hidden"
+                  className="hidden lg:block absolute -inset-x-2 -inset-y-1 pointer-events-none rounded-[50%] overflow-hidden"
                   style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.35) 0%, rgba(170,210,255,0.2) 25%, rgba(255,180,200,0.16) 50%, rgba(200,255,220,0.14) 75%, rgba(255,220,180,0.24) 100%)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', boxShadow: 'inset 0 2px 6px rgba(255,255,255,0.4), inset 0 -2px 6px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05)' }}
                 />
-                <img src={vendibookFavicon} alt="Vendibook" className="h-40 w-auto drop-shadow-lg" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.25))' }} />
+                <img src={vendibookFavicon} alt="Vendibook" className="h-11 w-11 object-contain lg:hidden" />
+                <img src={vendibookFavicon} alt="" className="hidden lg:block lg:h-40 lg:w-auto drop-shadow-lg" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.25))' }} />
               </Link>
 
               {/* Search bar — 3D glass field in header */}
-              <div className="flex-1 flex items-center gap-2 max-w-2xl">
-                <div ref={searchWrapperRef} className="relative flex-1 group">
+              <div className="order-3 w-full min-w-0 flex items-center gap-2 lg:order-none lg:w-auto lg:flex-1 lg:max-w-2xl">
+                <div ref={searchWrapperRef} className="relative min-w-0 flex-1 group">
                   <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-white/20 via-white/10 to-white/20 opacity-0 group-focus-within:opacity-100 blur-md transition-opacity duration-500 pointer-events-none" />
                   <div className="relative rounded-xl bg-white/12 backdrop-blur-xl border border-white/20 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15),0_2px_12px_-2px_rgba(0,0,0,0.25)] group-focus-within:bg-white/18 group-focus-within:border-white/35 group-focus-within:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_4px_20px_-4px_rgba(0,0,0,0.35),0_0_15px_-3px_rgba(255,255,255,0.15)] transition-all duration-300 flex items-center">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60" />
@@ -277,8 +279,8 @@ const Homepage2 = () => {
                       onChange={(e) => setQuery(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                       onFocus={() => setShowTrending(true)}
-                      placeholder={isRecording ? 'Listening...' : (window.innerWidth < 768 ? 'Search' : 'Search by keyword or location...')}
-                      className="relative w-full h-10 pl-8 pr-20 md:pr-12 rounded-xl bg-transparent text-white text-sm placeholder:text-white/50 focus:outline-none transition-all"
+                      placeholder={isRecording ? 'Listening...' : 'Search trucks, trailers, cities'}
+                      className="relative w-full h-12 lg:h-10 pl-8 pr-24 md:pr-12 rounded-xl bg-transparent text-primary-foreground text-base placeholder:text-white/50 focus:outline-none transition-all"
                     />
                     {/* Mobile: Geolocation button */}
                     <button
@@ -304,8 +306,8 @@ const Homepage2 = () => {
                           console.error('Geolocation error:', err);
                         }
                       }}
-                      className="absolute right-10 md:hidden top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all"
-                      title="Use my location"
+                      className="absolute right-12 md:hidden top-1/2 -translate-y-1/2 w-11 h-11 rounded-lg flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all"
+                      aria-label="Use my location" title="Use my location"
                     >
                       <Navigation className="w-3.5 h-3.5" />
                     </button>
@@ -316,7 +318,7 @@ const Homepage2 = () => {
                       onClick={toggleVoiceSearch}
                       size="sm"
                       label="Voice search"
-                      className="absolute right-2 top-1/2 -translate-y-1/2"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 h-11 w-11 lg:h-8 lg:w-8"
                     />
                   </div>
                   {/* Trending dropdown */}
@@ -366,36 +368,47 @@ const Homepage2 = () => {
             </div>
 
             {/* Bottom row: Category chips + mode + sort */}
-            <div className="flex items-center gap-3 pb-2 -mt-0.5">
+            <div className="flex flex-wrap items-center gap-2 pb-2 lg:flex-nowrap lg:gap-3">
               {/* Mode pills — equal width, premium */}
-              <div className="flex h-8 rounded-full overflow-hidden border border-white/20 bg-white/10 backdrop-blur-xl shrink-0 p-[2px] gap-[2px]">
+              <div className="flex h-12 lg:h-8 rounded-full overflow-hidden border border-white/20 bg-white/10 backdrop-blur-xl shrink-0 p-[2px] gap-[2px]">
                 {(['', 'rent', 'sale'] as const).map((m) => (
-                  <button
+                  <Button
+                    variant="ghost"
+                    aria-pressed={mode === m}
                     key={m}
                     onClick={() => setMode(m)}
-                    className={`w-12 sm:w-14 text-[11px] sm:text-xs font-semibold rounded-full transition-all duration-200 ${
+                    className={`w-14 h-full px-2 text-sm lg:w-12 lg:text-xs font-semibold rounded-full transition-all duration-200 ${
                       mode === m
                         ? 'bg-white text-gray-900 shadow-sm'
                         : 'text-white/60 hover:text-white hover:bg-white/10'
                     }`}
                   >
                     {m === '' ? 'All' : m === 'rent' ? 'Rent' : 'Buy'}
-                  </button>
+                  </Button>
                 ))}
               </div>
 
+              <FilterPanel
+                    filters={filters}
+                    onChange={setFilters}
+                    onApply={applyFilters}
+                    onClear={() => { clearFilterPanel(); setTimeout(() => fetchListings(1), 0); }}
+                    autoApply
+                  />
               {/* Category chips — scrollable with scroll-position indicator */}
-              <div className="flex-1 min-w-0 relative">
+              <div className="order-3 w-full min-w-0 relative lg:order-none lg:w-auto lg:flex-1">
                 <div
                   ref={categoryScrollRef}
                   onScroll={handleCategoryScroll}
                   className="flex gap-1 overflow-x-auto no-scrollbar scroll-smooth"
                 >
                   {CATEGORIES.map((cat) => (
-                    <button
+                    <Button
+                      variant="ghost"
+                      aria-pressed={category === cat.value}
                       key={cat.value}
                       onClick={() => handleCategoryChip(cat.value)}
-                      className={`relative whitespace-nowrap px-3 py-1.5 text-xs font-medium flex items-center gap-1.5 transition-all rounded-t-lg ${
+                      className={`relative whitespace-nowrap h-11 lg:h-8 px-3 py-1.5 text-sm lg:text-xs font-medium flex items-center gap-1.5 transition-all rounded-t-lg ${
                         category === cat.value
                           ? 'text-white font-bold'
                           : 'text-white/60 hover:text-white/90'
@@ -410,15 +423,9 @@ const Homepage2 = () => {
                           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                         />
                       )}
-                    </button>
+                    </Button>
                   ))}
-                  <FilterPanel
-                    filters={filters}
-                    onChange={setFilters}
-                    onApply={applyFilters}
-                    onClear={() => { clearFilterPanel(); setTimeout(() => fetchListings(1), 0); }}
-                    autoApply
-                  />
+
                 </div>
                 {/* Scroll position indicator — moves opposite to scroll direction */}
                 <div className="h-[2px] bg-white/10 rounded-full mt-0.5">
@@ -446,7 +453,7 @@ const Homepage2 = () => {
         <div className="flex-1 min-w-0">
           <div ref={resultsRef} className="scroll-mt-32 max-w-6xl mx-auto px-4 pt-6 pb-6">
             {/* Sort bar + map toggle */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
               <span className="text-sm font-medium text-foreground/70">
                 {totalCount} {totalCount === 1 ? 'result' : 'results'}
               </span>
@@ -454,7 +461,7 @@ const Homepage2 = () => {
                 {/* Mobile map toggle — next to sort */}
                 <button
                   onClick={() => setShowMap(!showMap)}
-                  className={`lg:hidden flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-lg border transition-all ${
+                  className={`lg:hidden flex items-center gap-1.5 h-11 px-3 text-sm font-medium rounded-lg border transition-all ${
                     showMap
                       ? 'bg-primary text-primary-foreground border-primary'
                       : 'border-border bg-background text-foreground/70 hover:bg-muted'
@@ -464,7 +471,7 @@ const Homepage2 = () => {
                   Map
                 </button>
                 <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-                  <SelectTrigger className="h-8 w-36 text-xs rounded-lg border-border bg-background">
+                  <SelectTrigger className="h-11 w-36 text-sm rounded-lg border-border bg-background">
                     <SlidersHorizontal className="w-3 h-3 mr-1" />
                     <SelectValue />
                   </SelectTrigger>
@@ -507,7 +514,7 @@ const Homepage2 = () => {
                     {totalPages > 1 && (
                       <div className="mt-8 mb-4">
                         <Pagination>
-                          <PaginationContent>
+                          <PaginationContent className="flex-wrap">
                             {page > 1 && (
                               <PaginationItem>
                                 <PaginationPrevious onClick={() => handlePageChange(page - 1)} className="cursor-pointer rounded-full bg-white/60 backdrop-blur border border-white/50" />
@@ -576,7 +583,7 @@ const Homepage2 = () => {
             initial={{ x: 20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             onClick={() => setLearnMoreOpen(true)}
-            className="fixed right-0 top-1/2 -translate-y-1/2 z-40 flex items-center gap-1 px-2 py-3 bg-foreground text-background text-[11px] font-bold rounded-l-xl shadow-lg shadow-black/20 hover:px-3 transition-all"
+            className="hidden lg:flex fixed right-0 top-1/2 -translate-y-1/2 z-40 flex items-center gap-1 px-2 py-3 bg-foreground text-background text-[11px] font-bold rounded-l-xl shadow-lg shadow-black/20 hover:px-3 transition-all"
             style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
           >
             <ChevronRight className="w-3 h-3 rotate-180" />

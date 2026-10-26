@@ -492,7 +492,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
       <div className={cn("p-4 space-y-2 flex-1 flex flex-col", compact && "p-3 space-y-1", isRow && "sm:p-4 sm:space-y-1.5")}>
         {/* Location & Category */}
         <div className="flex items-center justify-between gap-2">
-          <span className={cn(textMuted, "font-medium flex items-center gap-1", compact ? "text-xs" : "text-sm")}>
+          <span className={cn(textMuted, "min-w-0 font-medium flex items-center gap-1", compact ? "text-xs" : "text-sm")}>
             <MapPin className={cn(compact ? "h-2.5 w-2.5" : "h-3 w-3")} />
             <span className="line-clamp-1">{location}</span>
             {distanceMiles !== undefined && (
@@ -504,7 +504,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
           {!compact && (
             <CategoryTooltip category={listing.category} side="top">
               <span className={cn(
-                "text-xs font-bold px-3 py-1 rounded-full cursor-help",
+                "shrink-0 text-xs font-bold px-3 py-1 rounded-full cursor-help",
                 isSearch ? "bg-[#1b1714]/[0.05] text-[#1b1714]/70" : "bg-white/10 text-white/80",
               )}>
                 {CATEGORY_LABELS[listing.category]}
@@ -515,7 +515,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
 
         {/* Delivery Radius Badge */}
         {!compact && (listing.fulfillment_type === 'delivery' || listing.fulfillment_type === 'both') && listing.delivery_radius_miles && (
-          <div className={cn("flex items-center gap-1 text-xs", textFaint)}>
+          <div className={cn("flex flex-wrap items-center gap-1 text-xs", textFaint)}>
             <Truck className="h-3 w-3" />
             <span>Delivers within {listing.delivery_radius_miles} mi</span>
             {listing.delivery_fee && (
@@ -527,7 +527,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         {/* Title & Rating - Tracking Tight Typography */}
         <div className="flex items-center justify-between gap-2">
           <h3 className={cn(
-            "text-lg font-semibold tracking-tight line-clamp-1 group-hover:text-primary transition-colors",
+            "min-w-0 flex-1 text-lg font-semibold tracking-normal line-clamp-2 group-hover:text-primary transition-colors",
             textStrong,
             compact && "text-sm",
             isRow && "sm:text-lg sm:line-clamp-2",
@@ -622,7 +622,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
               type="button"
               variant="cta"
               size="sm"
-              className="relative z-10 h-9 px-4 text-[13px] rounded-2xl shrink-0"
+              className="relative z-10 h-11 sm:h-9 px-4 text-[13px] rounded-2xl shrink-0"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
