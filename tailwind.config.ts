@@ -18,11 +18,10 @@ export default {
     },
     extend: {
       fontFamily: {
-        // UI face — Manrope (variable, latin). Used as body/default.
-        sans: ['Manrope', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-        ui: ['Manrope', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-        // Display face — Sofia Pro Soft (self-hosted). Reserved for headlines/marketing/celebratory moments.
-        display: ['SofiaProSoftLight', 'Sofia Pro', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        // All proportional typography shares the global site face.
+        sans: ['var(--font-site)'],
+        ui: ['var(--font-site)'],
+        display: ['var(--font-site)'],
       },
       colors: {
         border: "hsl(var(--border) / 0.14)",
