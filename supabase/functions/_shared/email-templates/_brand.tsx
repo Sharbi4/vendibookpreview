@@ -6,7 +6,7 @@ import * as React from 'npm:react@18.3.1'
 import { Img, Section, Text } from 'npm:@react-email/components@0.0.22'
 
 export const SITE_URL = 'https://vendibook.com'
-export const SUPPORT_PHONE = '(725) 755-9598'
+export const SUPPORT_PHONE = '(866) 690-6227'
 export const LOGO_URL =
   'https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-logo-email-2026-10.png?v=2026-10'
 

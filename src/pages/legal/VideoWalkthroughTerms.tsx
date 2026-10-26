@@ -193,7 +193,7 @@ const VideoWalkthroughTerms: React.FC = () => (
           If a participant behaves inappropriately, misrepresents a listing, or makes you feel
           unsafe, end the meeting and report it to{' '}
           <a href="mailto:support@vendibook.com" className="underline">support@vendibook.com</a> or
-          call (725) 755-9598, Monday through Friday, 9am–5pm Arizona time. Include the listing and
+          call (866) 690-6227, Monday through Friday, 9am–5pm Arizona time. Include the listing and
           the scheduled meeting time so we can locate the record.
         </p>
       </Section>

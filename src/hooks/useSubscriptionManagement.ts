@@ -163,7 +163,7 @@ export function useSubscriptionManagement(product: SubscriptionProduct = 'pro') 
         toast({
           title: 'Contact support to cancel',
           description:
-            'This legacy membership is managed by our team. Email support@vendibook.com or call (725) 755-9598 and we’ll cancel it right away.',
+            'This legacy membership is managed by our team. Email support@vendibook.com or call (866) 690-6227 and we’ll cancel it right away.',
         });
       }
     } catch (err) {

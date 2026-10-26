@@ -214,7 +214,7 @@ serve(async (req) => {
             ],
             ctaLabel: "Browse Vendibook",
             ctaUrl: "https://vendibook.com/search",
-            footnote: "Questions? Reply to this email or call (725) 755-9598, Mon–Fri 9am–5pm AZ.",
+            footnote: "Questions? Reply to this email or call (866) 690-6227, Mon–Fri 9am–5pm AZ.",
           },
         });
     } catch (e) {

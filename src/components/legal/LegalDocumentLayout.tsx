@@ -61,7 +61,7 @@ const LegalDocumentLayout: React.FC<Props> = ({ slug, heading, seoTitle, seoDesc
         <Section title="Contact">
           <p>
             Questions about this document: <a className="underline" href="mailto:support@vendibook.com">support@vendibook.com</a>{' '}
-            or (725) 755-9598, Monday–Friday, 9am–5pm Arizona time.
+            or (866) 690-6227, Monday–Friday, 9am–5pm Arizona time.
           </p>
         </Section>
       </main>

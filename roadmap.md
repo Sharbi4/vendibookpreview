@@ -37,3 +37,6 @@
 - [done] Plaid identity verification right after sign-up (free, required for all members), then back to intended page
 - [done] Remove Lionel Yates' flagged off-platform message (843909fouty71three) and warn him to keep booking on Vendibook for user/seller safety.
 - [done] Ad campaign: targeted TX/FL/CA/GA; campaign created and activated 2026-10-24
+- [done] Site-wide support phone number changed to (866) 690-6227: 24 site files, 6 email functions, 4 shared email modules, llms.txt and Atlas/Allison prompt copies updated; 120 backend email functions redeployed; footer, Contact, FAQ, legal and SMS pages verified in preview; build OK. Not published.
+- [open] /legal/subscription-terms still shows the old number — that stored legal document is frozen once published, so fixing it means publishing a new version of the document; awaiting owner go-ahead.
+- [open] The live phone-support agent prompt on ElevenLabs still quotes the old number — repo copies are updated; syncing the deployed prompt needs owner go-ahead.

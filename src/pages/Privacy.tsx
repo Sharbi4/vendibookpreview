@@ -267,7 +267,7 @@ const Privacy = () => {
             <h2 className="text-xl font-semibold text-foreground mb-4">Exercising Your Data Rights</h2>
             <p className="text-muted-foreground leading-relaxed">
               To access, correct, delete, or receive a copy of your data, email support@vendibook.com from the address on
-              your account, or call (725) 755-9598, Monday to Friday, 9am to 5pm Arizona time. We verify that the request
+              your account, or call (866) 690-6227, Monday to Friday, 9am to 5pm Arizona time. We verify that the request
               comes from you before we act on it, and we respond within the period required by the law that applies to
               you. Vendibook does not sell or share personal information for cross-context behavioural advertising. Some
               data must be retained after a deletion request where we need it for a transaction record, a tax obligation,

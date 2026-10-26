@@ -368,7 +368,7 @@ const FAQ = () => {
           <div className="container max-w-3xl text-center">
             <h2 className="text-2xl font-semibold tracking-tight text-foreground">Still need help?</h2>
             <p className="text-muted-foreground mt-2 mb-6 text-sm">
-              Chat with our support assistant, call (725) 755-9598, or email support@vendibook.com.
+              Chat with our support assistant, call (866) 690-6227, or email support@vendibook.com.
               Support hours are Mon–Fri, 9am–5pm Arizona time.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">

@@ -29,7 +29,7 @@ const DISCLOSURE_TEXT =
   'By checking this box and selecting "Sign Up for Text Updates," you agree to receive recurring automated text messages from Vendibook at the mobile number provided, including account notifications, customer-care messages, and listing or transaction updates. Message frequency varies. Message and data rates may apply. Reply STOP to opt out and HELP for help. Consent is not a condition of purchase.';
 
 const SUPPORT_EMAIL = 'support@vendibook.com';
-const SUPPORT_PHONE_DISPLAY = '(725) 755-9598';
+const SUPPORT_PHONE_DISPLAY = '(866) 690-6227';
 
 const SmsOptIn: React.FC = () => {
   const [firstName, setFirstName] = useState('');
@@ -116,7 +116,7 @@ const SmsOptIn: React.FC = () => {
               </div>
               <div className="mt-1 flex items-center gap-1.5 sm:justify-end">
                 <Phone className="h-3.5 w-3.5" aria-hidden />
-                <a href={`tel:+17257559598`} className="underline underline-offset-2 hover:text-foreground">
+                <a href={`tel:+18666906227`} className="underline underline-offset-2 hover:text-foreground">
                   {SUPPORT_PHONE_DISPLAY}
                 </a>
                 <span className="ml-1">(Mon–Fri, 9a–5p AZ)</span>

@@ -133,7 +133,7 @@ export default function LegalCenter() {
               <p className="mt-1 text-sm text-muted-foreground">
                 Contact Vendibook Support at{' '}
                 <a href="mailto:support@vendibook.com" className="underline">support@vendibook.com</a>{' '}
-                or (725) 755-9598, Monday–Friday, 9am–5pm Arizona time. You can also visit the{' '}
+                or (866) 690-6227, Monday–Friday, 9am–5pm Arizona time. You can also visit the{' '}
                 <Link to="/help" className="underline">Help Center</Link>.
               </p>
             </div>

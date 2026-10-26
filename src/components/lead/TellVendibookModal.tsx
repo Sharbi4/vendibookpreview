@@ -238,7 +238,7 @@ export const TellVendibookModal = ({
       toast({ title: 'We got it — talk soon!', description: 'Vendibook will follow up within 1 business hour.' });
     } catch (err) {
       console.error('[TellVendibook] insert failed', err);
-      toast({ title: 'Something went wrong', description: 'Please try again or call (725) 755-9598.', variant: 'destructive' });
+      toast({ title: 'Something went wrong', description: 'Please try again or call (866) 690-6227.', variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }

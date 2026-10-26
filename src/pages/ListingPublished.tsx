@@ -301,8 +301,8 @@ const ListingPublished: React.FC = () => {
                       Reference: {featuredStuckRef}
                     </span>
                   )}
-                  <a href="tel:+17257559598" className="underline">
-                    Call (725) 755-9598
+                  <a href="tel:+18666906227" className="underline">
+                    Call (866) 690-6227
                   </a>
                   <a
                     href={`mailto:support@vendibook.com?subject=Featured%20boost%20not%20active%20${
