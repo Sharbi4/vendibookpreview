@@ -247,12 +247,10 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
         <Link to="/" className="ws-side-logo" aria-label="Vendibook homepage">
           <img src={logo} alt="Vendibook" className="v2-logo" />
         </Link>
-        {/* Pro sits up top, under the logo. Home carries its own plan panel, so it's skipped there. */}
-        {location.pathname !== '/dashboard' && (
-          <div className="mb-4 empty:hidden">
-            <ProCard tone="dark" />
-          </div>
-        )}
+        {/* Pro sits up top, under the logo, on every dashboard page including Home. */}
+        <div className="mb-4 empty:hidden">
+          <ProCard tone="dark" />
+        </div>
         <nav className="ws-side-nav" aria-label="Workspace navigation">
           <NavSections counts={counts} variant="sidebar" />
         </nav>
