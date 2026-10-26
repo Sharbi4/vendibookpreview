@@ -1,0 +1,1 @@
+Hi, this is Atlas, Vendibook’s AI voice representative. I’m calling about {{call_purpose}}. Is now an okay time for a quick question?
