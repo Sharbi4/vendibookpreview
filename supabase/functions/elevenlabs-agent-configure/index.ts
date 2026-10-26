@@ -203,7 +203,10 @@ serve(async (req) => {
         toolResults.push({ name, ok: res.ok, status: res.status, id: newId, error: res.ok ? undefined : res.body });
       }
 
-      if (toolResults.some(r => !r.ok)) return json({ agent_updated: false, error: 'Some tools failed; agent configuration was not replaced.', tools: toolResults }, 502);
+      if (toolResults.some(r => !r.ok)) {
+        console.error("elevenlabs-agent-configure: tool upsert rejected", target, JSON.stringify(toolResults.filter(r => !r.ok)).slice(0, 2000));
+        return json({ agent_updated: false, error: 'Some tools failed; agent configuration was not replaced.', tools: toolResults }, 502);
+      }
 
       // 2. Patch the agent prompt, keeping MCP servers and existing integration tools attached.
       const current = await el(`/convai/agents/${AGENT_ID}`);
@@ -246,24 +249,37 @@ serve(async (req) => {
         }] },
       } : undefined;
 
-      const patch = {
+      // Send only what this sync manages. The provider merges a PATCH, so the
+      // knowledge base, RAG, LLM and voice settings stay as they are; echoing the
+      // whole prompt object back (empty built-in slots included) was rejected.
+      // Connected MCP servers are restated so a sync can never detach them.
+      const integrationFields = Object.fromEntries(Object.entries(currentPrompt).filter(([k]) => /mcp/i.test(k)));
+      const activeBuiltIns = Object.fromEntries(Object.entries(builtIns && typeof builtIns === 'object' ? builtIns : {}).filter(([, v]) => v));
+      const patchWith = (transfer: typeof nativeTransfer) => ({
         conversation_config: {
           agent: {
             ...(firstMessage ? { first_message: firstMessage } : {}),
             prompt: {
-              ...currentPrompt,
-              ...(nativeTransfer ? { built_in_tools: { ...(builtIns ?? {}), transfer_to_agent: nativeTransfer } } : {}),
+              ...integrationFields,
               prompt,
               tool_ids: mergedIds,
+              ...(transfer ? { built_in_tools: { ...activeBuiltIns, transfer_to_agent: transfer } } : {}),
             },
           },
         },
-      };
-
-      const updated = await el(`/convai/agents/${AGENT_ID}`, {
-        method: "PATCH",
-        body: JSON.stringify(patch),
       });
+
+      let updated = await el(`/convai/agents/${AGENT_ID}`, { method: "PATCH", body: JSON.stringify(patchWith(nativeTransfer)) });
+      let transferError: unknown;
+      // The off-website AI handoff is optional; never let it block a prompt and tool sync.
+      if (!updated.ok && nativeTransfer && updated.status >= 400 && updated.status < 500) {
+        transferError = updated.body;
+        console.error("elevenlabs-agent-configure: agent PATCH with transfer rejected", target, updated.status, JSON.stringify(updated.body).slice(0, 2000));
+        updated = await el(`/convai/agents/${AGENT_ID}`, { method: "PATCH", body: JSON.stringify(patchWith(undefined)) });
+      }
+      if (!updated.ok) {
+        console.error("elevenlabs-agent-configure: agent PATCH rejected", target, updated.status, JSON.stringify(updated.body).slice(0, 2000));
+      }
 
       return json(
         {
@@ -271,6 +287,7 @@ serve(async (req) => {
           agent_updated: updated.ok,
           agent_status: updated.status,
           agent_error: updated.ok ? undefined : updated.body,
+          native_transfer: nativeTransfer ? (transferError ? { applied: false, error: transferError } : { applied: updated.ok }) : undefined,
           preserved_tool_count: preservedIds.filter(id => !toolIds.includes(id)).length,
         },
         updated.ok ? 200 : updated.status,

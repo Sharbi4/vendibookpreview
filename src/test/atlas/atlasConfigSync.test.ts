@@ -1,4 +1,4 @@
-// @vitest-environment node
+// @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import ts from 'typescript';
@@ -57,6 +57,26 @@ describe('Atlas provider sync protects integrations', () => {
     const transfer = JSON.parse(patch![1].body).conversation_config.agent.prompt.built_in_tools.transfer_to_agent;
     expect(transfer.params.transfers).toHaveLength(1);
     expect(transfer.params.transfers[0].condition).toContain('not a Vendibook website');
+  });
+  it('sends only managed fields, and retries without the AI handoff if the provider rejects it', async () => {
+    let agentPatches = 0;
+    const base = provider.getMockImplementation()!;
+    provider.mockImplementation(async (url: string, init?: RequestInit) => {
+      if (url.includes('/convai/agents/') && init?.method === 'PATCH') {
+        agentPatches += 1;
+        return agentPatches === 1 ? new Response(JSON.stringify({ detail: 'transfer rejected' }), { status: 422 }) : new Response('{}');
+      }
+      return base(url, init);
+    });
+    const res = await handler(request());
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toMatchObject({ agent_updated: true, native_transfer: { applied: false } });
+    const patches = provider.mock.calls.filter(([url, init]) => url.includes('/convai/agents/') && init?.method === 'PATCH');
+    const first = JSON.parse(patches[0][1].body).conversation_config.agent.prompt;
+    const retry = JSON.parse(patches[1][1].body).conversation_config.agent.prompt;
+    expect(Object.keys(first).sort()).toEqual(['built_in_tools', 'mcp_server_ids', 'prompt', 'tool_ids']);
+    expect(Object.keys(retry).sort()).toEqual(['mcp_server_ids', 'prompt', 'tool_ids']);
   });
   it('fails closed when tool pagination is incomplete', async () => {
     provider.mockResolvedValue(new Response(JSON.stringify({ tools: [], has_more: true })));
