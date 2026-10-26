@@ -135,6 +135,7 @@ const Messages = lazy(() => import("./pages/Messages"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AdminOperations = lazy(() => import("./pages/AdminOperations"));
 const AdminOutboundGrowth = lazy(() => import("./pages/AdminOutboundGrowth"));
+const AdminCallbackDialer = lazy(() => import("./pages/AdminCallbackDialer"));
 const AdminMetrics = lazy(() => import("./pages/AdminMetrics"));
 const AdminListings = lazy(() => import("./pages/AdminListings"));
 const AdminMetaMuse = lazy(() => import("./pages/AdminMetaMuse"));
@@ -497,6 +498,7 @@ const AnimatedRoutes = () => {
           <Route path="/admin/legacy" element={<PageTransition><AdminDashboard /></PageTransition>} />
           <Route path="/admin/operations" element={<PageTransition><AdminOperations /></PageTransition>} />
           <Route path="/admin/outbound-growth" element={<PageTransition><AdminOutboundGrowth /></PageTransition>} />
+          <Route path="/admin/callback-dialer" element={<PageTransition><AdminCallbackDialer /></PageTransition>} />
           <Route path="/admin/metrics" element={<PageTransition><AdminMetrics /></PageTransition>} />
           <Route path="/admin/listings" element={<PageTransition><AdminListings /></PageTransition>} />
           <Route path="/admin/meta-muse" element={<PageTransition><AdminMetaMuse /></PageTransition>} />

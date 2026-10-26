@@ -2036,6 +2036,48 @@ export type Database = {
           },
         ]
       }
+      callback_dialer_calls: {
+        Row: {
+          admin_user_id: string
+          caller_id: string
+          created_at: string
+          duration_seconds: number | null
+          expires_at: string
+          id: string
+          status: string
+          to_number: string
+          twilio_call_sid: string | null
+          updated_at: string
+          used_at: string | null
+        }
+        Insert: {
+          admin_user_id: string
+          caller_id?: string
+          created_at?: string
+          duration_seconds?: number | null
+          expires_at: string
+          id?: string
+          status?: string
+          to_number: string
+          twilio_call_sid?: string | null
+          updated_at?: string
+          used_at?: string | null
+        }
+        Update: {
+          admin_user_id?: string
+          caller_id?: string
+          created_at?: string
+          duration_seconds?: number | null
+          expires_at?: string
+          id?: string
+          status?: string
+          to_number?: string
+          twilio_call_sid?: string | null
+          updated_at?: string
+          used_at?: string | null
+        }
+        Relationships: []
+      }
       commerce_events: {
         Row: {
           actor_id: string | null

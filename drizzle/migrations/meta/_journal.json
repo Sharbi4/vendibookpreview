@@ -239,6 +239,13 @@
       "when": 1793044962748,
       "tag": "0033_growth_outreach_prepare_only",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1793050827393,
+      "tag": "0034_callback_dialer_calls",
+      "breakpoints": true
     }
   ]
 }
