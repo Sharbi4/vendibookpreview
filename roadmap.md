@@ -1,6 +1,7 @@
 # Roadmap
 
 - [done] Growth Outreach prepare-only: separate agent agent_6701m5wwwxm0f3p8rf0hmmbc54j1 created/read back with ZRM and recording off; admin route and consent/batch/draft service deployed; 21 safety tests and build pass; authenticated provider read verified; live dispatch/SMS return 423. No leads seeded, calls/SMS/jobs or publication.
+- [done] Outbound Atlas update: same agent agent_6701m5wwwxm0f3p8rf0hmmbc54j1 renamed "Atlas — Vendibook Outbound"; new prompt/first message/7 playbooks, 2 shared KB docs, 4 read-only tools (outbound-atlas-tools); inbound agents/phone unchanged on readback; dispatch/SMS still 423.
 - [open] Growth Outreach future activation — requires separate outbound number, independent founder identity/approval, verified owner test number and legally reviewed lead consent, dispatch/opt-out persistence transport, SMS provider/A2P and privacy/data-use review. Import/evidence-to-batch flow not exercised with real leads; no real consented prospect supplied. Dispatch intentionally remains unimplemented and locked off.
 
 - [done] Allison provider setup from cafec115f: separate Sarah female agent created, server ID saved (unused retired TaxJar secret removed for capacity), seven tools/prompt read back; Atlas prompt and 21 tools synced with voice/auth/existing tools preserved; token/config functions deployed; 122 Atlas tests + 2 Allison confirmation/stop tests and automatic build passed; Contact desktop/mobile, real text connection, pause and unavailable fallback checked.
