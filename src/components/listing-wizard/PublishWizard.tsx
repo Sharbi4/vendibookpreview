@@ -1935,7 +1935,12 @@ export const PublishWizard: React.FC = () => {
         .from('listing-images')
         .getPublicUrl(fileName);
 
-      urls.push(publicUrl);
+      // iPhone HEIC/HEIF photos don't display in most browsers; save a converted JPEG link instead.
+      urls.push(
+        /\.hei[cf]$/i.test(fileName)
+          ? publicUrl.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/') + '?width=2000&quality=85'
+          : publicUrl,
+      );
     }
 
     return urls;
