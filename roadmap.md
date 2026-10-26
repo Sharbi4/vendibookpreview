@@ -43,3 +43,6 @@
 
 - [done] Mobile search UI audit: both search entry points checked at 320/390/430px; header, touch targets, filter sheet, duplicate bottom controls, titles and pagination improved; no search or payment logic changes.
 - [ ] Ad images: use REAL listing photos + uploaded logo (owner request 2026-10-26)
+
+- [x] Facebook tracking for paid rental bookings (consent-gated) — needs publish
+- [ ] Renter ads campaign (Meta): wording, images, budget, create paused
