@@ -28,6 +28,18 @@ const agent = await el(`/convai/agents/${OUTBOUND_AGENT_ID}`);
 if (agent.agent_id !== OUTBOUND_AGENT_ID) throw new Error('Persisted agent ID readback mismatch; aborting');
 console.log('readback ok:', agent.agent_id, '| current name:', agent.name);
 
+// Focused prompt corrections must not mutate tools, KB, workspace secrets or privacy.
+if (process.argv.includes('--prompt-only')) {
+  if (!APPLY) { console.log('dry run: prompt/first-message only'); process.exit(0); }
+  await el(`/convai/agents/${OUTBOUND_AGENT_ID}`, { method: 'PATCH', body: JSON.stringify({
+    conversation_config: { agent: { first_message: FIRST_MESSAGE, prompt: { prompt: OUTBOUND_PROMPT } } },
+  }) });
+  const readback = await el(`/convai/agents/${OUTBOUND_AGENT_ID}`);
+  if (readback.agent_id !== OUTBOUND_AGENT_ID || readback.conversation_config?.agent?.first_message !== FIRST_MESSAGE || readback.conversation_config?.agent?.prompt?.prompt !== OUTBOUND_PROMPT) throw new Error('Prompt readback mismatch');
+  console.log('verified: same outbound ID, prompt and first message match');
+  process.exit(0);
+}
+
 const secretValue = process.env.OUTBOUND_ATLAS_TOOL_SECRET || createHmac('sha256', KEY).update(OUTBOUND_TOOL_LABEL).digest('hex');
 const secrets = (await el('/convai/secrets')).secrets ?? [];
 let secret = secrets.find((s: any) => s.name === OUTBOUND_TOOL_SECRET_NAME);
