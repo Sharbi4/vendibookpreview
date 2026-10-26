@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SlidersHorizontal, X, Zap, Star, DollarSign, Truck, MapPin } from 'lucide-react';
+import { SlidersHorizontal, X, Zap, Crown, DollarSign, Truck, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -97,10 +97,12 @@ export const FilterPanel = ({ filters, onChange, onApply, onClear, autoApply = f
 
   return (
     <div className="relative">
-      <button
+      <Button
+        variant="ghost"
         ref={buttonRef}
+        aria-expanded={isOpen}
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+        className={`flex items-center gap-1.5 h-11 lg:h-8 px-3 py-1.5 rounded-lg text-sm lg:text-xs font-medium border transition-all ${
           activeCount > 0
             ? 'bg-white text-gray-900 border-white/80 shadow-lg shadow-black/10 font-bold'
             : 'bg-white/10 backdrop-blur border-white/20 text-white/80 hover:text-white hover:bg-white/20'
@@ -113,7 +115,7 @@ export const FilterPanel = ({ filters, onChange, onApply, onClear, autoApply = f
             {activeCount}
           </span>
         )}
-      </button>
+      </Button>
 
       {isOpen && createPortal(
         <>
@@ -125,21 +127,21 @@ export const FilterPanel = ({ filters, onChange, onApply, onClear, autoApply = f
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -4 }}
             transition={{ duration: 0.15 }}
-            style={{ top: dropdownPos.top, left: dropdownPos.left }}
-            className="fixed z-[200] w-80 rounded-2xl bg-white/70 backdrop-blur-2xl border border-border shadow-2xl shadow-black/20 overflow-hidden"
+            style={{ '--filter-top': `${dropdownPos.top}px`, '--filter-left': `${dropdownPos.left}px` } as React.CSSProperties}
+            role="dialog" aria-modal="true" aria-label="Filters" className="fixed z-[200] bottom-0 left-0 right-0 max-h-[85dvh] flex flex-col rounded-t-2xl lg:rounded-2xl lg:bottom-auto lg:right-auto lg:top-[var(--filter-top)] lg:left-[var(--filter-left)] lg:w-80 bg-card text-card-foreground border border-border shadow-xl overflow-hidden"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <h3 className="text-sm font-bold text-foreground">Filters</h3>
-              <button onClick={() => setIsOpen(false)} className="p-1 rounded-lg hover:bg-muted border border-border">
+              <Button variant="ghost" size="icon" aria-label="Close filters" onClick={() => setIsOpen(false)} className="h-11 w-11">
                 <X className="w-4 h-4 text-muted-foreground" />
-              </button>
+              </Button>
             </div>
 
-            <div className="p-4 space-y-5 max-h-[60vh] overflow-y-auto">
+            <div className="min-h-0 p-4 space-y-5 overflow-y-auto overscroll-contain">
               {/* Price Range */}
               <div>
-                <Label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5 mb-2">
+                <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5 mb-2">
                   <DollarSign className="w-3.5 h-3.5" /> Price Range
                 </Label>
                 <div className="flex items-center gap-2">
@@ -148,7 +150,7 @@ export const FilterPanel = ({ filters, onChange, onApply, onClear, autoApply = f
                     placeholder="Min"
                     value={filters.minPrice}
                     onChange={(e) => onChange({ ...filters, minPrice: e.target.value })}
-                    className="h-9 text-sm rounded-lg"
+                    className="h-11 text-base rounded-lg"
                   />
                   <span className="text-muted-foreground text-xs">to</span>
                   <Input
@@ -156,21 +158,21 @@ export const FilterPanel = ({ filters, onChange, onApply, onClear, autoApply = f
                     placeholder="Max"
                     value={filters.maxPrice}
                     onChange={(e) => onChange({ ...filters, maxPrice: e.target.value })}
-                    className="h-9 text-sm rounded-lg"
+                    className="h-11 text-base rounded-lg"
                   />
                 </div>
               </div>
 
               {/* Search Radius */}
               <div>
-                <Label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5 mb-2">
+                <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5 mb-2">
                   <MapPin className="w-3.5 h-3.5" /> Search Radius
                 </Label>
                 <Select
                   value={filters.radiusMiles || '25'}
                   onValueChange={(v) => onChange({ ...filters, radiusMiles: v })}
                 >
-                  <SelectTrigger className="h-9 text-sm rounded-lg">
+                  <SelectTrigger className="h-11 text-base rounded-lg">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-background border-border z-[250]">
@@ -186,53 +188,53 @@ export const FilterPanel = ({ filters, onChange, onApply, onClear, autoApply = f
 
               {/* Quick Toggles */}
               <div className="space-y-3">
-                <Label className="text-xs font-semibold text-gray-700">Quick Filters</Label>
+                <Label className="text-xs font-semibold text-foreground">Quick Filters</Label>
                 
-                <label className="flex items-center gap-3 cursor-pointer group">
+                <label className="flex min-h-11 items-center gap-3 cursor-pointer group">
                   <Checkbox
                     checked={filters.instantBookOnly}
                     onCheckedChange={(v) => onChange({ ...filters, instantBookOnly: !!v })}
                   />
                   <div className="flex items-center gap-1.5">
                     <Zap className="w-3.5 h-3.5 text-amber-500" />
-                    <span className="text-sm text-gray-700 group-hover:text-gray-900">Instant Book Only</span>
+                    <span className="text-sm text-foreground group-hover:text-foreground">Instant Book Only</span>
                   </div>
                 </label>
 
-                <label className="flex items-center gap-3 cursor-pointer group">
+                <label className="flex min-h-11 items-center gap-3 cursor-pointer group">
                   <Checkbox
                     checked={filters.featuredOnly}
                     onCheckedChange={(v) => onChange({ ...filters, featuredOnly: !!v })}
                   />
                   <div className="flex items-center gap-1.5">
-                    <Star className="w-3.5 h-3.5 text-amber-500" />
-                    <span className="text-sm text-gray-700 group-hover:text-gray-900">Featured Listings</span>
+                    <Crown className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-sm text-foreground group-hover:text-foreground">Featured Listings</span>
                   </div>
                 </label>
 
-                <label className="flex items-center gap-3 cursor-pointer group">
+                <label className="flex min-h-11 items-center gap-3 cursor-pointer group">
                   <Checkbox
                     checked={filters.deliveryCapable}
                     onCheckedChange={(v) => onChange({ ...filters, deliveryCapable: !!v })}
                   />
                   <div className="flex items-center gap-1.5">
                     <Truck className="w-3.5 h-3.5 text-emerald-500" />
-                    <span className="text-sm text-gray-700 group-hover:text-gray-900">Delivery Available</span>
+                    <span className="text-sm text-foreground group-hover:text-foreground">Delivery Available</span>
                   </div>
                 </label>
               </div>
 
               {/* Amenities */}
               <div>
-                <Label className="text-xs font-semibold text-gray-700 mb-2 block">Features & Amenities</Label>
+                <Label className="text-xs font-semibold text-foreground mb-2 block">Features & Amenities</Label>
                 <div className="grid grid-cols-2 gap-2">
                   {AMENITY_OPTIONS.map((amenity) => (
-                    <label key={amenity.value} className="flex items-center gap-2 cursor-pointer group">
+                    <label key={amenity.value} className="flex min-h-11 items-center gap-2 cursor-pointer group">
                       <Checkbox
                         checked={filters.amenities.includes(amenity.value)}
                         onCheckedChange={() => handleToggleAmenity(amenity.value)}
                       />
-                      <span className="text-xs text-gray-600 group-hover:text-gray-900">{amenity.label}</span>
+                      <span className="text-xs text-muted-foreground group-hover:text-foreground">{amenity.label}</span>
                     </label>
                   ))}
                 </div>
@@ -240,18 +242,19 @@ export const FilterPanel = ({ filters, onChange, onApply, onClear, autoApply = f
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-white/40 backdrop-blur-xl">
-              <button
+            <div className="flex shrink-0 items-center justify-between gap-2 px-4 py-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] border-t border-border bg-card">
+              <Button
+                variant="ghost"
                 onClick={() => { onClear(); }}
-                className="text-xs font-medium text-muted-foreground hover:text-foreground underline underline-offset-2"
+                className="h-11 text-sm font-medium text-muted-foreground hover:text-foreground"
               >
                 Clear all
-              </button>
+              </Button>
               <Button
                 size="sm"
                 variant="dark-shine"
                 onClick={() => { onApply(); setIsOpen(false); }}
-                className="rounded-xl text-xs font-semibold px-6"
+                className="h-11 rounded-xl text-sm font-semibold px-6"
               >
                 Apply Filters
               </Button>
