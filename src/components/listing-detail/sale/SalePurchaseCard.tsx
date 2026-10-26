@@ -1,4 +1,5 @@
 import { useSaleActionState } from '@/hooks/useSaleActionState';
+import { PurchaseProtectionCard } from './PurchaseProtectionCard';
 import SaleAvailabilityNote from '@/components/commerce/SaleAvailabilityNote';
 import { financingCalculatorUrl, illustrativeFinancingNote, illustrativeMonthlyPayment } from '@/lib/financing/calculator';
 import { useCategoryPriceCheck } from '@/hooks/useCategoryPriceCheck';
@@ -411,8 +412,9 @@ export const SalePurchaseCard = ({
           )}
 
           {/* Small print — details live in one overlay, never as extra modules */}
+          <PurchaseProtectionCard compact />
           <p className="text-[11px] leading-relaxed text-muted-foreground">
-            No Vendibook buyer fee: your total is the price plus any delivery and sales tax, shown before you pay. All sales are final.{' '}
+            No Vendibook buyer fee: your total is the price plus any delivery and sales tax, shown before you pay. The sale is final once you confirm at the walkthrough and sign.{' '}
             <BuyingInfoDialog
               offersPickup={offersPickup}
               sellerDelivers={sellerDelivers}

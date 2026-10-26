@@ -25,6 +25,7 @@ import { SaleFeaturesGrid } from './SaleFeaturesGrid';
 import { SalePurchaseCard } from './SalePurchaseCard';
 import { SaleStickyActionBar } from './SaleStickyActionBar';
 import { SaleLocationCard } from './SaleSharedSections';
+import { PurchaseProtectionCard } from './PurchaseProtectionCard';
 import TitleWalkthroughCta from '@/components/listing-detail/TitleWalkthroughCta';
 import { formatCurrency } from '@/lib/commissions';
 import { isSellerCoveredFreight } from '@/lib/freight/presentation';
@@ -198,6 +199,8 @@ export const SaleListingLayout = ({
           {/* Left: content only */}
           <div className="lg:col-span-2 space-y-6">
             <SaleQuickSpecs listing={listing} />
+
+            {!isOwner && <PurchaseProtectionCard />}
 
             {/* About */}
             <SaleCard padding="lg" className="space-y-3">

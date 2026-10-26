@@ -104,16 +104,16 @@ export const BuyingInfoDialog = ({
               . Vendibook is not a lender; approval and terms are set by the provider.
             </Row>
           )}
-          <Row icon={Lock} title="PayPal checkout">
-            Online payments are processed by PayPal. If you and the seller agree to pay in person,
-            the handoff happens directly between you.
+          <Row icon={Lock} title="Vendibook Purchase Protection">
+            No deposit. Pay through Vendibook checkout and we hold your payment. The seller is paid only after
+            you walk through and test the equipment on video, confirm it matches the listing, and both of you sign.
           </Row>
           <Row icon={ShieldCheck} title="Verified sellers">
             Sellers can verify their identity with Plaid and display a verified badge.
           </Row>
-          <Row icon={FileText} title="Disputes &amp; final sale">
-            All sales are final — review details and ask questions before purchasing. Payment
-            disputes go through PayPal buyer protection and Vendibook support.
+          <Row icon={FileText} title="Walkthrough &amp; final sale">
+            If something wasn&rsquo;t disclosed, or you decide not to go ahead at the walkthrough, don&rsquo;t confirm:
+            the purchase is canceled under the Vendibook Guarantee. Once you confirm and sign, the sale is final.
           </Row>
         </div>
       </DialogContent>
