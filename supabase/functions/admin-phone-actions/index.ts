@@ -113,6 +113,59 @@ Deno.serve(async (req) => {
     const db = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "", {
       auth: { persistSession: false },
     });
+
+    // Admin → Texts: conversations with people who text the support line.
+    if (body.action === "texts_inbox") {
+      const { data: rows } = await db.from("sms_inbound_messages")
+        .select("from_phone, body, created_at, action_taken")
+        .eq("action_taken", "support_text")
+        .order("created_at", { ascending: false })
+        .limit(500);
+      const threads = new Map<string, { phone: string; last_text: string; last_at: string; count: number }>();
+      for (const r of rows ?? []) {
+        const t = threads.get(r.from_phone);
+        if (t) t.count += 1;
+        else threads.set(r.from_phone, { phone: r.from_phone, last_text: String(r.body ?? "").slice(0, 160), last_at: r.created_at, count: 1 });
+      }
+      const phones = [...threads.keys()];
+      const { data: replies } = phones.length
+        ? await db.from("sms_message_log_v2").select("recipient_phone_e164, created_at").in("recipient_phone_e164", phones)
+          .eq("template_id", "support_reply_freeform").eq("send_status", "sent").order("created_at", { ascending: false })
+        : { data: [] };
+      const lastReply = new Map<string, string>();
+      for (const r of replies ?? []) if (!lastReply.has(r.recipient_phone_e164)) lastReply.set(r.recipient_phone_e164, r.created_at);
+      return json({
+        threads: [...threads.values()].map((t) => ({
+          ...t,
+          last_reply_at: lastReply.get(t.phone) ?? null,
+          needs_reply: !lastReply.get(t.phone) || lastReply.get(t.phone)! < t.last_at,
+        })),
+      });
+    }
+    if (body.action === "text_thread") {
+      const phone = normalizeNanpToE164(typeof body.phone === "string" ? body.phone : "");
+      if (!phone) return json({ error: "Pick a conversation." }, 400);
+      const [{ data: inbound }, { data: outbound }, { data: ticket }] = await Promise.all([
+        db.from("sms_inbound_messages").select("body, created_at, action_taken").eq("from_phone", phone)
+          .order("created_at", { ascending: false }).limit(200),
+        db.from("sms_message_log_v2").select("template_id, template_variables, send_status, failure_reason, created_at")
+          .eq("recipient_phone_e164", phone).in("template_id", ["support_reply_freeform", "phone_listing_links"])
+          .order("created_at", { ascending: false }).limit(200),
+        db.from("support_tickets").select("id, reference_code, status").eq("callback_phone_e164", phone)
+          .order("created_at", { ascending: false }).limit(1).maybeSingle(),
+      ]);
+      const messages = [
+        ...(inbound ?? []).map((m) => ({ from: "customer", text: m.action_taken === "support_text" ? m.body : `${m.body} (${m.action_taken})`, at: m.created_at })),
+        ...(outbound ?? []).map((m) => ({
+          from: "vendibook",
+          text: String((m.template_variables as Record<string, unknown> | null)?.body ?? (m.template_id === "phone_listing_links" ? "Listing links from a phone call" : "Text from the team")),
+          at: m.created_at,
+          status: m.send_status === "sent" ? "sent" : `not sent (${m.failure_reason ?? m.send_status})`,
+        })),
+      ].sort((a, b) => a.at.localeCompare(b.at));
+      return json({ phone, ticket: ticket ?? null, messages });
+    }
+
     const { data: ticket } = ticketId
       ? await db.from("support_tickets").select("id, reference_code, customer_name, callback_phone_e164, user_id").eq("id", ticketId).maybeSingle()
       : { data: null };
@@ -148,12 +201,13 @@ Deno.serve(async (req) => {
         category: "customer_care",
         templateId: "support_reply_freeform",
         businessPurpose: ticket ? `support_ticket:${ticket.id}` : "support_reply",
+        templateVariables: { body: text },
         body: /reply stop/i.test(text) ? text : `${text} Reply STOP to opt out.`,
         idempotencyKey: typeof body.idempotency_key === "string" ? body.idempotency_key.slice(0, 80) : crypto.randomUUID(),
       });
       if (!result.ok) {
         const why: Record<string, string> = {
-          no_active_consent: "This number hasn't agreed to Vendibook texts. Call or email instead.",
+          no_active_consent: "This number hasn't agreed to Vendibook texts or texted us in the last 7 days. Call or email instead.",
           suppressed_number: "This number replied STOP, so it can't be texted.",
           invalid_phone_format: "That isn't a valid US phone number.",
           provider_not_configured: "Texting isn't configured.",
@@ -168,7 +222,7 @@ Deno.serve(async (req) => {
       return json({ ok: true, message: "Text sent from the support line." });
     }
 
-    return json({ error: "action must be call_back or text" }, 400);
+    return json({ error: "action must be call_back, text, texts_inbox or text_thread" }, 400);
   } catch (e) {
     console.error("[admin-phone-actions] error", e);
     return json({ error: "Could not complete that." }, 500);

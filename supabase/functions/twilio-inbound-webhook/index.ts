@@ -24,6 +24,7 @@ import {
   SMS_POLICY_VERSION,
   SMS_TEMPLATES,
 } from '../_shared/smsConsent.ts';
+import { routeSupportText } from '../_shared/supportTexts.ts';
 
 const TWILIO_AUTH_TOKEN = Deno.env.get('TWILIO_AUTH_TOKEN') ?? '';
 const SKIP_SIG_VERIFY =
@@ -85,8 +86,11 @@ Deno.serve(async (req) => {
     // Verify the Twilio request signature. Twilio signs the *full* URL
     // including protocol + host + path (no query for POST form bodies).
     const sig = req.headers.get('X-Twilio-Signature') ?? '';
-    const url = req.url;
-    const valid = await verifyTwilioSignature(url, params, sig);
+    // Twilio signs the public URL; inside the edge runtime req.url can be the
+    // internal one, so accept a signature over either.
+    const publicUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/twilio-inbound-webhook`;
+    const valid = (await verifyTwilioSignature(req.url, params, sig))
+      || (req.url !== publicUrl && (await verifyTwilioSignature(publicUrl, params, sig)));
     if (!valid) {
       console.warn('twilio-inbound-webhook: invalid signature');
       return new Response('invalid signature', { status: 403 });
@@ -192,14 +196,23 @@ Deno.serve(async (req) => {
       reply = SMS_TEMPLATES.help_reply;
     }
 
-    await supabase.from('sms_inbound_messages').insert({
+    const { data: saved } = await supabase.from('sms_inbound_messages').insert({
       from_phone: from,
       to_phone: to,
       body,
       twilio_message_sid: sid || null,
-      action_taken: action,
+      action_taken: action ?? 'support_text',
       raw_payload: params,
-    });
+    }).select('id').maybeSingle();
+
+    // Anything that isn't STOP/START/HELP is a message for the support team.
+    if (!action && from.startsWith('+')) {
+      try {
+        reply = await routeSupportText(supabase, { from, body, media: Number(params.NumMedia ?? 0) || 0, inboundId: saved?.id ?? null });
+      } catch (e) {
+        console.error('twilio-inbound-webhook: support routing failed', e);
+      }
+    }
 
     return twiml(reply);
   } catch (e) {

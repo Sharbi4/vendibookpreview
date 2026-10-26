@@ -11,6 +11,7 @@ import {
   ClipboardCheck,
   PhoneOutgoing,
   PhoneCall,
+  MessageSquareText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +24,7 @@ const SECTIONS = [
   { to: "/admin/meta-muse", label: "Lead review", icon: ClipboardCheck },
   { to: "/admin/outbound-growth", label: "Growth outreach", icon: PhoneOutgoing },
   { to: "/admin/callback-dialer", label: "Callback dialer", icon: PhoneCall },
+  { to: "/admin/texts", label: "Texts", icon: MessageSquareText },
   { to: "/admin/freight", label: "Freight", icon: Truck },
   { to: "/admin/support", label: "Support", icon: Headphones },
   { to: "/admin/finance", label: "Finance", icon: DollarSign },

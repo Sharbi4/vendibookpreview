@@ -36,6 +36,8 @@ const TWILIO_AUTH_TOKEN = Deno.env.get('TWILIO_AUTH_TOKEN') ?? '';
 const TWILIO_FROM_NUMBER = Deno.env.get('TWILIO_FROM_NUMBER') || Deno.env.get('TWILIO_PHONE_NUMBER') || '';
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY') ?? '';
 const TWILIO_CONNECTOR_KEY = Deno.env.get('TWILIO_API_KEY') ?? '';
+/** A person who texts the support line can get customer-care replies for this many days. */
+const INBOUND_REPLY_DAYS = 7;
 const IS_TEST_MODE =
   Deno.env.get('SMS_TEST_MODE') === 'true' ||
   Deno.env.get('DENO_ENV') === 'test';
@@ -111,13 +113,30 @@ export async function sendGuardedSms(input: GuardedSendInput): Promise<GuardResu
     return { ok: false, reason: 'suppressed_number', logId };
   }
 
-  // 4) Transactional consent must be opted_in.
+  // 4) Transactional consent must be opted_in. Customer-care replies may also
+  //    rely on a conversation the person started: they texted the support line
+  //    within INBOUND_REPLY_DAYS (and STOP, checked above, still wins).
   const { data: pref } = await db
     .from('sms_preferences')
     .select('id,user_id,transactional_status,phone_verified_at')
     .eq('phone_e164', phoneE164)
     .maybeSingle();
-  if (!pref || pref.transactional_status !== 'opted_in' || !pref.phone_verified_at) {
+  const prefOk = Boolean(pref && pref.transactional_status === 'opted_in' && pref.phone_verified_at);
+  let inbound: { id: string; created_at: string } | null = null;
+  if (!prefOk && input.category === 'customer_care' && pref?.transactional_status !== 'opted_out') {
+    const since = new Date(Date.now() - INBOUND_REPLY_DAYS * 86_400_000).toISOString();
+    const { data } = await db
+      .from('sms_inbound_messages')
+      .select('id, created_at')
+      .eq('from_phone', phoneE164)
+      .gte('created_at', since)
+      .eq('action_taken', 'support_text')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    inbound = data ?? null;
+  }
+  if (!prefOk && !inbound) {
     const logId = await logBlocked(db, input, phoneE164, 'no_active_consent');
     return { ok: false, reason: 'no_active_consent', logId };
   }
@@ -125,7 +144,7 @@ export async function sendGuardedSms(input: GuardedSendInput): Promise<GuardResu
   // 5) Ownership check — the phone must belong to the intended recipient.
   //    Skipped when no userId is supplied (e.g. re-enrollment confirmation
   //    to an unauthenticated verified number).
-  if (input.userId && pref.user_id !== input.userId) {
+  if (input.userId && pref && pref.user_id !== input.userId) {
     const logId = await logBlocked(db, input, phoneE164, 'phone_owner_mismatch');
     return { ok: false, reason: 'phone_owner_mismatch', logId };
   }
@@ -147,17 +166,19 @@ export async function sendGuardedSms(input: GuardedSendInput): Promise<GuardResu
   }
 
   // 7) All checks passed — record intent, then dispatch.
-  const consentBasis = {
-    preference_id: pref.id,
-    transactional_status: pref.transactional_status,
-    phone_verified_at: pref.phone_verified_at,
-    checked_at: new Date().toISOString(),
-  };
+  const consentBasis = prefOk && pref
+    ? {
+        preference_id: pref.id,
+        transactional_status: pref.transactional_status,
+        phone_verified_at: pref.phone_verified_at,
+        checked_at: new Date().toISOString(),
+      }
+    : { inbound_conversation_message_id: inbound!.id, last_inbound_at: inbound!.created_at, checked_at: new Date().toISOString() };
 
   const { data: log, error: logErr } = await db
     .from('sms_message_log_v2')
     .insert({
-      user_id: input.userId ?? pref.user_id,
+      user_id: input.userId ?? pref?.user_id ?? null,
       recipient_phone_e164: phoneE164,
       message_category: input.category,
       template_id: input.templateId,
