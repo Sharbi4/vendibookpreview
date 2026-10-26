@@ -189,7 +189,17 @@ describe("phone listing tools", () => {
     expect(res.status).toBe(200);
     expect(res.body.listings[0]).toMatchObject({ listing_id: LISTING, price: "$45,000 to buy", location: "Houston, TX", miles_away: 4 });
     const sent = JSON.parse(String((t.fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body));
-    expect(sent).toMatchObject({ category: "food_truck", mode: "sale", location_text: "Houston, TX", page_size: 5 });
+    expect(sent).toMatchObject({ category: "food_truck", mode: "sale", location_text: "Houston, TX" });
+  });
+
+  it("puts local results before featured listings from other areas", async () => {
+    const far = live({ id: "far", title: "Featured Miami truck", city: "Miami", state: "FL", distance_miles: 1180, featured_enabled: true, featured_expires_at: "2999-01-01" });
+    const near = live({ id: "near", distance_miles: 9 });
+    const t = loadTools(base(), [far, near]);
+    (t.fetchMock as any).mockImplementationOnce(async () => new Response(JSON.stringify({ listings: [far, near], search_meta: { effective_radius_miles: 50 } })));
+    const res = await t.call("search_listings", { location: "Houston, TX" });
+    expect(res.body.listings.map((l: Row) => l.listing_id)).toEqual(["near", "far"]);
+    expect(res.body.listings[1]).toMatchObject({ featured: true, outside_search_area: true });
   });
 
   it("only shows published listings", async () => {

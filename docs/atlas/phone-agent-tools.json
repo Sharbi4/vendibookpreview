@@ -370,7 +370,8 @@
           "listing_ids": {
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "string",
+              "description": "A listing_id from search_listings."
             },
             "description": "Up to 5 listing_ids from search_listings."
           },
@@ -379,7 +380,8 @@
             "enum": [
               "text",
               "email"
-            ]
+            ],
+            "description": "How to send it: text or email."
           },
           "email": {
             "type": "string",
@@ -499,7 +501,8 @@
             "enum": [
               "rent",
               "sale"
-            ]
+            ],
+            "description": "rent or sale."
           },
           "title": {
             "type": "string",
@@ -551,7 +554,8 @@
           "equipment": {
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "string",
+              "description": "One piece of equipment."
             },
             "description": "Key equipment, e.g. 'fryer', 'flat-top griddle', 'hood with fire suppression'."
           },
@@ -597,7 +601,8 @@
             "enum": [
               "text",
               "email"
-            ]
+            ],
+            "description": "How to send it: text or email."
           },
           "email": {
             "type": "string",

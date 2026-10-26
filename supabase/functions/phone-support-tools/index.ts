@@ -531,13 +531,22 @@ async function searchListings(body: Record<string, unknown>): Promise<Response> 
     body: JSON.stringify({
       query: query || undefined, category, mode, max_price: maxPrice,
       location_text: location || undefined, instant_book_only: body.instant_book_only === true || undefined,
-      page: 1, page_size: 5,
+      page: 1, page_size: 12,
     }),
     signal: AbortSignal.timeout(15000),
   });
   if (!res.ok) return json({ error: "Listing search is unavailable right now. Offer to text or email them a link to vendibook.com/search." }, 502);
   const data = await res.json().catch(() => ({}));
-  const rows = ((data?.listings ?? []) as ListingRow[]).slice(0, 5);
+  // Featured listings are pinned first on every search, even outside the
+  // searched area (owner, 2026-10-26). On a call, local results come first and
+  // featured listings from elsewhere follow, labelled as such.
+  const radius = Number(data?.search_meta?.effective_radius_miles);
+  const inArea = (l: ListingRow) =>
+    !location || l.location_text_match === true || !Number.isFinite(radius) ||
+    (l.distance_miles != null && Number(l.distance_miles) <= radius);
+  const all = (data?.listings ?? []) as ListingRow[];
+  const rows = [...all.filter(inArea), ...all.filter((l) => !inArea(l))].slice(0, 5);
+  const nowIso = new Date().toISOString();
   return json({
     total_found: Number(data?.total_count ?? rows.length),
     listings: rows.map((l) => ({
@@ -549,9 +558,11 @@ async function searchListings(body: Record<string, unknown>): Promise<Response> 
       location: place(l),
       miles_away: Number.isFinite(Number(l.distance_miles)) ? Math.round(Number(l.distance_miles)) : null,
       instant_book: l.mode === "rent" ? l.instant_book === true : undefined,
+      featured: !!(l.featured_enabled && String(l.featured_expires_at ?? "") > nowIso),
+      outside_search_area: !inArea(l) || undefined,
     })),
     note: rows.length
-      ? "Read at most three at a time: title, price and city. Keep listing_id to look one up, text or email links, or message the seller. Never read listing IDs aloud."
+      ? "Read at most three at a time: title, price and city. Local results come first. A result marked outside_search_area is a featured listing from another area: say so (\"a featured listing in Dallas\") rather than implying it's nearby. Keep listing_id to look one up, text or email links, or message the seller. Never read listing IDs aloud."
       : "Nothing matched. Offer to widen the area or price, or to save the request so the team can source one (request_live_follow_up).",
   });
 }
