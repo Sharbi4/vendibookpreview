@@ -180,7 +180,7 @@ export const generateOrganizationSchema = () => ({
   description: 'Shop food trucks, food trailers, carts and mobile food equipment nationwide. Buy, sell or rent with financing options, verified sellers and delivery.',
   contactPoint: {
     '@type': 'ContactPoint',
-    telephone: '+1-725-755-9598',
+    telephone: '+1-866-690-6227',
     contactType: 'customer service',
     availableLanguage: 'English',
   },

@@ -444,7 +444,7 @@ serve(async (req) => {
                 },
                 ctaLabel: "View dashboard",
                 ctaUrl: dashboardUrl,
-                footnote: "Questions? Email support@vendibook.com or call (725) 755-9598.",
+                footnote: "Questions? Email support@vendibook.com or call (866) 690-6227.",
               },
             });
           if (error) throw error;

@@ -40,7 +40,7 @@
  *    lender).
  *  - The paid Identity Verified badge is optional and never required to
  *    publish; contact / purchase actions may need separate phone or ID checks.
- *  - Support: (725) 755-9598 · support@vendibook.com · Mon–Fri 9 a.m.–5 p.m.
+ *  - Support: (866) 690-6227 · support@vendibook.com · Mon–Fri 9 a.m.–5 p.m.
  *    Arizona time.
  *  - Anything not shipped is marked "coming soon"; answers link to real routes.
  */
@@ -172,12 +172,12 @@ export const faqCategories: FaqCategory[] = [
         id: "contact-support",
         question: "How do I contact support?",
         answer:
-          "Use the Help Center or contact support@vendibook.com. You can also call (725) 755-9598, Monday–Friday, 9:00 a.m.–5:00 p.m. Arizona time. For an order, listing or subscription issue, include its ID or link, the exact error text and the time it happened.",
+          "Use the Help Center or contact support@vendibook.com. You can also call (866) 690-6227, Monday–Friday, 9:00 a.m.–5:00 p.m. Arizona time. For an order, listing or subscription issue, include its ID or link, the exact error text and the time it happened.",
         keywords: ["help", "phone", "email", "hours"],
         actions: [
           A.helpCenter,
           A.contactSupport,
-          { label: "Call support", href: "tel:+17257559598" },
+          { label: "Call support", href: "tel:+18666906227" },
           { label: "Email support", href: "mailto:support@vendibook.com" },
         ],
       },

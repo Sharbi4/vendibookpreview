@@ -116,7 +116,7 @@ const ReferralTerms = () => (
               <p>
                 Questions? Email{" "}
                 <a className="text-[#FF5124] underline" href="mailto:support@vendibook.com">support@vendibook.com</a>{" "}
-                or call (725) 755-9598 (Mon–Fri 9am–5pm AZ time).
+                or call (866) 690-6227 (Mon–Fri 9am–5pm AZ time).
               </p>
             </section>
           </main>

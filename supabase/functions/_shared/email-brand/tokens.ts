@@ -19,7 +19,7 @@
 export const BRAND_NAME = 'Vendibook'
 export const SITE_URL = 'https://vendibook.com'
 export const SUPPORT_EMAIL = 'support@vendibook.com'
-export const SUPPORT_PHONE = '(725) 755-9598'
+export const SUPPORT_PHONE = '(866) 690-6227'
 export const SUPPORT_HOURS = 'Mon–Fri, 9am–5pm AZ'
 export const HELP_URL = `${SITE_URL}/help`
 export const TERMS_URL = `${SITE_URL}/legal/terms`

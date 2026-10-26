@@ -26,7 +26,7 @@ const Press = () => {
       '@type': 'ContactPoint',
       contactType: 'media relations',
       email: 'support@vendibook.com',
-      telephone: '+1-725-755-9598',
+      telephone: '+1-866-690-6227',
     },
   };
 
@@ -180,7 +180,7 @@ const Press = () => {
               </a>
             </Button>
             <Button asChild variant="outline" className="rounded-2xl">
-              <a href="tel:+17257559598"><Phone className="h-4 w-4" /> (725) 755-9598</a>
+              <a href="tel:+18666906227"><Phone className="h-4 w-4" /> (866) 690-6227</a>
             </Button>
           </div>
           <p className="text-sm text-muted-foreground mt-6 inline-flex items-center gap-1.5">

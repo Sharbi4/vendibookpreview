@@ -223,7 +223,7 @@ export async function buildOrderDetail(
     },
     support: {
       email: 'support@vendibook.com',
-      phone: '(725) 755-9598',
+      phone: '(866) 690-6227',
       dispute_url: '/help',
     },
   };

@@ -200,7 +200,7 @@ export default function AdminFreightRequests() {
       "Reply to this email to book, and we'll confirm pickup scheduling.",
       "",
       "Vendibook Freight",
-      "support@vendibook.com · (725) 755-9598",
+      "support@vendibook.com · (866) 690-6227",
     ]
       .filter(Boolean)
       .join("\n");
