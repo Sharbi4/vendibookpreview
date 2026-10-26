@@ -45,7 +45,7 @@ export const PLAYBOOKS: Record<GrowthSegment, Playbook> = {
     discovery: ['What kind of setup are you after, and what will you be serving?', 'Where are you located, and how far would you travel to pick one up?', 'Do you have a budget range and a timeline in mind?', 'Any must-haves — size, specific equipment, condition?'],
     value: 'Vendibook lists trucks and trailers from sellers across the US; you can search by area, price and equipment.',
     objections: ['Financing -> one concise answer: “Financing options aren’t something I can approve; someone from the team can share what’s available.” No guarantees.', 'Is it legit / safe? -> payments go through Vendibook’s checkout on the website, never over the phone.'],
-    cta: 'Want to narrow it to a couple of options? I can check what’s listed right now.',
+    cta: 'Want to narrow it to a couple of options? I can check what’s listed right now, if that helps?',
   },
   renter: {
     purpose: 'finding a food truck, trailer or kitchen to rent',
