@@ -304,12 +304,14 @@ function hostContext(admin: any, account: Record<string, any>): RentalSquareCont
   };
 }
 
-/** The Square account a new rental payment for this host should use. */
-export async function rentalSquareContext(admin: any, hostId: string): Promise<RentalSquareContext | null> {
-  if (marketplaceConfigured()) {
-    const account = await activeSellerAccount(admin, hostId);
-    if (account) return hostContext(admin, account);
-  }
+/**
+ * The Square account a new rental payment should use. Owner decision
+ * 2026-10-26: every rental is charged on Vendibook's own Square account, even
+ * when the host has connected Square. Vendibook pays the host's share out
+ * manually (seller_payables, by the host's payout method) and refunds the
+ * deposit after the rental. Host-account records keep their own context below.
+ */
+export async function rentalSquareContext(_admin: any, _hostId: string): Promise<RentalSquareContext | null> {
   return platformContext();
 }
 

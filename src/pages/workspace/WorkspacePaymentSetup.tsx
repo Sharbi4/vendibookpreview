@@ -12,7 +12,6 @@ import { useMyPayPalConnection } from '@/hooks/useMyPayPalConnection';
 import { useSellerPaymentReadiness } from '@/hooks/useSellerPaymentReadiness';
 import SellerBusinessAccountHelp from '@/components/payments/SellerBusinessAccountHelp';
 import { PageHeader, Panel, StatusPill, ws } from '@/components/workspace/ui';
-import { LightScope } from '@/components/workspace/money/LightScope';
 
 type SetupListing = {
   id: string;
@@ -24,20 +23,6 @@ type SetupListing = {
 };
 
 type StepState = 'done' | 'blocked' | 'pending';
-
-/**
- * Restyles the shared Square connect card (SellerSquareConnect, a v2 panel) to
- * match workspace Panels: one white surface, a full-width hairline under the
- * header and the same 20/24px insets. Presentation only.
- */
-const SQUARE_CARD = [
-  '[&_.v2-panel]:overflow-hidden [&_.v2-panel]:rounded-2xl [&_.v2-panel]:border-0 [&_.v2-panel]:bg-white [&_.v2-panel]:p-0',
-  '[&_.v2-panel]:shadow-[0_0_0_1px_rgba(28,27,26,0.05),0_1px_2px_rgba(28,27,26,0.04),0_12px_32px_-22px_rgba(28,27,26,0.22)]',
-  '[&_.v2-panel-head]:m-0 [&_.v2-panel-head]:flex-wrap [&_.v2-panel-head]:gap-3 [&_.v2-panel-head]:border-[#ECE6DD] [&_.v2-panel-head]:px-5 [&_.v2-panel-head]:py-4 sm:[&_.v2-panel-head]:px-6',
-  '[&_.v2-panel-head_h2]:mt-1 [&_.v2-panel-head_h2]:text-[15px] [&_.v2-panel-head_h2]:font-semibold [&_.v2-panel-head_h2]:text-[#1C1B1A]',
-  '[&_.v2-panel>div:last-child]:px-5 [&_.v2-panel>div:last-child]:pb-6 [&_.v2-panel>div:last-child]:pt-5 sm:[&_.v2-panel>div:last-child]:px-6',
-  '[&_.v2-panel>div:last-child>p:first-child]:max-w-3xl [&_.v2-panel>div:last-child>p:first-child]:leading-6',
-].join(' ');
 
 const marker = (state: StepState) =>
   state === 'done' ? <CheckCircle2 /> : state === 'blocked' ? <AlertTriangle /> : <Circle />;
@@ -60,7 +45,7 @@ export default function WorkspacePaymentSetup() {
           <PageHeader
             eyebrow="Money"
             title="Payment setup"
-            description="Connect Square so renters pay you by card. Your existing transactions, receipts and payout statuses stay in Payouts & payments."
+            description="Renters pay Vendibook by card through Square, and Vendibook pays you after the rental. Your transactions, receipts and payout statuses stay in Payouts & payments."
             actions={
               <Link to="/dashboard/payments" className={ws.secondary}>
                 <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Payouts & payments
@@ -68,9 +53,13 @@ export default function WorkspacePaymentSetup() {
             }
           />
 
-          <LightScope className={SQUARE_CARD}>
-            <SellerSquareConnect />
-          </LightScope>
+          <Panel title="Rental card payments" action={<StatusPill tone="ok">Handled by Vendibook</StatusPill>}>
+            <p className={ws.body}>
+              Renters pay Vendibook by card through Square. After the rental, Vendibook sends your share to your payout
+              method (ACH, PayPal, Venmo or Cash App) and handles the security deposit. There is nothing to connect.
+            </p>
+            <Link to="/dashboard/account/payouts" className={ws.link}>Set your payout method</Link>
+          </Panel>
 
           <div className="grid items-start gap-6 lg:grid-cols-2 lg:gap-8">
             <Panel title="Equipment sales" action={<StatusPill tone="muted">Paused</StatusPill>}>
