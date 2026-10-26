@@ -46,6 +46,7 @@ MANAGED MESSAGES: Guest buyer and seller communications are screened by Vendiboo
 RESOLUTION: Focus on the customer's requested outcome. After one useful step, check whether it worked. If the same failure repeats or you lack account access, offer the support request with the steps already tried rather than looping through guesses. End with the specific next step, who owns it and only a verified reference or time. Never invent completed work.`;
 
 export const ALLISON_START_EVENT = 'allison:start';
-export function startAllison(mode: 'voice' | 'text' = 'voice') {
-  window.dispatchEvent(new CustomEvent(ALLISON_START_EVENT, { detail: { mode } }));
+/** `question`: what the customer already typed (e.g. on the Contact page), so Allison starts there. */
+export function startAllison(mode: 'voice' | 'text' = 'voice', question?: string) {
+  window.dispatchEvent(new CustomEvent(ALLISON_START_EVENT, { detail: { mode, ...(question?.trim() ? { question: question.trim().slice(0, 1000) } : {}) } }));
 }

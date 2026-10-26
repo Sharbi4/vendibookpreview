@@ -1,580 +1,326 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowRight, CalendarClock, CheckCircle2, Loader2, MessageSquareText, Phone, PhoneCall, Sparkles } from 'lucide-react';
 import SEO from '@/components/SEO';
-import AllisonContactCard from '@/components/support/AllisonContactCard';
-import { z } from 'zod';
-import { Phone, Mail, Clock, Send, Loader2, CheckCircle, Ticket, Headphones, CalendarClock, ArrowRight } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import ZendeskTicketForm from '@/components/support/ZendeskTicketForm';
-import CallbackScheduler from '@/components/support/CallbackScheduler';
-import TicketStatusTracker from '@/components/support/TicketStatusTracker';
-import SocialContactOptions from '@/components/support/SocialContactOptions';
-import FeaturedArticles from '@/components/support/FeaturedArticles';
+import { useAuth } from '@/contexts/AuthContext';
+import { invokeEdge } from '@/lib/edge/invokeFunction';
+import { startAllison } from '@/lib/atlas/allisonConfig';
+import { instantAnswers } from '@/lib/support/instantAnswers';
+import { CUSTOMER_SUCCESS_MEETING_URL, SUPPORT_PHONE_DISPLAY, SUPPORT_PHONE_E164 } from '@/lib/support/contactConfig';
+import { followUpDueAt, formatEt, inFollowUpHours } from '../../supabase/functions/_shared/followUpWindow';
 import { trackFormSubmit } from '@/lib/analytics';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
-import contactPaperPlane from '@/assets/contact-paper-plane.svg.asset.json';
+import './contact.css';
 
-const contactSchema = z.object({
-  name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
-  email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters"),
-  phone: z.string().trim().min(1, "Phone number is required").max(20, "Phone number must be less than 20 characters"),
-  subject: z.string().trim().min(1, "Subject is required").max(200, "Subject must be less than 200 characters"),
-  message: z.string().trim().min(1, "Message is required").max(2000, "Message must be less than 2000 characters"),
-  // Honeypot field - should always be empty for real users
-  website: z.string().optional()});
+type Way = 'phone' | 'text' | 'email';
+const TIMES = ['As soon as possible', 'Morning (8–12)', 'Afternoon (12–5)', 'Evening (5–8)'];
+const WAYS: Array<{ id: Way; label: string }> = [
+  { id: 'phone', label: 'Call me' },
+  { id: 'text', label: 'Text me' },
+  { id: 'email', label: 'Email me' },
+];
 
-type ContactFormData = z.infer<typeof contactSchema>;
+interface Saved { reference_code: string; follow_up_by: string; team_open_now: boolean }
 
-const Contact = () => {
-  const [formData, setFormData] = useState<ContactFormData>({
-    name: '',
-    email: '',
-    phone: '',
-    subject: '',
-    message: '',
-    website: '', // Honeypot field
-  });
-  const [errors, setErrors] = useState<Partial<Record<keyof ContactFormData, string>>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const { toast } = useToast();
+function Choice({ checked, onSelect, children }: { checked: boolean; onSelect: () => void; children: React.ReactNode }) {
+  return (
+    <button type="button" role="radio" aria-checked={checked} className="vc-choice" onClick={onSelect}>
+      {children}
+    </button>
+  );
+}
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    if (errors[name as keyof ContactFormData]) {
-      setErrors(prev => ({ ...prev, [name]: undefined }));
-    }
-  };
+export default function Contact() {
+  const { user } = useAuth();
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [hasAccount, setHasAccount] = useState<boolean | null>(null);
+  const [email, setEmail] = useState('');
+  const [time, setTime] = useState(TIMES[0]);
+  const [specificTime, setSpecificTime] = useState('');
+  const [way, setWay] = useState<Way>('phone');
+  const [comments, setComments] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [saved, setSaved] = useState<Saved | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Signed-in members: they have an account and we know their email.
+  useEffect(() => {
+    if (!user) return;
+    setHasAccount(true);
+    setEmail((e) => e || user.email || '');
+  }, [user]);
+
+  const now = new Date();
+  const openNow = inFollowUpHours(now);
+  const nextBy = formatEt(followUpDueAt(now));
+
+  // Instant answers from the reviewed support FAQ while they type (debounced).
+  const [typed, setTyped] = useState('');
+  useEffect(() => {
+    const t = window.setTimeout(() => setTyped(comments), 450);
+    return () => window.clearTimeout(t);
+  }, [comments]);
+  const answers = useMemo(() => instantAnswers(typed), [typed]);
+
+  const phoneOk = phone.replace(/\D/g, '').length >= 10;
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
+
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
-    setErrors({});
-
-    const result = contactSchema.safeParse(formData);
-    if (!result.success) {
-      const fieldErrors: Partial<Record<keyof ContactFormData, string>> = {};
-      result.error.errors.forEach(err => {
-        if (err.path[0]) {
-          fieldErrors[err.path[0] as keyof ContactFormData] = err.message;
-        }
-      });
-      setErrors(fieldErrors);
+    setError('');
+    if (!name.trim()) return setError('Please tell us your name.');
+    if (way !== 'email' && !phoneOk) return setError('Please add the best number to reach you.');
+    if (way === 'email' && !emailOk) return setError('Please add your email address.');
+    if (email.trim() && !emailOk) return setError('That email address doesn’t look right.');
+    setBusy(true);
+    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const { data, error: failed } = await invokeEdge<Saved>('schedule-callback', {
+      body: {
+        name: name.trim(),
+        phone: phone.trim(),
+        email: email.trim(),
+        has_account: hasAccount,
+        best_time: [specificTime.trim() || time, zone && `(${zone})`].filter(Boolean).join(' '),
+        preferred_contact: way,
+        comments: comments.trim(),
+        source: 'contact-page',
+        page_url: window.location.href,
+      },
+    }, { retries: 0, timeoutMs: 20000 });
+    setBusy(false);
+    if (failed || !data?.reference_code) {
+      trackFormSubmit('contact_callback', false, { error: 'submission_failed' });
+      setError(failed || `We couldn’t save your request. Please call or text ${SUPPORT_PHONE_DISPLAY}.`);
       return;
     }
-
-    setIsSubmitting(true);
-
-    try {
-      const { error } = await supabase.functions.invoke('send-contact-email', {
-        body: result.data});
-
-      if (error) throw error;
-
-      setIsSuccess(true);
-      trackFormSubmit('contact', true);
-      trackFormSubmitConversion({ form_type: 'contact' });
-      toast({
-        title: 'Message sent!',
-        description: 'We have received your message and will get back to you soon.'});
-    } catch (error) {
-      console.error('Contact form error:', error);
-      trackFormSubmit('contact', false, { error: 'submission_failed' });
-      toast({
-        title: 'Something went wrong',
-        description: 'Please try again or email us directly at support@vendibook.com',
-        variant: 'destructive'});
-    } finally {
-      setIsSubmitting(false);
-    }
+    trackFormSubmit('contact_callback', true);
+    trackFormSubmitConversion({ form_type: 'contact' });
+    setSaved(data);
   };
 
+  const meetingFallback = () => startAllison('text', 'I’d like to book the 30-minute Customer Success Meeting with the Vendibook team.');
+
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="vb-contact min-h-screen flex flex-col">
       <SEO
-        title="Contact Vendibook Support | Buying, Selling & Rentals"
-        description="Contact Vendibook support for help with listings, buying, selling, rentals, payments, and your account. Send a support request or schedule a callback."
+        title="Contact Vendibook | Call, Text, Book a Meeting or Get a Callback"
+        description={`Talk to Vendibook any time: call or text ${SUPPORT_PHONE_DISPLAY}, book a 30-minute customer success meeting, chat with Allison, or request a callback within 2 business hours.`}
         canonical="/contact"
       />
       <Header />
-      
+
       <main className="flex-1">
-        {/* Hero Section - GRADIENT */}
-        <section className="relative py-16 md:py-24 overflow-hidden">
-          {/* Orange Gradient Background - #FF5124 based, subtle */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#FF5124]/8 via-[#FF5124]/5 to-amber-200/4" />
-          
-          {/* Decorative orbs - subtle orange hints */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-20 right-20 w-96 h-96 bg-[#FF5124]/6 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-20 left-20 w-80 h-80 bg-[#FF5124]/5 rounded-full blur-3xl" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#FF5124]/4 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute top-40 left-1/4 w-64 h-64 bg-amber-300/5 rounded-full blur-2xl" />
-          </div>
-          
-          <div className="container relative z-10">
-            <div className="text-center mb-12">
-              {/* Animated paper plane artwork */}
-              <img
-                src={contactPaperPlane.url}
-                alt=""
-                aria-hidden="true"
-                className="mx-auto w-40 md:w-52 h-auto -mb-2 md:-mb-4 drop-shadow-xl animate-in fade-in zoom-in-95 duration-700"
-                draggable={false}
-              />
-
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-                
-                We're here to help
-              </div>
-              
-              <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6 tracking-tight">
-                Get in Touch
-              </h1>
-              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-                Have questions about renting, selling, or listing your mobile kitchen? 
-                Our support team is ready to assist you.
-              </p>
-              
-              {/* Live Chat Button - Enhanced */}
-              <div className="max-w-md mx-auto">
-                <SocialContactOptions />
-              </div>
-            </div>
-
-            {/* Quick Stats */}
-            <AllisonContactCard />
-            <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto mb-12">
-              <div className="text-center p-4 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50">
-                <div className="text-xl font-bold text-primary mb-1">AI help</div>
-                <div className="text-xs md:text-sm text-muted-foreground">Voice or text</div>
-              </div>
-              <div className="text-center p-4 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50">
-                <div className="text-xl font-bold text-primary mb-1">Your issue</div>
-                <div className="text-xs md:text-sm text-muted-foreground">Tracked support requests</div>
-              </div>
-              <div className="text-center p-4 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50">
-                <div className="text-xl font-bold text-primary mb-1">Human help</div>
-                <div className="text-xs md:text-sm text-muted-foreground">Request a callback</div>
-              </div>
-            </div>
-
-            {/* Featured Articles - Enhanced */}
-            <div className="max-w-4xl mx-auto">
-              <Card className="border-0 shadow-xl bg-card/80 backdrop-blur-sm">
-                <CardContent className="p-6 md:p-8">
-                  <FeaturedArticles />
-                </CardContent>
-              </Card>
-            </div>
+        <section className="vc-hero">
+          <div className="vc-wrap">
+            <p className="vc-eyebrow">Vendibook support</p>
+            <h1>We’re here for you, <em>every step of the way.</em></h1>
+            <p className="vc-lede">
+              We’re food business owners and entrepreneurs ourselves, with years of running trucks, trailers and kitchens.
+              Call, text, book a meeting or ask Allison. A real person is always within reach.
+            </p>
+            <p className="vc-status" role="status">
+              <span className={`vc-dot ${openNow ? 'is-open' : ''}`} aria-hidden="true" />
+              {openNow ? 'Our team is in now. Callbacks within 2 hours.' : `Our team is offline. Request a callback and we’ll reach you by ${nextBy}.`}
+              <span className="hidden sm:inline text-[#9a958e]">Mon–Fri 8 AM–8 PM ET</span>
+            </p>
           </div>
         </section>
 
-        {/* Main Content - NATURAL */}
-        <section className="py-16 md:py-20 bg-background">
-          <div className="container">
-            <div className="max-w-6xl mx-auto">
-              {/* Section Header */}
-              <div className="text-center mb-10">
-                <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
-                  How Can We Help?
-                </h2>
-                <p className="text-muted-foreground">
-                  Choose your preferred method of contact
+        <section className="vc-wrap" aria-label="Ways to reach us">
+          <div className="vc-ways">
+            <a className="vc-card" href={`tel:${SUPPORT_PHONE_E164}`}>
+              <span className="vc-card-icon"><Phone className="h-5 w-5" aria-hidden="true" /></span>
+              <h3>Call {SUPPORT_PHONE_DISPLAY}</h3>
+              <p>Answered 24/7. Our phone assistant helps right away and connects you with a person whenever you want one.</p>
+              <span className="vc-card-go">Call now <ArrowRight className="h-4 w-4" aria-hidden="true" /></span>
+            </a>
+            <a className="vc-card" href={`sms:${SUPPORT_PHONE_E164}`}>
+              <span className="vc-card-icon"><MessageSquareText className="h-5 w-5" aria-hidden="true" /></span>
+              <h3>Text {SUPPORT_PHONE_DISPLAY}</h3>
+              <p>Prefer texting? Send us a message any time and get help right in your messages.</p>
+              <span className="vc-card-go">Send a text <ArrowRight className="h-4 w-4" aria-hidden="true" /></span>
+            </a>
+            <a className="vc-card" href="#meeting">
+              <span className="vc-card-icon"><CalendarClock className="h-5 w-5" aria-hidden="true" /></span>
+              <h3>Book a 30-minute meeting</h3>
+              <p>Pick a time for a Customer Success Meeting with our team to plan your purchase, listing or launch.</p>
+              <span className="vc-card-go">See times <ArrowRight className="h-4 w-4" aria-hidden="true" /></span>
+            </a>
+            <button type="button" className="vc-card" onClick={() => startAllison('voice')}>
+              <span className="vc-card-icon"><Sparkles className="h-5 w-5" aria-hidden="true" /></span>
+              <h3>Talk to Allison</h3>
+              <p>Our AI support assistant sorts most questions in minutes, by voice or by typing, and can bring in our team.</p>
+              <span className="vc-card-go">Start talking <ArrowRight className="h-4 w-4" aria-hidden="true" /></span>
+            </button>
+          </div>
+        </section>
+
+        <section className="vc-wrap vc-main" aria-label="Request a callback">
+          <div className="vc-panel">
+            {saved ? (
+              <div className="vc-done" role="status">
+                <span className="vc-done-badge"><CheckCircle2 className="h-7 w-7" aria-hidden="true" /></span>
+                <h2>You’re all set, {name.trim().split(' ')[0]}.</h2>
+                <p className="vc-panel-sub">
+                  A real person from our team will {way === 'email' ? 'email' : way === 'text' ? 'text' : 'call'} you by <b>{saved.follow_up_by}</b>.
+                  {!saved.team_open_now && ' We’re offline right now, so you’re first in line when we open.'}
+                  {' '}Need us sooner? Call or text {SUPPORT_PHONE_DISPLAY} any time.
                 </p>
+                <span className="vc-ref">Reference {saved.reference_code}</span>
+                <div className="vc-allison-actions" style={{ marginTop: 24 }}>
+                  <button type="button" className="vc-btn is-dark" onClick={() => startAllison('text', comments)}>
+                    Ask Allison while you wait
+                  </button>
+                </div>
               </div>
+            ) : (
+              <>
+                <p className="vc-eyebrow">Callback within 2 business hours</p>
+                <h2 style={{ marginTop: 10 }}>Request a callback</h2>
+                <p className="vc-panel-sub">Tell us how to reach you and what’s going on. A real person calls back within 2 business hours (Mon–Fri 8 AM–8 PM ET).</p>
+                <form className="vc-form" onSubmit={submit} noValidate>
+                  <div className="vc-row">
+                    <label className="vc-field">
+                      <span>Your name</span>
+                      <input className="vc-input" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" maxLength={80} required />
+                    </label>
+                    <label className="vc-field">
+                      <span>Best callback number {way === 'email' && <small>(optional)</small>}</span>
+                      <input className="vc-input" type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" maxLength={30} placeholder="(555) 555-0123" aria-invalid={Boolean(phone) && !phoneOk} />
+                    </label>
+                  </div>
 
-              <Tabs defaultValue="ticket" className="w-full">
-                {/* Enhanced Tab List */}
-                <TabsList className="grid w-full grid-cols-4 mb-10 p-1.5 h-auto bg-card border border-border rounded-2xl shadow-sm">
-                  <TabsTrigger 
-                    value="ticket" 
-                    className="flex items-center justify-center gap-2 py-4 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-200"
-                  >
-                    <Ticket className="h-5 w-5" />
-                    <span className="hidden sm:inline font-medium">New Ticket</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="form" 
-                    className="flex items-center justify-center gap-2 py-4 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-200"
-                  >
-                    <Send className="h-5 w-5" />
-                    <span className="hidden sm:inline font-medium">Message</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="schedule" 
-                    className="flex items-center justify-center gap-2 py-4 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-200"
-                  >
-                    <CalendarClock className="h-5 w-5" />
-                    <span className="hidden sm:inline font-medium">Schedule</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="tickets" 
-                    className="flex items-center justify-center gap-2 py-4 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-200"
-                  >
-                    <Headphones className="h-5 w-5" />
-                    <span className="hidden sm:inline font-medium">My Tickets</span>
-                  </TabsTrigger>
-                </TabsList>
-
-                {/* Zendesk Ticket Form - Enhanced */}
-                <TabsContent value="ticket" className="mt-0">
-                  <div className="grid lg:grid-cols-5 gap-8">
-                    <div className="lg:col-span-3">
-                      <Card className="border-0 shadow-xl">
-                        <CardContent className="p-6 md:p-8">
-                          <div className="flex items-center gap-3 mb-6">
-                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center shadow-lg">
-                              <Ticket className="h-6 w-6" />
-                            </div>
-                            <div>
-                              <h2 className="text-xl font-bold text-foreground">Create a Support Ticket</h2>
-                              <p className="text-sm text-muted-foreground">We'll respond within 2 hours</p>
-                            </div>
-                          </div>
-                          <ZendeskTicketForm />
-                        </CardContent>
-                      </Card>
-                    </div>
-                    
-                    <div className="lg:col-span-2 space-y-4">
-                      {/* Contact Cards - Enhanced */}
-                      <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow group cursor-pointer">
-                        <CardContent className="p-5">
-                          <a href="tel:+18666906227" className="flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-                              <Phone className="h-6 w-6" />
-                            </div>
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-foreground mb-0.5">Call Us</h3>
-                              <p className="text-primary font-medium">(866) 690-6227</p>
-                            </div>
-                            <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                          </a>
-                        </CardContent>
-                      </Card>
-
-                      <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow group cursor-pointer">
-                        <CardContent className="p-5">
-                          <a href="mailto:support@vendibook.com" className="flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 text-white flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-                              <Mail className="h-6 w-6" />
-                            </div>
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-foreground mb-0.5">Email Us</h3>
-                              <p className="text-primary font-medium text-sm">support@vendibook.com</p>
-                            </div>
-                            <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                          </a>
-                        </CardContent>
-                      </Card>
-
-                      <Card className="border-0 shadow-lg bg-gradient-to-br from-primary/5 to-primary/10">
-                        <CardContent className="p-5">
-                          <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center shadow-lg">
-                              <Clock className="h-6 w-6" />
-                            </div>
-                            <div>
-                              <h3 className="font-semibold text-foreground mb-1">Business Hours</h3>
-                              <p className="text-sm text-muted-foreground leading-relaxed">
-                                Mon–Fri: 9am – 5pm AZ time<br />
-                                Closed Saturday & Sunday
-                              </p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
+                  <div role="radiogroup" aria-labelledby="vc-account">
+                    <span className="vc-legend" id="vc-account">Do you have a Vendibook account?</span>
+                    <div className="vc-choices">
+                      <Choice checked={hasAccount === true} onSelect={() => setHasAccount(true)}>Yes</Choice>
+                      <Choice checked={hasAccount === false} onSelect={() => setHasAccount(false)}>No</Choice>
                     </div>
                   </div>
-                </TabsContent>
 
-                {/* Contact Form - Enhanced */}
-                <TabsContent value="form" className="mt-0">
-                  <div className="max-w-3xl mx-auto">
-                    {isSuccess ? (
-                      <Card className="border-0 shadow-xl">
-                        <CardContent className="p-12 text-center">
-                          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-green-500 to-green-600 text-white mb-8 shadow-xl">
-                            <CheckCircle className="h-12 w-12" />
-                          </div>
-                          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-                            Thank you for reaching out!
-                          </h2>
-                          <p className="text-muted-foreground mb-2 text-lg">
-                            We have received your message and will get back to you as soon as possible.
-                          </p>
-                          <p className="text-sm text-muted-foreground mb-8">
-                            If you do not hear from us, please check your phone or email us directly at{' '}
-                            <a href="mailto:support@vendibook.com" className="text-primary hover:underline font-medium">
-                              support@vendibook.com
-                            </a>
-                          </p>
-                          <Button onClick={() => setIsSuccess(false)} variant="outline" size="lg" className="rounded-xl">
-                            Send Another Message
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    ) : (
-                      <Card className="border-0 shadow-xl">
-                        <CardContent className="p-6 md:p-10">
-                          <div className="flex items-center gap-3 mb-8">
-                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center shadow-lg">
-                              <Send className="h-6 w-6" />
+                  <label className="vc-field">
+                    <span>
+                      {hasAccount ? 'Email on your account' : 'Email'}{' '}
+                      {way !== 'email' && <small>(optional{hasAccount ? ', helps us find your account' : ''})</small>}
+                    </span>
+                    <input className="vc-input" type="email" inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" maxLength={120} placeholder="you@example.com" aria-invalid={Boolean(email) && !emailOk} />
+                  </label>
+
+                  <div role="radiogroup" aria-labelledby="vc-time">
+                    <span className="vc-legend" id="vc-time">Best time to reach you <small className="font-normal text-[#74716d]">(your time)</small></span>
+                    <div className="vc-choices">
+                      {TIMES.map((t) => <Choice key={t} checked={!specificTime && time === t} onSelect={() => { setTime(t); setSpecificTime(''); }}>{t}</Choice>)}
+                    </div>
+                    <input className="vc-input" style={{ marginTop: 10 }} value={specificTime} onChange={(e) => setSpecificTime(e.target.value)} maxLength={80} placeholder="Or a specific day and time, e.g. Tuesday after 3 PM" aria-label="Specific day and time" />
+                  </div>
+
+                  <div role="radiogroup" aria-labelledby="vc-way">
+                    <span className="vc-legend" id="vc-way">How should we follow up?</span>
+                    <div className="vc-choices">
+                      {WAYS.map((w) => <Choice key={w.id} checked={way === w.id} onSelect={() => setWay(w.id)}>{w.label}</Choice>)}
+                    </div>
+                  </div>
+
+                  <label className="vc-field">
+                    <span>How can we help?</span>
+                    <textarea className="vc-input" value={comments} onChange={(e) => setComments(e.target.value)} maxLength={1500} placeholder="e.g. I’m buying my first food trailer and want to know how the walkthrough works" />
+                  </label>
+
+                  <div aria-live="polite">
+                    {answers.length > 0 && (
+                      <div className="vc-answers">
+                        <h4><Sparkles className="h-3.5 w-3.5" aria-hidden="true" /> This might help right now</h4>
+                        <dl>
+                          {answers.map((a) => (
+                            <div key={a.question}>
+                              <dt>{a.question}</dt>
+                              <dd>{a.answer}</dd>
                             </div>
-                            <div>
-                              <h2 className="text-xl font-bold text-foreground">Send us a Message</h2>
-                              <p className="text-sm text-muted-foreground">We'd love to hear from you</p>
-                            </div>
-                          </div>
-                          
-                          <form onSubmit={handleSubmit} className="space-y-6">
-                            <div className="grid md:grid-cols-2 gap-5">
-                              <div className="space-y-2">
-                                <Label htmlFor="name" className="text-sm font-medium">Full Name *</Label>
-                                <Input
-                                  id="name"
-                                  name="name"
-                                  value={formData.name}
-                                  onChange={handleChange}
-                                  placeholder="John Doe"
-                                  className={`h-12 rounded-xl border-border/60 focus:border-primary ${errors.name ? 'border-destructive' : ''}`}
-                                  disabled={isSubmitting}
-                                />
-                                {errors.name && (
-                                  <p className="text-sm text-destructive">{errors.name}</p>
-                                )}
-                              </div>
-
-                              <div className="space-y-2">
-                                <Label htmlFor="email" className="text-sm font-medium">Email Address *</Label>
-                                <Input
-                                  id="email"
-                                  name="email"
-                                  type="email"
-                                  value={formData.email}
-                                  onChange={handleChange}
-                                  placeholder="john@example.com"
-                                  className={`h-12 rounded-xl border-border/60 focus:border-primary ${errors.email ? 'border-destructive' : ''}`}
-                                  disabled={isSubmitting}
-                                />
-                                {errors.email && (
-                                  <p className="text-sm text-destructive">{errors.email}</p>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="grid md:grid-cols-2 gap-5">
-                              <div className="space-y-2">
-                                <Label htmlFor="phone" className="text-sm font-medium">Phone Number *</Label>
-                                <Input
-                                  id="phone"
-                                  name="phone"
-                                  type="tel"
-                                  value={formData.phone}
-                                  onChange={handleChange}
-                                  placeholder="(555) 123-4567"
-                                  className={`h-12 rounded-xl border-border/60 focus:border-primary ${errors.phone ? 'border-destructive' : ''}`}
-                                  disabled={isSubmitting}
-                                />
-                                {errors.phone && (
-                                  <p className="text-sm text-destructive">{errors.phone}</p>
-                                )}
-                              </div>
-
-                              <div className="space-y-2">
-                                <Label htmlFor="subject" className="text-sm font-medium">Subject *</Label>
-                                <Input
-                                  id="subject"
-                                  name="subject"
-                                  value={formData.subject}
-                                  onChange={handleChange}
-                                  placeholder="How can we help?"
-                                  className={`h-12 rounded-xl border-border/60 focus:border-primary ${errors.subject ? 'border-destructive' : ''}`}
-                                  disabled={isSubmitting}
-                                />
-                                {errors.subject && (
-                                  <p className="text-sm text-destructive">{errors.subject}</p>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label htmlFor="message" className="text-sm font-medium">Message *</Label>
-                              <Textarea
-                                id="message"
-                                name="message"
-                                value={formData.message}
-                                onChange={handleChange}
-                                placeholder="Tell us more about your inquiry..."
-                                rows={6}
-                                className={`rounded-xl border-border/60 focus:border-primary resize-none ${errors.message ? 'border-destructive' : ''}`}
-                                disabled={isSubmitting}
-                              />
-                              {errors.message && (
-                                <p className="text-sm text-destructive">{errors.message}</p>
-                              )}
-                            </div>
-
-                            {/* Honeypot field - hidden from real users, bots will fill it */}
-                            <div className="absolute -left-[9999px] opacity-0 pointer-events-none" aria-hidden="true">
-                              <Label htmlFor="website">Website</Label>
-                              <Input
-                                id="website"
-                                name="website"
-                                type="text"
-                                value={formData.website || ''}
-                                onChange={handleChange}
-                                tabIndex={-1}
-                                autoComplete="off"
-                              />
-                            </div>
-
-                            <Button
-                              type="submit" 
-                              size="lg" 
-                              className="w-full h-14 text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-shadow" 
-                              disabled={isSubmitting}
-                            >
-                              {isSubmitting ? (
-                                <>
-                                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                                  Sending...
-                                </>
-                              ) : (
-                                <>
-                                  <Send className="h-5 w-5 mr-2" />
-                                  Send Message
-                                </>
-                              )}
-                            </Button>
-                          </form>
-                        </CardContent>
-                      </Card>
+                          ))}
+                        </dl>
+                        <div className="vc-answers-actions">
+                          <button type="button" className="vc-link" onClick={() => startAllison('text', comments)}>Ask Allison a follow-up</button>
+                          <span className="text-[#74716d]">Still want a call? Just send your request below.</span>
+                        </div>
+                      </div>
                     )}
                   </div>
-                </TabsContent>
 
-                {/* Schedule Callback - Enhanced */}
-                <TabsContent value="schedule" className="mt-0">
-                  <div className="grid lg:grid-cols-5 gap-8">
-                    <div className="lg:col-span-3">
-                      <Card className="border-0 shadow-xl">
-                        <CardContent className="p-6 md:p-8">
-                          <div className="flex items-center gap-3 mb-6">
-                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center shadow-lg">
-                              <CalendarClock className="h-6 w-6" />
-                            </div>
-                            <div>
-                              <h2 className="text-xl font-bold text-foreground">Schedule a Callback</h2>
-                              <p className="text-sm text-muted-foreground">We'll call you at your preferred time</p>
-                            </div>
-                          </div>
-                          <CallbackScheduler />
-                        </CardContent>
-                      </Card>
-                    </div>
-                    
-                    <div className="lg:col-span-2 space-y-4">
-                      <Card className="border-0 shadow-lg bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5">
-                        <CardContent className="p-6">
-                          <h3 className="font-bold text-foreground mb-4 flex items-center gap-2">
-                            
-                            Why Schedule a Callback?
-                          </h3>
-                          <ul className="space-y-3">
-                            {[
-                              'No waiting on hold – we call you',
-                              'Speak with a real person, not a chatbot',
-                              'Get personalized help for your situation',
-                              'Available Mon–Fri during business hours'
-                            ].map((item, i) => (
-                              <li key={i} className="flex items-start gap-3 text-sm">
-                                <div className="w-5 h-5 rounded-full bg-primary/20 text-primary flex items-center justify-center flex-shrink-0 mt-0.5">
-                                  <CheckCircle className="h-3 w-3" />
-                                </div>
-                                <span className="text-muted-foreground">{item}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </CardContent>
-                      </Card>
-                      
-                      <Card className="border-0 shadow-lg">
-                        <CardContent className="p-5">
-                          <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center shadow-lg">
-                              <Clock className="h-6 w-6" />
-                            </div>
-                            <div>
-                              <h3 className="font-semibold text-foreground mb-1">Business Hours</h3>
-                              <p className="text-sm text-muted-foreground leading-relaxed">
-                                Mon–Fri: 9am – 5pm AZ time<br />
-                                Closed Saturday & Sunday
-                              </p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </div>
-                </TabsContent>
+                  {error && <p className="vc-error" role="alert">{error}</p>}
+                  <button type="submit" className="vc-submit" disabled={busy}>
+                    {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <PhoneCall className="h-4 w-4" aria-hidden="true" />}
+                    {busy ? 'Sending…' : 'Request my callback'}
+                  </button>
+                  <p className="vc-fine">
+                    By sending this you ask Vendibook to contact you about this request by the method you chose.
+                    {way === 'text' && ` Texts come from ${SUPPORT_PHONE_DISPLAY}; message and data rates may apply; reply STOP to opt out.`}
+                    {' '}This doesn’t sign you up for marketing. See our <Link to="/privacy" className="underline">privacy policy</Link>.
+                  </p>
+                </form>
+              </>
+            )}
+          </div>
 
-                {/* Ticket Status - Enhanced */}
-                <TabsContent value="tickets" className="mt-0">
-                  <div className="grid lg:grid-cols-5 gap-8">
-                    <div className="lg:col-span-3">
-                      <Card className="border-0 shadow-xl">
-                        <CardContent className="p-6 md:p-8">
-                          <div className="flex items-center gap-3 mb-6">
-                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center shadow-lg">
-                              <Headphones className="h-6 w-6" />
-                            </div>
-                            <div>
-                              <h2 className="text-xl font-bold text-foreground">Check Ticket Status</h2>
-                              <p className="text-sm text-muted-foreground">Track your support requests</p>
-                            </div>
-                          </div>
-                          <TicketStatusTracker />
-                        </CardContent>
-                      </Card>
-                    </div>
-                    
-                    <div className="lg:col-span-2">
-                      <Card className="border-0 shadow-lg bg-gradient-to-br from-muted/50 to-muted/30">
-                        <CardContent className="p-6">
-                          <h3 className="font-bold text-foreground mb-5">Understanding Ticket Statuses</h3>
-                          <ul className="space-y-4">
-                            {[
-                              { color: 'bg-blue-500', label: 'New', desc: 'Received and awaiting review' },
-                              { color: 'bg-yellow-500', label: 'Open', desc: 'Agent actively working on it' },
-                              { color: 'bg-orange-500', label: 'Pending', desc: 'Waiting for your response' },
-                              { color: 'bg-green-500', label: 'Solved', desc: 'Request has been resolved' }].map((status, i) => (
-                              <li key={i} className="flex items-start gap-4">
-                                <span className={`w-4 h-4 rounded-full ${status.color} mt-0.5 flex-shrink-0 shadow-sm`} />
-                                <div>
-                                  <span className="font-semibold text-foreground text-sm">{status.label}</span>
-                                  <p className="text-muted-foreground text-sm">{status.desc}</p>
-                                </div>
-                              </li>
-                            ))}
-                          </ul>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </div>
-                </TabsContent>
-              </Tabs>
+          <aside className="vc-side">
+            <div className="vc-panel">
+              <h2 style={{ fontSize: 22 }}>What happens next</h2>
+              <ol className="vc-steps">
+                <li><b>We save your request</b> and the whole team is notified right away.</li>
+                <li><b>A real person reaches out</b> within 2 business hours, at the time and in the way you asked.</li>
+                <li><b>We stay with you</b> until it’s sorted, whether that’s a listing, a purchase, a rental or getting paid.</li>
+              </ol>
             </div>
+            <div className="vc-allison">
+              <p className="vc-eyebrow" style={{ color: '#ffb59c', marginTop: 0 }}>Can’t wait? Ask Allison now</p>
+              <h2>Answers in minutes, day or night.</h2>
+              <p>Allison is our AI support assistant. She can explain buying and renting, help troubleshoot, and set up a callback or meeting with our team.</p>
+              <div className="vc-allison-actions">
+                <button type="button" className="vc-btn is-primary" onClick={() => startAllison('voice', comments)}>Talk to Allison</button>
+                <button type="button" className="vc-btn is-ghost" onClick={() => startAllison('text', comments)}>Type instead</button>
+              </div>
+            </div>
+          </aside>
+        </section>
+
+        <section id="meeting" className="vc-wrap vc-meeting" aria-labelledby="vc-meeting-title">
+          <div className="vc-meeting-head">
+            <div>
+              <p className="vc-eyebrow">Customer Success Meeting · 30 minutes</p>
+              <h2 id="vc-meeting-title">Sit down with our team.</h2>
+              <p>Planning a purchase, a listing or your launch? Book 30 minutes with someone who has been there. Pick any open time.</p>
+            </div>
+            {!CUSTOMER_SUCCESS_MEETING_URL && (
+              <button type="button" className="vc-btn is-dark" onClick={meetingFallback}>
+                <CalendarClock className="h-4 w-4" aria-hidden="true" /> Find a time with Allison
+              </button>
+            )}
+          </div>
+          {CUSTOMER_SUCCESS_MEETING_URL && (
+            <div className="vc-meeting-frame">
+              <iframe
+                title="Book a 30-minute Customer Success Meeting"
+                src={`${CUSTOMER_SUCCESS_MEETING_URL}?hide_gdpr_banner=1&primary_color=ff5124${name ? `&name=${encodeURIComponent(name)}` : ''}${emailOk ? `&email=${encodeURIComponent(email.trim())}` : ''}`}
+                loading="lazy"
+              />
+            </div>
+          )}
+        </section>
+
+        <section className="vc-wrap vc-promise" aria-label="Our promise">
+          <div>
+            <h3>Real people, real experience</h3>
+            <p>Our team has run food trucks, trailers and kitchens. We know what a slow season, a failed inspection or a first sale feels like.</p>
+          </div>
+          <div>
+            <h3>Always a way to reach us</h3>
+            <p>Call or text {SUPPORT_PHONE_DISPLAY} 24/7, talk to Allison, or ask for a person. During business hours we call back within 2 hours.</p>
+          </div>
+          <div>
+            <h3>Answers on your own time</h3>
+            <p>Browse guides and policies in the <Link to="/help" className="underline">Help Center</Link>, or read <Link to="/how-purchasing-works" className="underline">how buying works</Link> with Purchase Protection.</p>
           </div>
         </section>
       </main>
@@ -582,6 +328,4 @@ const Contact = () => {
       <Footer />
     </div>
   );
-};
-
-export default Contact;
+}

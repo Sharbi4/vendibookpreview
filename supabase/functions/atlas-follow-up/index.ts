@@ -1,7 +1,7 @@
 // Atlas "speak with a person" follow-up (owner, 2026-10-15).
 // A member or guest asks Atlas for a person. This records an admin support
 // ticket (Admin → Support + an in-app notification for every admin) and
-// emails support@vendibook.com through Resend, with the follow-up due within
+// emails adminAlertEmails() (support@ plus the owners), with the follow-up due within
 // 2 business hours (Mon–Fri 8 AM–8 PM ET, _shared/followUpWindow.ts).
 // Guests must give a phone or email. Rate limited per IP and per contact.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
@@ -11,13 +11,12 @@ import { checkRateLimit, clientIp } from "../_shared/rateLimit.ts";
 import { invokeTransactionalEmail } from "../_shared/invokeTransactionalEmail.ts";
 import { followUpDueAt, formatEt, inFollowUpHours } from "../_shared/followUpWindow.ts";
 import { buyerFollowUpConsent } from "../_shared/atlasBuyerFollowUp.ts";
+import { adminAlertEmails, adminNoticeKey } from "../_shared/adminRecipients.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-
-const SUPPORT_TO = "support@vendibook.com";
 
 
 const json = (body: unknown, status = 200) =>
@@ -126,7 +125,7 @@ serve(async (req) => {
       console.error("[atlas-follow-up] admin notification failed", e);
     }
 
-    // Email to support@ through Resend; Lovable's email service is the fallback.
+    // Email every admin recipient (support@ alone is suppressed since 2026-08-04).
     const subject = `Follow up by ${dueLabel}: ${name} (${ticket.reference_code})`;
     const rows = [
       ["Follow up by", dueLabel],
@@ -137,10 +136,10 @@ serve(async (req) => {
       pageUrl ? ["Page", pageUrl] : null,
     ].filter(Boolean) as [string, string][];
     let emailed = false;
-    try {
+    for (const to of adminAlertEmails()) try {
       await invokeTransactionalEmail({
-        templateName: "generic-notice", recipientEmail: SUPPORT_TO,
-        idempotencyKey: `atlas-follow-up-admin-${ticket.id}`,
+        templateName: "generic-notice", recipientEmail: to,
+        idempotencyKey: adminNoticeKey(`atlas-follow-up-admin-${ticket.id}`, to),
         templateData: {
           subject, kicker: "Atlas · requested follow-up", heading: `Follow up by ${dueLabel}`,
           paragraphs: [summary || "(No summary given.)"],
