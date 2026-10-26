@@ -1,7 +1,8 @@
 // Webhook tools for the Vendibook phone support agent on +1 866 690 6227
 // (owner, 2026-10-25). ElevenLabs calls these during a phone call; browsers
-// never do. Every request must carry the PHONE_AGENT_TOOL_SECRET in the
-// x-vendibook-tool-secret header (set on each tool in ElevenLabs).
+// never do. Every request must carry the tool secret (_shared/phoneLine.ts)
+// in the x-vendibook-tool-secret header, set on each tool in ElevenLabs from
+// the PHONE_AGENT_TOOL_SECRET workspace secret.
 //
 // Tools (?tool=…):
 // - save_caller_details: called as soon as the caller gives their first and
@@ -28,6 +29,7 @@ import { invokeTransactionalEmail } from "../_shared/invokeTransactionalEmail.ts
 import { followUpDueAt, formatEt, inFollowUpHours } from "../_shared/followUpWindow.ts";
 import { checkRateLimit } from "../_shared/rateLimit.ts";
 import { normalizeNanpToE164, SMS_POLICY_VERSION } from "../_shared/smsConsent.ts";
+import { phoneToolSecret } from "../_shared/phoneLine.ts";
 import { adminAlertEmails, adminNoticeKey } from "../_shared/adminRecipients.ts";
 import { FEE_CONFIG } from "../_shared/feeConfig.ts";
 
@@ -489,7 +491,7 @@ async function getPricing(): Promise<Response> {
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
-  const secret = Deno.env.get("PHONE_AGENT_TOOL_SECRET") ?? "";
+  const secret = await phoneToolSecret();
   if (!sameSecret(req.headers.get("x-vendibook-tool-secret") ?? "", secret)) return json({ error: "Forbidden" }, 403);
 
   try {

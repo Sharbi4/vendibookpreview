@@ -54,19 +54,20 @@ Caveat: support@vendibook.com has been suppressed in Resend since a 2026-08-04 b
 
 ## Provisioning
 
-1. **Secrets.**
-   1. Generate a random `PHONE_AGENT_TOOL_SECRET`.
-   2. Store it in ElevenLabs as a workspace secret. The webhook tools send it in the `x-vendibook-tool-secret` header.
-   3. Store the same value as a Supabase edge-function secret.
-2. **Agent.**
-   1. Duplicate Allison.
-   2. Replace its prompt and first message with the files above.
-   3. Add the webhook tools from `phone-agent-tools.json` and the system `end_call` tool. Keep the Calendly tools.
-3. **Number.** Assign `phnum_9001m5tnf446f4sbmch182jzvfq1` to the new agent.
-4. **Agent ID.** Set the Supabase secret `PHONE_AGENT_ID` to the new agent's ID. The contact report counts its calls with it.
-5. **Deploy the database first, then the functions.**
+This setup needs no new Supabase secrets. The tool secret is derived from `ELEVENLABS_API_KEY` (`_shared/phoneLine.ts`), and the report looks up the phone agent from the number's assignment. If you set `PHONE_AGENT_TOOL_SECRET` or `PHONE_AGENT_ID` explicitly, those values are used instead.
+
+1. **Deploy the database first, then the functions.**
    1. Apply migrations `20261025233000_member_message_relay.sql` and `20261026010000_phone_agent_verification_and_contact_report.sql`.
    2. Deploy `phone-support-tools`, `admin-phone-actions` and `agent-contact-report`.
    3. Publish the frontend only after the owner's go-ahead.
+2. **Tool secret.** As an admin, call `admin-phone-actions` with `{"action": "register_tool_secret"}`.
+   - It writes the value into the ElevenLabs workspace secret `PHONE_AGENT_TOOL_SECRET` and returns only the secret's ID. Nobody sees or copies the value.
+   - Run it again after rotating the ElevenLabs API key, because the derived value changes with the key.
+3. **Agent.**
+   1. Duplicate Allison.
+   2. Replace its prompt and first message with the files above.
+   3. Add the webhook tools from `phone-agent-tools.json`, with the `x-vendibook-tool-secret` header referencing that workspace secret, plus the system `end_call` tool. Keep the Calendly tools.
+4. **Number.** Assign `phnum_9001m5tnf446f4sbmch182jzvfq1` to the new agent.
+5. **Check.** Call `admin-phone-actions` with `{"action": "phone_line_status"}`. It should show the new agent and `tool_secret_registered: true`.
 
 The older Vapi functions (`vapi-*`, `schedule-callback`) are still deployed. They don't use this number once it points at ElevenLabs. Retire them separately.

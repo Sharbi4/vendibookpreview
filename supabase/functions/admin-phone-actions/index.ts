@@ -6,6 +6,11 @@
 //   sees (866) 690-6227.
 // - text: sends a customer-care text from the support line through the
 //   guarded SMS path (consent, STOP suppression and logging all apply).
+// - register_tool_secret: one-time setup. Writes the phone tools' shared
+//   secret (_shared/phoneLine.ts) into the ElevenLabs workspace secret
+//   PHONE_AGENT_TOOL_SECRET; returns only its id, never the value.
+// - phone_line_status: which agent the 866 number is assigned to and whether
+//   that workspace secret exists.
 //
 // Admin-only. US/Canada numbers only, so the line can't place toll calls.
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -13,6 +18,7 @@ import { getCaller, isAdminUser } from "../_shared/callerGuard.ts";
 import { checkRateLimit } from "../_shared/rateLimit.ts";
 import { normalizeNanpToE164 } from "../_shared/smsConsent.ts";
 import { sendGuardedSms } from "../_shared/smsGuard.ts";
+import { PHONE_LINE_NUMBER_ID, PHONE_TOOL_SECRET_NAME, phoneLineAgent, phoneToolSecret } from "../_shared/phoneLine.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -51,6 +57,39 @@ async function placeCall(params: Record<string, string>): Promise<{ ok: boolean;
   return { ok: true, sid: data?.sid };
 }
 
+async function elevenLabsSecrets(): Promise<Array<{ secret_id: string; name: string }> | null> {
+  const key = Deno.env.get("ELEVENLABS_API_KEY");
+  if (!key) return null;
+  const res = await fetch("https://api.elevenlabs.io/v1/convai/secrets", {
+    headers: { "xi-api-key": key },
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!res.ok) return null;
+  return ((await res.json())?.secrets ?? []) as Array<{ secret_id: string; name: string }>;
+}
+
+/** Writes the tool secret into the ElevenLabs workspace secret the webhook tools reference. The value never leaves the server. */
+async function registerToolSecret() {
+  const key = Deno.env.get("ELEVENLABS_API_KEY");
+  const value = await phoneToolSecret();
+  if (!key || !value) return { ok: false, error: "ELEVENLABS_API_KEY is not configured." };
+  const secrets = await elevenLabsSecrets();
+  if (!secrets) return { ok: false, error: "Could not read ElevenLabs workspace secrets." };
+  const existing = secrets.find((s) => s.name === PHONE_TOOL_SECRET_NAME);
+  const res = await fetch(
+    existing ? `https://api.elevenlabs.io/v1/convai/secrets/${existing.secret_id}` : "https://api.elevenlabs.io/v1/convai/secrets",
+    {
+      method: existing ? "PATCH" : "POST",
+      headers: { "xi-api-key": key, "Content-Type": "application/json" },
+      body: JSON.stringify({ type: existing ? "update" : "new", name: PHONE_TOOL_SECRET_NAME, value }),
+      signal: AbortSignal.timeout(10000),
+    },
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return { ok: false, error: `ElevenLabs ${res.status}: ${String(data?.detail?.message ?? data?.detail ?? "request failed").slice(0, 200)}` };
+  return { ok: true, secret_id: data?.secret_id ?? existing?.secret_id ?? null, name: PHONE_TOOL_SECRET_NAME, updated: !!existing };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
@@ -59,6 +98,17 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
+    if (body.action === "register_tool_secret") return json(await registerToolSecret());
+    if (body.action === "phone_line_status") {
+      const agent = await phoneLineAgent();
+      const secrets = await elevenLabsSecrets();
+      return json({
+        number_id: PHONE_LINE_NUMBER_ID,
+        assigned_agent_id: agent?.agent_id ?? null,
+        assigned_agent_name: agent?.agent_name ?? null,
+        tool_secret_registered: secrets ? secrets.some((s) => s.name === PHONE_TOOL_SECRET_NAME) : null,
+      });
+    }
     const ticketId = typeof body.ticket_id === "string" && UUID_RE.test(body.ticket_id) ? body.ticket_id : null;
     const db = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "", {
       auth: { persistSession: false },

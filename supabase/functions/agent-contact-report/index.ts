@@ -12,6 +12,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { invokeTransactionalEmail } from "../_shared/invokeTransactionalEmail.ts";
 import { getCaller, isAdminUser, isCronCaller } from "../_shared/callerGuard.ts";
 import { formatEt } from "../_shared/followUpWindow.ts";
+import { phoneLineAgent } from "../_shared/phoneLine.ts";
 
 const REPORT_TO = ["support@vendibook.com", "atlasmom421@gmail.com"];
 const WINDOW_MS = 2 * 60 * 60 * 1000;
@@ -90,8 +91,8 @@ Deno.serve(async (req) => {
 
     const calls = await agentCalls([
       { key: "atlas", label: "Atlas", id: Deno.env.get("ATLAS_AGENT_ID") || "agent_1501m4rhvkz9fsbs5ce89zvk2k7b" },
-      { key: "allison", label: "Allison", id: Deno.env.get("ALLISON_AGENT_ID") },
-      { key: "phone", label: "Phone line", id: Deno.env.get("PHONE_AGENT_ID") },
+      { key: "allison", label: "Allison", id: Deno.env.get("ALLISON_AGENT_ID") || "agent_8301m5nh7dq6e1x9wgqk2yx7k4pd" },
+      { key: "phone", label: "Phone line", id: (await phoneLineAgent())?.agent_id },
     ], since);
     const callLine = (k: string) => {
       const c = calls?.[k];

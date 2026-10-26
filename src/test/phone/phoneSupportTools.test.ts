@@ -83,6 +83,7 @@ function loadTools(tables: Record<string, Row[]>) {
     adminAlertEmails: () => ["owner@vendibook.test"],
     adminNoticeKey: (b: string, r: string) => `${b}:${r}`,
     FEE_CONFIG,
+    phoneToolSecret: async () => SECRET,
     fetch: fetchMock,
     Response, URL, TextEncoder, Uint8Array, Uint32Array, Array, JSON, Date, Math, Number, String, Object, Promise, Set, RegExp, AbortSignal, URLSearchParams,
     crypto: globalThis.crypto, console: { error: vi.fn(), log: vi.fn() },
@@ -162,5 +163,27 @@ describe("phone support tools", () => {
     expect(res.status).toBe(200);
     expect(res.body.say_this).toMatch(/If that matches a Vendibook account/);
     expect(t.tables.phone_agent_verifications).toHaveLength(0);
+  });
+});
+
+describe("phone line shared secret", () => {
+  const load = (env: Record<string, string>) => {
+    const source = fs.readFileSync("supabase/functions/_shared/phoneLine.ts", "utf8");
+    const out = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText;
+    const mod: { exports: Record<string, any> } = { exports: {} };
+    vm.runInNewContext(out, {
+      module: mod, exports: mod.exports, crypto: globalThis.crypto, TextEncoder, Uint8Array, Array,
+      Deno: { env: { get: (k: string) => env[k] } },
+    });
+    return mod.exports as { phoneToolSecret: () => Promise<string> };
+  };
+
+  it("prefers an explicit secret, otherwise derives a stable one from the ElevenLabs key", async () => {
+    expect(await load({ PHONE_AGENT_TOOL_SECRET: "explicit" }).phoneToolSecret()).toBe("explicit");
+    const a = await load({ ELEVENLABS_API_KEY: "key-a" }).phoneToolSecret();
+    expect(a).toMatch(/^[0-9a-f]{64}$/);
+    expect(await load({ ELEVENLABS_API_KEY: "key-a" }).phoneToolSecret()).toBe(a);
+    expect(await load({ ELEVENLABS_API_KEY: "key-b" }).phoneToolSecret()).not.toBe(a);
+    expect(await load({}).phoneToolSecret()).toBe("");
   });
 });
