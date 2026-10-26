@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useConversation } from '@elevenlabs/react';
 import { useAuth } from '@/contexts/AuthContext';
 import { invokeEdge } from '@/lib/edge/invokeFunction';
@@ -9,6 +9,8 @@ import { ALLISON_START_EVENT, ALLISON_TOOL_NAMES } from '@/lib/atlas/allisonConf
 import { asksToPauseNavigation } from '@/lib/atlas/atlasNavigation';
 import { ATLAS_START_EVENT } from '@/lib/atlas/atlasFlag';
 import { handoffBriefing, type AgentHandoff } from '@/lib/atlas/agentHandoff';
+import { pageOutline } from '@/lib/atlas/atlasPage';
+import { attentionBriefing, currentJourney, journeyBriefing, watchAttention } from '@/lib/atlas/journeyContext';
 import { Button } from '@/components/ui/button';
 import { MakeOfferModal } from '@/components/offers/MakeOfferModal';
 import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
@@ -18,6 +20,7 @@ import { Input } from '@/components/ui/input';
 
 export default function AllisonAgent() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const userRef = useRef(user); userRef.current = user;
   const [offer, setOffer] = useState<AtlasOfferDraft | null>(null);
@@ -49,7 +52,11 @@ export default function AllisonAgent() {
     catch (e) { return e instanceof Error && e.message === 'atlas_navigation_paused' ? 'Page control is paused; nothing opened.' : 'The action failed. Do not claim it succeeded. Offer the support form without automatically retrying.'; }
   }])), [tools]);
   const conversation = useConversation({ clientTools, micMuted: muted,
-    onConnect: () => { sessionRef.current.sendContextualUpdate(handoffBriefing('Atlas', handoff.current)); handoff.current = undefined; },
+    onConnect: () => {
+      sessionRef.current.sendContextualUpdate(handoffBriefing('Atlas', handoff.current));
+      handoff.current = undefined;
+      sessionRef.current.sendContextualUpdate(journeyBriefing(currentJourney(), pageOutline()));
+    },
     onMessage: ({ source, message }) => {
       if (mode === 'text' && message?.trim()) setTurns(previous => [...previous, { source, message: message.trim() }].slice(-40));
       if (source !== 'ai' && asksToPauseNavigation(message ?? '')) void tools.set_navigation({ paused: true });
@@ -64,6 +71,18 @@ export default function AllisonAgent() {
     window.dispatchEvent(new CustomEvent(ATLAS_START_EVENT, { detail: { mode, summary, navigationPaused } }));
   };
   const live = conversation.status === 'connected';
+  // Keep Allison aware of where the customer is: page changes, then what they point at or read.
+  const firstPage = useRef(true);
+  useEffect(() => {
+    if (!live) { firstPage.current = true; return; }
+    if (firstPage.current) { firstPage.current = false; return; }
+    const t = window.setTimeout(() => sessionRef.current.sendContextualUpdate(`The customer moved to ${location.pathname}${location.search}. ${journeyBriefing(currentJourney(), pageOutline())}`), 900);
+    return () => window.clearTimeout(t);
+  }, [location.pathname, location.search, live]);
+  useEffect(() => {
+    if (!live) return;
+    return watchAttention((item) => sessionRef.current.sendContextualUpdate(attentionBriefing(item)));
+  }, [live]);
   useEffect(() => {
     const start = async (event: Event) => {
       if (starting.current || sessionRef.current.status === 'connected') return;
@@ -76,12 +95,14 @@ export default function AllisonAgent() {
       handoff.current = typeof detail?.summary === 'string' ? { summary: detail.summary.slice(0, 1000), navigationPaused: detail.navigationPaused === true } : undefined;
       if (handoff.current) void tools.set_navigation({ paused: handoff.current.navigationPaused });
       setMode(nextMode);
+      // Fills {{page_opening}} in Allison's first message: what the customer is looking at right now.
+      const dynamicVariables = { page_opening: handoff.current ? 'Atlas filled me in, so let’s pick up right there.' : currentJourney().supportOpening };
       try {
         const { data, error } = await invokeEdge<{ token?: string; signedUrl?: string }>('atlas-agent-token', { body: { agent: 'allison', mode: nextMode } }, { retries: 0, timeoutMs: 15000 });
         if (attempt !== generation.current) return;
         if (error) throw new Error('unavailable');
-        if (nextMode === 'text' && data?.signedUrl) await sessionRef.current.startSession({ signedUrl: data.signedUrl, connectionType: 'websocket', textOnly: true });
-        else if (nextMode === 'voice' && data?.token) await sessionRef.current.startSession({ conversationToken: data.token, connectionType: 'webrtc' });
+        if (nextMode === 'text' && data?.signedUrl) await sessionRef.current.startSession({ signedUrl: data.signedUrl, connectionType: 'websocket', textOnly: true, dynamicVariables });
+        else if (nextMode === 'voice' && data?.token) await sessionRef.current.startSession({ conversationToken: data.token, connectionType: 'webrtc', dynamicVariables });
         else throw new Error('unavailable');
         if (attempt !== generation.current) await sessionRef.current.endSession();
       } catch { if (attempt === generation.current) setError('Allison is unavailable right now. Please use the support request or callback options on this page.'); }
@@ -99,7 +120,7 @@ export default function AllisonAgent() {
     {offer && user && <MakeOfferModal open onOpenChange={value => { if (!value) setOffer(null); }} listingId={offer.listingId} sellerId={offer.hostId} listingTitle={offer.title} askingPrice={offer.askingPrice} initialAmount={offer.amount} initialMessage={offer.message} />}
     <Dialog open={!!message} onOpenChange={value => { if (!value) setMessage(null); }}><DialogContent data-atlas-ui><DialogHeader><DialogTitle>Review your message</DialogTitle></DialogHeader>{message && <MessageHostForm key={`${message.listingId}:${message.message}`} listingId={message.listingId} hostId={message.hostId} listingTitle={message.title} initialMessage={message.message} />}</DialogContent></Dialog>
     <section data-atlas-ui role="region" aria-label="Allison AI customer support" className="fixed bottom-20 right-4 z-[70] max-h-[calc(100dvh-7rem)] w-[360px] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-border bg-card p-4 text-card-foreground shadow-2xl md:bottom-5">
-    <div className="flex items-center gap-3"><img src="/brand/vendibook-icon-48.png" alt="" className={`h-9 w-9 ${conversation.isSpeaking ? 'animate-pulse motion-reduce:animate-none' : ''}`} /><div><strong>Allison</strong><p className="text-xs text-muted-foreground">AI customer success · {busy ? 'Connecting…' : live ? 'Connected' : 'Offline'}</p></div></div>
+    <div className="flex items-center gap-3"><img src="/brand/vendibook-icon-48.png" alt="" className={`h-9 w-9 ${conversation.isSpeaking ? 'animate-pulse motion-reduce:animate-none' : ''}`} /><div><strong>Allison</strong><p className="text-xs text-muted-foreground">AI customer success · {busy ? 'Connecting…' : live ? 'Connected' : 'Offline'}</p><p className="text-[11px] text-muted-foreground">Sees the page you’re on and what you point at while connected.</p></div></div>
     {error && <p role="alert" className="my-3 text-sm">{error}</p>}
     {mode === 'text' && turns.length > 0 && <div role="log" aria-label="Conversation with Allison" aria-live="polite" className="my-3 max-h-64 space-y-3 overflow-y-auto text-sm">
       {turns.map((turn, index) => <p key={index} className="whitespace-pre-wrap break-words"><strong>{turn.source === 'ai' ? 'Allison' : 'You'}: </strong>{turn.message}</p>)}

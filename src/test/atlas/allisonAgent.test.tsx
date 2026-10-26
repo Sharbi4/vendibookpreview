@@ -4,7 +4,7 @@ import AllisonAgent from '@/components/support/AllisonAgent';
 import { ALLISON_START_EVENT } from '@/lib/atlas/allisonConfig';
 
 const mocks = vi.hoisted(() => ({ options: {} as any, request: vi.fn(), pause: vi.fn(), invoke: vi.fn(), start: vi.fn(), end: vi.fn() }));
-vi.mock('react-router-dom', () => ({ useNavigate: () => vi.fn() }));
+vi.mock('react-router-dom', () => ({ useNavigate: () => vi.fn(), useLocation: () => ({ pathname: '/', search: '' }) }));
 vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ user: null }) }));
 vi.mock('@/lib/edge/invokeFunction', () => ({ invokeEdge: mocks.invoke }));
 vi.mock('@/lib/atlas/atlasTools', () => ({ createAtlasTools: (deps: any) => ({ request_follow_up: mocks.request, set_navigation: (p: any) => { mocks.pause(p); deps.onNavigationChange(p.paused); } }) }));
@@ -53,6 +53,15 @@ it('retains paused navigation when receiving an Atlas handoff', async () => {
   await act(async () => { window.dispatchEvent(new CustomEvent(ALLISON_START_EVENT, { detail: { mode: 'text', summary: 'Payment question', navigationPaused: true } })); });
   expect(mocks.pause).toHaveBeenCalledWith({ paused: true });
   expect(mocks.start).toHaveBeenCalledTimes(1);
+  expect(mocks.start.mock.calls[0][0].dynamicVariables.page_opening).toContain('Atlas filled me in');
+});
+
+it('opens with a line about the page the customer is on', async () => {
+  window.history.replaceState({}, '', '/dashboard/transactions/42');
+  render(<AllisonAgent />);
+  await act(async () => { window.dispatchEvent(new CustomEvent(ALLISON_START_EVENT, { detail: { mode: 'text' } })); });
+  expect(mocks.start.mock.calls[0][0].dynamicVariables.page_opening).toContain("I see you're looking at an order");
+  window.history.replaceState({}, '', '/');
 });
 
 it('does not connect after the customer ends while a token is pending', async () => {

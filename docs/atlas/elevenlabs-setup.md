@@ -35,10 +35,15 @@ planned phase 2.
      launch, turn on **authentication** and set the Supabase secret
      `ATLAS_AGENT_ID`; the site then gets short-lived tokens from the
      `atlas-agent-token` function (rate-limited per visitor).
-8. **Security → Overrides**: allow **First message** override. It lets a
-   returning buyer hear "Welcome back…" instead of the intro when they pick
-   up a call (then set `VITE_ATLAS_ALLOW_OVERRIDES=true`). Without it, Atlas
-   still gets the earlier conversation, he just greets first.
+8. **First message**: Atlas's and Allison's first messages end with
+   `{{page_opening}}`, a line about the page the user is on ("I see you're
+   looking at the 2019 Step Van…", "Welcome back…" on a resumed call). The
+   site fills it per session (src/lib/atlas/journeyContext.ts); the admin
+   Sync button stores the generic opening as its placeholder default, so no
+   override permission is needed. During a live session both agents also get
+   "Journey:" and "Attention:" contextual updates (page, stage, and what the
+   user points at, focuses or stops scrolling at; never field values, and
+   only the page type on private pages).
 9. **Tools → System tools**: turn on **Skip turn**, so when a buyer says
    "hold on" or "give me a minute" Atlas waits silently instead of asking if
    they're still there.

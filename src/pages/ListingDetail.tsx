@@ -316,7 +316,7 @@ const ListingDetail = () => {
   if (faqSchema) schemas.push(faqSchema);
 
   return (
-    <div className="min-h-screen flex flex-col bg-sale-page text-foreground">
+    <div className="min-h-screen flex flex-col bg-sale-page text-foreground" data-atlas-listing={isRental ? 'rental' : 'sale'}>
 
       <SEO
         title={seoTitle}

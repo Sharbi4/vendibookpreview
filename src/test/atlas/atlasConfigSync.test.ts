@@ -46,6 +46,15 @@ describe('Atlas provider sync protects integrations', () => {
     expect((await handler(request())).status).toBe(409);
     expect(provider.mock.calls.some(([url, init]) => url.includes('/agents/') && init?.method === 'PATCH')).toBe(false);
   });
+  it('stores a default for the page_opening variable and drops malformed placeholders', async () => {
+    const body = { action: 'apply', agent: 'atlas', prompt: 'updated', first_message: "Hi, I'm Atlas. {{page_opening}}", tools: [{ type: 'client', name: 'search_listings' }],
+      dynamic_variable_placeholders: { page_opening: 'What city are you looking in?', 'Bad-Key': 'x', too_long: 'y'.repeat(501) } };
+    expect((await handler(new Request('https://example.test/config', { method: 'POST', headers: { Authorization: 'Bearer test' }, body: JSON.stringify(body) }))).status).toBe(200);
+    const patch = provider.mock.calls.find(([url, init]) => url.includes('/convai/agents/') && init?.method === 'PATCH');
+    const agent = JSON.parse(patch![1].body).conversation_config.agent;
+    expect(agent.first_message).toContain('{{page_opening}}');
+    expect(agent.dynamic_variables).toEqual({ dynamic_variable_placeholders: { page_opening: 'What city are you looking in?' } });
+  });
   it('still requires an actual admin session', async () => {
     isAdmin = false;
     expect((await handler(request())).status).toBe(403);

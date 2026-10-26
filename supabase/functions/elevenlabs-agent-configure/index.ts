@@ -157,6 +157,13 @@ serve(async (req) => {
     if (action === "apply") {
       const prompt = String(body?.prompt ?? "");
       const firstMessage = String(body?.first_message ?? "");
+      // Defaults for {{variables}} in the first message (e.g. page_opening), so a
+      // session that sends none still gets a sensible greeting.
+      const placeholders = Object.fromEntries(
+        Object.entries(body?.dynamic_variable_placeholders && typeof body.dynamic_variable_placeholders === "object" ? body.dynamic_variable_placeholders : {})
+          .filter(([k, v]) => /^[a-z_]{1,40}$/.test(k) && typeof v === "string" && v.length <= 500)
+          .slice(0, 10),
+      ) as Record<string, string>;
       const toolDefs = Array.isArray(body?.tools) ? body.tools : [];
       if (!prompt) return json({ error: "prompt_required" }, 400);
       // This sync only manages browser tools; existing provider integrations remain attached.
@@ -259,6 +266,7 @@ serve(async (req) => {
         conversation_config: {
           agent: {
             ...(firstMessage ? { first_message: firstMessage } : {}),
+            ...(Object.keys(placeholders).length ? { dynamic_variables: { dynamic_variable_placeholders: placeholders } } : {}),
             prompt: {
               ...integrationFields,
               prompt,

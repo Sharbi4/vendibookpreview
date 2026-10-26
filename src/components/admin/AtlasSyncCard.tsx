@@ -3,8 +3,8 @@ import { CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { ATLAS_FIRST_MESSAGE, ATLAS_SYSTEM_PROMPT, ATLAS_TOOL_DEFINITIONS } from '@/lib/atlas/atlasConfig';
-import { ALLISON_FIRST_MESSAGE, ALLISON_SYSTEM_PROMPT, ALLISON_TOOL_DEFINITIONS } from '@/lib/atlas/allisonConfig';
+import { ATLAS_DEFAULT_OPENING, ATLAS_FIRST_MESSAGE, ATLAS_SYSTEM_PROMPT, ATLAS_TOOL_DEFINITIONS, PAGE_OPENING_VAR } from '@/lib/atlas/atlasConfig';
+import { ALLISON_DEFAULT_OPENING, ALLISON_FIRST_MESSAGE, ALLISON_SYSTEM_PROMPT, ALLISON_TOOL_DEFINITIONS } from '@/lib/atlas/allisonConfig';
 
 type ToolResult = { name: string; ok: boolean; status: number; error?: unknown };
 type SyncResult = { agent_updated?: boolean; tools?: ToolResult[]; error?: string; detail?: string };
@@ -61,6 +61,7 @@ export default function AtlasSyncCard({ agent = 'atlas' }: { agent?: 'atlas' | '
         agent,
         prompt: agent === 'allison' ? ALLISON_SYSTEM_PROMPT : ATLAS_SYSTEM_PROMPT,
         first_message: agent === 'allison' ? ALLISON_FIRST_MESSAGE : ATLAS_FIRST_MESSAGE,
+        dynamic_variable_placeholders: { [PAGE_OPENING_VAR]: agent === 'allison' ? ALLISON_DEFAULT_OPENING : ATLAS_DEFAULT_OPENING },
         tools: definitions,
       },
     });

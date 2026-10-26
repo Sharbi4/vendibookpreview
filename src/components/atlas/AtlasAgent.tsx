@@ -9,6 +9,7 @@ import { asksToPauseNavigation } from '@/lib/atlas/atlasNavigation';
 import { ALLISON_START_EVENT } from '@/lib/atlas/allisonConfig';
 import { handoffBriefing, type AgentHandoff } from '@/lib/atlas/agentHandoff';
 import { ATLAS_PAGE_EVENT, pageOutline } from '@/lib/atlas/atlasPage';
+import { attentionBriefing, currentJourney, journeyBriefing, watchAttention } from '@/lib/atlas/journeyContext';
 import { createAtlasTools, liveListingIds, type AtlasListingCard, type AtlasOfferDraft, type AtlasSellerDraft } from '@/lib/atlas/atlasTools';
 import { useAuth } from '@/contexts/AuthContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -36,8 +37,6 @@ import './atlas.css';
 // Production always uses the rate-limited server handoff. Direct public agent
 // mode is available only with an explicit local-development override.
 const AGENT_ID = import.meta.env.DEV ? ((import.meta.env.VITE_ATLAS_AGENT_ID as string | undefined) ?? '').trim() : '';
-/** Set once "First message" overrides are allowed on the ElevenLabs agent. */
-const CAN_OVERRIDE_FIRST_MESSAGE = import.meta.env.VITE_ATLAS_ALLOW_OVERRIDES === 'true';
 
 type Phase = 'idle' | 'connecting' | 'live' | 'error';
 type Mode = 'voice' | 'text';
@@ -199,6 +198,7 @@ export default function AtlasAgent() {
       setPhase('live');
       conversation.sendContextualUpdate(handoffBriefing('Allison', incomingHandoff.current));
       incomingHandoff.current = undefined;
+      conversation.sendContextualUpdate(journeyBriefing(currentJourney(), pageOutline()));
       const resume = resumeRef.current;
       resumeRef.current = null;
       if (resume) window.setTimeout(() => conversation.sendContextualUpdate(buildResumeBriefing(resume, goneRef.current)), 50);
@@ -219,18 +219,36 @@ export default function AtlasAgent() {
 
   const live = phase === 'live' && conversation.status === 'connected';
 
-  // Keep Atlas aware of the page the buyer is looking at.
+  // Keep Atlas aware of the page the buyer is looking at and where they are in their journey.
+  const firstPage = useRef(true);
   useEffect(() => {
-    if (!live) return;
+    if (!live) { firstPage.current = true; return; }
+    // onConnect already described the page the call started on.
+    if (firstPage.current) { firstPage.current = false; return; }
     // Give the new page a moment to render, then tell Atlas what's on it.
     const t = window.setTimeout(() => {
       conversation.sendContextualUpdate(
-        `The buyer is now viewing ${location.pathname}${location.search}. ${pageOutline()} Use look_at_page before pointing at anything.`,
+        `The buyer moved to ${location.pathname}${location.search}. ${journeyBriefing(currentJourney(), pageOutline())} Use look_at_page before pointing at anything.`,
       );
     }, 900);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname, location.search, live]);
+
+  // What the buyer points at, focuses or stops scrolling at, only while the call is live.
+  useEffect(() => {
+    if (!live) return;
+    return watchAttention((item) => conversation.sendContextualUpdate(attentionBriefing(item)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [live]);
+
+  // The idle launcher's subtitle follows the page ("Questions about this listing?").
+  const [teaser, setTeaser] = useState('Find, compare and negotiate by voice.');
+  useEffect(() => {
+    // Again once listing data has loaded (sale vs rental is only known then).
+    const timers = [700, 3000].map((ms) => window.setTimeout(() => setTeaser(currentJourney().teaser), ms));
+    return () => timers.forEach((t) => window.clearTimeout(t));
+  }, [location.pathname, location.search]);
 
   // Audio-reactive ring around Atlas's avatar (voice calls only).
   useEffect(() => {
@@ -272,19 +290,24 @@ export default function AtlasAgent() {
       resumeRef.current = memory;
       setPhase('connecting');
       const textOnly = opts.mode === 'text';
-      const overrides = memory && CAN_OVERRIDE_FIRST_MESSAGE
-        ? { agent: { firstMessage: 'Welcome back! Picking up right where we left off.' } }
-        : undefined;
+      // Fills {{page_opening}} in Atlas's first message: what the buyer is looking at right now.
+      const dynamicVariables = {
+        page_opening: memory
+          ? 'Welcome back! Picking up right where we left off.'
+          : incomingHandoff.current
+            ? 'Allison filled me in, so let’s pick up right there.'
+            : currentJourney().salesOpening,
+      };
       try {
         // The SDK owns microphone permission and cleanup for voice sessions.
         if (AGENT_ID) {
-          await conversation.startSession({ agentId: AGENT_ID, connectionType: textOnly ? 'websocket' : 'webrtc', textOnly, overrides });
+          await conversation.startSession({ agentId: AGENT_ID, connectionType: textOnly ? 'websocket' : 'webrtc', textOnly, dynamicVariables });
         } else {
           const { data, error: edgeError } = await invokeEdge<{ token?: string; signedUrl?: string }>('atlas-agent-token', { body: { mode: opts.mode } }, { retries: 1, timeoutMs: 15000 });
           if (attempt !== generation.current) return;
           if (edgeError) throw new Error('unavailable');
-          if (textOnly && data?.signedUrl) await conversation.startSession({ signedUrl: data.signedUrl, connectionType: 'websocket', textOnly: true, overrides });
-          else if (!textOnly && data?.token) await conversation.startSession({ conversationToken: data.token, connectionType: 'webrtc', overrides });
+          if (textOnly && data?.signedUrl) await conversation.startSession({ signedUrl: data.signedUrl, connectionType: 'websocket', textOnly: true, dynamicVariables });
+          else if (!textOnly && data?.token) await conversation.startSession({ conversationToken: data.token, connectionType: 'webrtc', dynamicVariables });
           else throw new Error('unavailable');
         }
         if (attempt !== generation.current) await conversation.endSession();
@@ -473,7 +496,7 @@ export default function AtlasAgent() {
           <AtlasOrb size={42} />
           <div className="min-w-0 flex-1">
             <p className="atlas-widget-title">{saved ? 'Pick up where you left off?' : `${ATLAS_NAME} · AI sales assistant`}</p>
-            <p className="atlas-widget-sub">{saved ? `${ATLAS_NAME} remembers your call.` : 'Find, compare and negotiate by voice.'}</p>
+            <p className="atlas-widget-sub">{saved ? `${ATLAS_NAME} remembers your call.` : teaser}</p>
           </div>
           {!saved && (
             <button type="button" className="atlas-widget-min" onClick={() => setMinimized(true)} aria-label={`Minimize ${ATLAS_NAME}`}>
@@ -624,7 +647,7 @@ export default function AtlasAgent() {
           </>
         )}
       </div>
-      <p className="atlas-fine">Atlas is an AI sales assistant. Calls may be recorded to improve service.</p>
+      <p className="atlas-fine">Atlas is an AI sales assistant. During the call it sees the page you’re on and what you point at. Calls may be recorded to improve service.</p>
     </section>
     </>
   );
