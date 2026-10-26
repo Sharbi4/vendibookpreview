@@ -44,7 +44,7 @@ export const PLAYBOOKS: Record<GrowthSegment, Playbook> = {
     opener: 'Are you shopping for a food truck or trailer right now?',
     discovery: ['What kind of setup are you after, and what will you be serving?', 'Where are you located, and how far would you travel to pick one up?', 'Do you have a budget range and a timeline in mind?', 'Any must-haves — size, specific equipment, condition?'],
     value: 'Vendibook lists trucks and trailers from sellers across the US; you can search by area, price and equipment.',
-    objections: ['Financing -> one concise answer: “Financing options aren’t something I can approve; someone from the team can share what’s available.” No guarantees.', 'Is it legit / safe? -> payments go through Vendibook’s checkout on the website, never over the phone.'],
+    objections: ['Financing -> one concise answer: “Financing options aren’t something I can approve; someone from the team can share what’s available.” No guarantees.', 'Is it legit / safe? -> payments go through Vendibook’s checkout on the website, never over the phone.', 'Deposit / is my money protected? -> “There’s no deposit to buy. You pay through Vendibook and the payment is held; the seller isn’t paid until you’ve done the walkthrough and test drive, confirmed it matches the listing, and you both sign. If it isn’t as described, you don’t confirm and the purchase is canceled.” Never call it escrow, insurance or a condition guarantee.'],
     cta: 'Want to narrow it to a couple of options? I can check what’s listed right now, if that helps?',
   },
   renter: {

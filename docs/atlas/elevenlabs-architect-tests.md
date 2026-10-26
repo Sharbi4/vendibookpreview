@@ -6,6 +6,11 @@ button rewrites the prompt from `src/lib/atlas/atlasConfig.ts` /
 `allisonConfig.ts`, so direct edits are lost on the next sync. Copy its
 suggestions back into the code (or hand them to Claude), then Sync.
 
+**Pick the right agent in Architect.** Website Atlas is `agent_1501m4rhvkz9fsbs5ce89zvk2k7b`
+and Allison is `agent_8301m5nh7dq6e1x9wgqk2yx7k4pd`. "Atlas — Vendibook Outbound"
+(agent_6701…) is the cold-calling agent and is deliberately limited (read-only,
+no texts, offers or callbacks), so the website scenarios below don't apply to it.
+
 ## 1. Brief to paste into Architect
 
 > You are testing Vendibook's AI agents: Atlas (sales) and Allison (customer
