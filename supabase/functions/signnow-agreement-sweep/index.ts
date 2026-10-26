@@ -5,6 +5,11 @@
 // Purely idempotent: it only calls the same ensure* helpers used elsewhere,
 // which no-op when a live document already exists or the record is not yet
 // eligible. It never moves money and never changes payout state.
+//
+// It also catches signatures whose SignNow webhook never arrived (failed
+// subscription, missed delivery): open documents are checked against SignNow,
+// and any signing progress is replayed through signnow-webhook itself so the
+// same status, PDF and release logic runs exactly once per signing step.
 
 import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 import { corsHeaders, jsonResponse, unknownErrorResponse } from '../_shared/jsonError.ts';
@@ -13,6 +18,7 @@ import {
   ensureRentalAgreement,
 } from '../_shared/signnowDocuments.ts';
 import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
+import { getDocument } from '../_shared/signnow.ts';
 
 const SALE_STATUSES = ['paid', 'buyer_confirmed', 'seller_confirmed', 'completed'];
 const BOOKING_STATUSES = ['approved', 'completed'];
@@ -26,6 +32,57 @@ function svc() {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     { auth: { persistSession: false } },
   );
+}
+
+/** Open agreements older than this are checked against SignNow directly. */
+const SYNC_AFTER_MINUTES = 30;
+
+async function hmacHex(secret: string, body: string): Promise<string> {
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(body));
+  return Array.from(new Uint8Array(sig), (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function syncMissedSignatures(supabase: ReturnType<typeof svc>) {
+  const secret = Deno.env.get('SIGNNOW_WEBHOOK_SECRET');
+  if (!secret) return [];
+  const { data: open } = await supabase
+    .from('documents')
+    .select('id,signnow_document_id,status')
+    .in('status', ['sent', 'partially_signed'])
+    .is('superseded_by_document_id', null)
+    .lt('updated_at', new Date(Date.now() - SYNC_AFTER_MINUTES * 60_000).toISOString())
+    .gte('created_at', new Date(Date.now() - 2 * LOOKBACK_DAYS * 86_400_000).toISOString())
+    .order('updated_at', { ascending: true })
+    .limit(MAX_PER_RUN);
+
+  const synced: Record<string, unknown>[] = [];
+  for (const doc of open ?? []) {
+    if (!doc.signnow_document_id) continue;
+    try {
+      const remote = await getDocument(doc.signnow_document_id);
+      const invites: any[] = remote?.field_invites ?? [];
+      const fulfilled = invites.filter((i) => String(i.status ?? '').toLowerCase() === 'fulfilled').length;
+      const allSigned = invites.length > 0 && fulfilled === invites.length;
+      const behind = (doc.status === 'sent' && fulfilled > 0) || (allSigned && doc.status !== 'completed');
+      if (!behind) continue;
+      // One event id per signing step keeps replays idempotent in signnow_webhook_events.
+      const body = JSON.stringify({
+        event_id: `sweep-sync:${doc.signnow_document_id}:${fulfilled}`,
+        event: 'document.sync',
+        meta: { document_id: doc.signnow_document_id },
+      });
+      const res = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/signnow-webhook`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-neap-signature': await hmacHex(secret, body) },
+        body,
+      });
+      synced.push({ document_id: doc.id, fulfilled, of: invites.length, webhook_status: res.status });
+    } catch (e) {
+      console.error('[signnow-agreement-sweep] sync failed', doc.id, (e as Error).message);
+    }
+  }
+  return synced;
 }
 
 Deno.serve(async (req) => {
@@ -109,7 +166,10 @@ Deno.serve(async (req) => {
       }
     }
 
+    const synced = await syncMissedSignatures(supabase);
+
     console.log('[signnow-agreement-sweep]', {
+      synced: synced.length,
       sales: saleTargets.length,
       bookings: bookingTargets.length,
       created,
@@ -122,6 +182,7 @@ Deno.serve(async (req) => {
       created,
       skipped,
       results,
+      synced,
     });
   } catch (e) {
     console.error('[signnow-agreement-sweep]', e);
