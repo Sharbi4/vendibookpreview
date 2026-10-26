@@ -1,0 +1,21 @@
+import {describe,it,expect} from 'vitest';
+import {eligibility,pilotLimit,safeInfoLink,SEGMENTS,OPENERS} from '../../../supabase/functions/_shared/growthOutreach';
+const now=new Date('2026-10-26T19:00:00Z');
+const lead={timezone:'America/Phoenix',state:'AZ',attempts:0,suppressed:false};
+const consent={channel:'ai_call',status:'verified',source:'signed-record',accepted_at:'2026-10-20T19:00:00Z',reviewed_at:'2026-10-26T18:00:00Z',revoked_at:null,ai_marketing:true,vendibook_named:true,dnc_checked_at:'2026-10-26T18:00:00Z',jurisdiction_approved:true,window_start:10,window_end:18,timezone:'America/Phoenix',state:'AZ'};
+describe('growth outreach mandatory rules',()=>{
+ it('limits a pilot to ten prospects',()=>{expect(pilotLimit(10)).toBe(true);expect(pilotLimit(11)).toBe(false);expect(pilotLimit(0)).toBe(false);});
+ it('allows no repeat after one outreach attempt',()=>{expect(eligibility({...lead,attempts:1},consent,now)).toContain('One-attempt limit reached');});
+ it('blocks absent audited consent even with lead metadata',()=>{expect(eligibility(lead,null,now)).toContain('Verified written AI marketing consent required');});
+ it('separate SMS consent cannot authorize an AI call',()=>{expect(eligibility(lead,{...consent,channel:'sms_marketing'},now)).toContain('Verified written AI marketing consent required');});
+ it('blocks suppression',()=>{expect(eligibility({...lead,suppressed:true},consent,now)).toContain('Suppressed / do not call');});
+ it('requires named Vendibook written AI consent',()=>{expect(eligibility(lead,{...consent,vendibook_named:false},now)).toContain('Verified written AI marketing consent required');});
+ it('blocks revoked consent',()=>{expect(eligibility(lead,{...consent,revoked_at:now.toISOString()},now)).toContain('Verified written AI marketing consent required');});
+ it('requires jurisdiction review matching current state',()=>{expect(eligibility({...lead,state:'TX'},consent,now)).toContain('Jurisdiction review required');});
+ it('requires current DNC review',()=>{expect(eligibility(lead,{...consent,dnc_checked_at:'2026-10-20T18:00:00Z'},now)).toContain('Current DNC review required');});
+ it('blocks unknown timezone',()=>{expect(eligibility({...lead,timezone:'unknown'},consent,now)).toContain('Valid IANA timezone and state required');});
+ it('restricts calling to weekdays 10 through 18 local',()=>{expect(eligibility(lead,consent,new Date('2026-10-26T16:00:00Z'))).toContain('Outside reviewed local weekday calling window');expect(eligibility(lead,{...consent,dnc_checked_at:'2026-10-25T18:00:00Z'},new Date('2026-10-25T19:00:00Z'))).toContain('Outside reviewed local weekday calling window');});
+ it('accepts a fully reviewed lead during permitted hours',()=>{expect(eligibility(lead,consent,now)).toEqual([]);});
+ it('links are only secure Vendibook info pages, never payments',()=>{expect(safeInfoLink('https://vendibook.com/list')).toBe(true);expect(safeInfoLink('https://vendibook.com.evil.test/list')).toBe(false);expect(safeInfoLink('https://vendibook.com/checkout/pay')).toBe(false);});
+ it('has all seven requested segment branches',()=>{expect(SEGMENTS).toHaveLength(7);expect(Object.keys(OPENERS)).toEqual([...SEGMENTS]);});
+});

@@ -4014,6 +4014,277 @@ export type Database = {
           },
         ]
       }
+      growth_outreach_audit: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          details: Json
+          id: string
+          record_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          details?: Json
+          id?: string
+          record_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          details?: Json
+          id?: string
+          record_id?: string | null
+        }
+        Relationships: []
+      }
+      growth_outreach_batches: {
+        Row: {
+          audit: Json
+          created_at: string
+          created_by: string
+          founder_approved_at: string | null
+          founder_approved_by: string | null
+          id: string
+          lead_ids: string[]
+          provider_batch_id: string | null
+          status: string
+        }
+        Insert: {
+          audit: Json
+          created_at?: string
+          created_by: string
+          founder_approved_at?: string | null
+          founder_approved_by?: string | null
+          id?: string
+          lead_ids: string[]
+          provider_batch_id?: string | null
+          status?: string
+        }
+        Update: {
+          audit?: Json
+          created_at?: string
+          created_by?: string
+          founder_approved_at?: string | null
+          founder_approved_by?: string | null
+          id?: string
+          lead_ids?: string[]
+          provider_batch_id?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      growth_outreach_config: {
+        Row: {
+          agent_id: string | null
+          calling_enabled: boolean
+          created_at: string
+          founder_user_id: string | null
+          id: boolean
+        }
+        Insert: {
+          agent_id?: string | null
+          calling_enabled?: boolean
+          created_at?: string
+          founder_user_id?: string | null
+          id?: boolean
+        }
+        Update: {
+          agent_id?: string | null
+          calling_enabled?: boolean
+          created_at?: string
+          founder_user_id?: string | null
+          id?: boolean
+        }
+        Relationships: []
+      }
+      growth_outreach_consent: {
+        Row: {
+          accepted_at: string
+          ai_marketing: boolean
+          channel: string
+          created_at: string
+          dnc_checked_at: string | null
+          evidence_text: string
+          id: string
+          jurisdiction_approved: boolean
+          lead_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          revoked_at: string | null
+          source: string
+          state: string
+          status: string
+          timezone: string
+          vendibook_named: boolean
+          window_end: number
+          window_start: number
+        }
+        Insert: {
+          accepted_at: string
+          ai_marketing?: boolean
+          channel: string
+          created_at?: string
+          dnc_checked_at?: string | null
+          evidence_text: string
+          id?: string
+          jurisdiction_approved?: boolean
+          lead_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          revoked_at?: string | null
+          source: string
+          state: string
+          status?: string
+          timezone: string
+          vendibook_named?: boolean
+          window_end?: number
+          window_start?: number
+        }
+        Update: {
+          accepted_at?: string
+          ai_marketing?: boolean
+          channel?: string
+          created_at?: string
+          dnc_checked_at?: string | null
+          evidence_text?: string
+          id?: string
+          jurisdiction_approved?: boolean
+          lead_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          revoked_at?: string | null
+          source?: string
+          state?: string
+          status?: string
+          timezone?: string
+          vendibook_named?: boolean
+          window_end?: number
+          window_start?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "growth_outreach_consent_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "growth_outreach_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      growth_outreach_followups: {
+        Row: {
+          created_at: string
+          created_by: string
+          draft: string
+          id: string
+          lead_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          draft: string
+          id?: string
+          lead_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          draft?: string
+          id?: string
+          lead_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "growth_outreach_followups_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "growth_outreach_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      growth_outreach_leads: {
+        Row: {
+          attempts: number
+          business_name: string
+          context: Json
+          created_at: string
+          created_by: string
+          disposition: string
+          id: string
+          market: string
+          phone: string
+          prospect_name: string
+          record_id: string
+          segment: string
+          state: string
+          suppressed: boolean
+          timezone: string
+        }
+        Insert: {
+          attempts?: number
+          business_name?: string
+          context?: Json
+          created_at?: string
+          created_by: string
+          disposition?: string
+          id?: string
+          market?: string
+          phone: string
+          prospect_name?: string
+          record_id: string
+          segment: string
+          state?: string
+          suppressed?: boolean
+          timezone?: string
+        }
+        Update: {
+          attempts?: number
+          business_name?: string
+          context?: Json
+          created_at?: string
+          created_by?: string
+          disposition?: string
+          id?: string
+          market?: string
+          phone?: string
+          prospect_name?: string
+          record_id?: string
+          segment?: string
+          state?: string
+          suppressed?: boolean
+          timezone?: string
+        }
+        Relationships: []
+      }
+      growth_outreach_suppressions: {
+        Row: {
+          created_at: string
+          created_by: string
+          phone: string
+          reason: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          phone: string
+          reason: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          phone?: string
+          reason?: string
+        }
+        Relationships: []
+      }
       handoff_exceptions: {
         Row: {
           created_at: string
