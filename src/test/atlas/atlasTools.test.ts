@@ -420,7 +420,7 @@ describe('Atlas policy knowledge (owner master guide v5.3)', () => {
     expect(out.answers[0].answer).toMatch(/^No\. Vendibook does not offer Pay in Person/);
     const { GUIDE_FAQ } = await import('@/lib/atlas/atlasGuideFaq');
     expect(GUIDE_FAQ.some((e) => /\$0 .*commission|in person.*free/i.test(e.answer))).toBe(false);
-    expect(GUIDE_FAQ).toHaveLength(87);
+    expect(GUIDE_FAQ).toHaveLength(88);
   });
 
   it('knows account closure, FLIP insurance and financing from v5.3', async () => {

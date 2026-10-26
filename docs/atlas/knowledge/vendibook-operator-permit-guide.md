@@ -74,6 +74,8 @@ Questions an agent should suggest before money changes hands:
 - What is its loaded weight and GVWR? Is the tow vehicle rated for it?
 - Federal rules require a Class A CDL when the combined rating is 26,001 lb or more **and** the trailer rating is over 10,000 lb. Trailer brake thresholds vary by state; Virginia, for example, requires brakes at 3,000 lb actual gross weight.
 
+**Buying on Vendibook has no deposit; the payment is held.** The buyer pays the full price through Vendibook checkout and Vendibook holds it. At handoff the buyer inspects, tests and test-drives the unit while a walkthrough video is recorded. If it matches the listing, the buyer confirms and both sign the purchase agreement, and only then are the funds released to the seller. If the buyer finds an undisclosed problem or decides not to go ahead at the walkthrough, they don't confirm and the purchase is canceled under the Vendibook Guarantee. Agreeing to buy is a good-faith commitment.
+
 On Vendibook, rentals are paid by card through Square and sales follow the listing's checkout. Buyers can message sellers through Vendibook, and every message is reviewed before it's relayed.
 
 ## Shared and ghost kitchens
