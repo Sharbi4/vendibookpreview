@@ -21,7 +21,7 @@ const TOOLS = [
   { name: 'get_platform_facts', description: 'Current Vendibook fees and optional upgrade prices with an as_of date. Call before quoting any fee or price.', props: { topic: str('What the prospect asked about, e.g. selling fees, rental fees or memberships.') } },
   { name: 'search_listings', description: 'Search published public Vendibook listings. Returns at most five with title, price and city. Does not confirm date availability.', props: { query: str('Keywords such as coffee trailer or 16 ft truck. Leave empty if none.'), location: str('City and state or ZIP the prospect gave.'), mode: str('rent or sale.'), category: str('One of food_truck, food_trailer, ghost_kitchen, vendor_lot, vendor_space, or empty.'), max_price: { type: 'number', description: 'Maximum price in US dollars, if the prospect gave a budget.' } } },
   { name: 'get_listing', description: 'Details of one published listing returned by search_listings. Availability for dates is not verified.', props: { listing_id: str('The listing_id from search_listings. Never read it aloud.') } },
-  { name: 'get_prospect_context', description: 'Verified prior context for this call, only when a server-issued call scope exists. If unavailable, proceed with no prior context.', props: { call_scope: { type: 'string', description: 'Server-issued call scope token.', dynamic_variable: 'call_scope' } } },
+  { name: 'get_prospect_context', description: 'Verified prior context for this call, only when a server-issued call scope exists. If unavailable, proceed with no prior context.', props: { call_scope: { type: 'string', dynamic_variable: 'call_scope' } } },
 ];
 
 const agent = await el(`/convai/agents/${OUTBOUND_AGENT_ID}`);
