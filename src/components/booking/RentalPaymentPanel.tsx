@@ -10,6 +10,8 @@ import { trackRentalCheckout } from '@/lib/rentalCheckoutAnalytics';
 import PaymentFormSkeleton from '@/components/checkout/PaymentFormSkeleton';
 import CampusPartnerCodeField, { usePersistedPartnerCode } from '@/components/checkout/CampusPartnerCodeField';
 import { trackCampusPartner } from '@/lib/campusPartnerAnalytics';
+import { trackFacebookEvent } from '@/lib/facebookCAPI';
+import { hasMarketingConsent } from '@/lib/cookieConsent';
 
 /**
  * Rental payment step: card payment through Square only. The server picks the
@@ -143,8 +145,27 @@ export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
   const finish = useCallback((id: string) => {
     setPaid(true);
     trackRentalCheckout('payment_completed', { listingId, bookingId: id, flow, provider: 'square' });
+    // Report the server-confirmed paid rental to Facebook once per booking,
+    // only with marketing consent. Stable event id dedupes Pixel + CAPI.
+    try {
+      const key = `fb_rental_purchase_${id}`;
+      if (hasMarketingConsent() && !localStorage.getItem(key) && config?.amount_cents) {
+        localStorage.setItem(key, '1');
+        void trackFacebookEvent({
+          eventName: 'Purchase',
+          eventId: `rental-${id}`,
+          customData: {
+            value: config.amount_cents / 100,
+            currency: (config.currency || 'USD').toUpperCase(),
+            contentIds: [listingId],
+            contentType: 'product',
+            contentCategory: 'rental',
+          },
+        });
+      }
+    } catch { /* tracking must never block the paid state */ }
     onPaid(id);
-  }, [flow, listingId, onPaid]);
+  }, [flow, listingId, onPaid, config]);
 
   /** Server-verified status polling for a payment Square is still settling. */
   const poll = useCallback(async () => {
