@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 import { getCaller } from "../_shared/callerGuard.ts";
+import { adminAlertEmails, adminNoticeKey } from "../_shared/adminRecipients.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,7 +21,6 @@ interface CallbackRequest {
   preferredContact?: "phone" | "email";
 }
 
-const SUPPORT_EMAILS = ["support@vendibook.com"];
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -33,30 +33,67 @@ serve(async (req) => {
     }
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-    const summary = [
-      `Name: ${data.name}`,
-      data.phone && `Phone: ${data.phone}`,
-      data.email && `Email: ${data.email}`,
-      data.restaurantName && `Business: ${data.restaurantName}`,
-      data.scheduledDate && `Date: ${data.scheduledDate}`,
-      data.scheduledTime && `Time: ${data.scheduledTime}`,
-      data.preferredTime && `Preferred time: ${data.preferredTime}`,
-      data.preferredContact && `Preferred contact: ${data.preferredContact}`,
-      data.source && `Source: ${data.source}`,
-    ].filter(Boolean).join("\n");
+    const clip = (v: unknown, n: number) => (typeof v === "string" ? v.trim().slice(0, n) : "");
+    const name = clip(data.name, 200);
+    const phone = clip(data.phone, 40);
+    const email = clip(data.email, 320);
+    const pageUrl = clip((data as any).page_url, 500) || req.headers.get("referer")?.slice(0, 500) || null;
+    const lines = [
+      `Name: ${name}`,
+      phone && `Phone: ${phone}`,
+      email && `Email: ${email}`,
+      data.restaurantName && `Business: ${clip(data.restaurantName, 200)}`,
+      data.scheduledDate && `Date: ${clip(data.scheduledDate, 60)}`,
+      data.scheduledTime && `Time: ${clip(data.scheduledTime, 60)}`,
+      data.preferredTime && `Preferred time: ${clip(data.preferredTime, 120)}`,
+      data.preferredContact && `Preferred contact: ${clip(data.preferredContact, 20)}`,
+      data.source && `Source: ${clip(data.source, 120)}`,
+      pageUrl && `Page: ${pageUrl}`,
+    ].filter(Boolean) as string[];
 
-    // Notify support team (silently forwarded to owner)
-    for (const adminTo of SUPPORT_EMAILS) {
-      await invokeTransactionalEmail({
+    // Save every request FIRST so details are never lost, even if email fails.
+    const { data: ticket, error: ticketError } = await admin.from("support_tickets").insert({
+      source: "system",
+      submission_channel: "callback_form",
+      feature_area: "other",
+      category: "callback_request",
+      priority: "high",
+      title: `Callback request from ${name}`,
+      description: lines.join("\n"),
+      customer_name: name,
+      customer_email: email || null,
+      reply_email: email || null,
+      callback_phone_display: phone || null,
+      callback_phone_source: "website_form",
+      page_url: pageUrl,
+      browser_info: req.headers.get("user-agent")?.slice(0, 300) ?? null,
+    }).select("id, reference_code").single();
+    if (ticketError || !ticket) {
+      console.error("callback ticket insert failed", ticketError?.message ?? "no row");
+      return new Response(JSON.stringify({ error: "Unable to submit your request. Please try again or call us." }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    // Alert inboxes that actually receive mail (support@ alone is suppressed).
+    for (const adminTo of adminAlertEmails()) {
+      try {
+        await invokeTransactionalEmail({
           templateName: "support-reply",
           recipientEmail: adminTo,
-          idempotencyKey: `callback-internal-${data.name}-${adminTo}-${Date.now()}`,
+          idempotencyKey: adminNoticeKey(`callback-internal-${ticket.id}`, adminTo),
           templateData: {
-            name: "Vendibook Support",
-            subject: `Callback request from ${data.name}`,
-            message: summary,
+            firstName: "Vendibook Support",
+            subject: `Callback request from ${name}`,
+            ticketNumber: ticket.reference_code,
+            signedBy: "Vendibook callback form",
+            signedTitle: "Automatic notice",
+            bodyParagraphs: lines,
           },
         });
+      } catch (e) {
+        console.error("callback admin alert failed", e);
+      }
     }
 
     // Confirmation emails and automatic calls only for signed-in members;
