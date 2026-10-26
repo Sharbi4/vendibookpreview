@@ -13,7 +13,7 @@ import {Label} from '@/components/ui/label';
 import AdminSectionNav from '@/components/admin/AdminSectionNav';
 import SEO from '@/components/SEO';
 import {SEGMENTS,OPENERS,followupDraft,OUTCOMES} from '../../supabase/functions/_shared/growthOutreach';
-type Lead={id:string;record_id:string;business_name:string;market:string;segment:typeof SEGMENTS[number];state:string;timezone:string;blockers:string[];disposition:string;phone:string};
+type Lead={id:string;record_id:string;business_name:string;market:string;segment:typeof SEGMENTS[number];state:string;timezone:string;blockers:string[];disposition:string;phone:string;opener:string};
 type Consent={id:string;lead_id:string;channel:string;status:string};
 type Batch={id:string;status:string;lead_ids:string[]};
 type Snapshot={agent_id:string;calling_enabled:boolean;leads:Lead[];consents:Consent[];batches:Batch[];followups:{id:string;draft:string;status:string}[];metrics:{imported:number;eligible:number;calls_placed:number;sms_sent:number}};
