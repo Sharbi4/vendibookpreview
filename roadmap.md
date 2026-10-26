@@ -41,4 +41,4 @@
 - [open] /legal/subscription-terms still shows the old number — that stored legal document is frozen once published, so fixing it means publishing a new version of the document; awaiting owner go-ahead.
 - [open] The live phone-support agent prompt on ElevenLabs still quotes the old number — repo copies are updated; syncing the deployed prompt needs owner go-ahead.
 
-- [open] Mobile search UI audit: verify both search entry points, fix cramped header/touch targets, duplicate bottom controls and narrow-screen pagination; no search or payment logic changes.
+- [done] Mobile search UI audit: both search entry points checked at 320/390/430px; header, touch targets, filter sheet, duplicate bottom controls, titles and pagination improved; no search or payment logic changes.

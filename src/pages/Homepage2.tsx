@@ -1,3 +1,4 @@
+import '@/components/search/mobileSearch.css';
 import React, { useState, useEffect, useCallback, useRef } from 'react'; // v2
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -235,7 +236,7 @@ const Homepage2 = () => {
   };
 
   return (
-    <div className="min-h-screen relative overflow-x-hidden scroll-smooth">
+    <div data-mobile-search className="min-h-screen relative overflow-x-hidden scroll-smooth pb-20 md:pb-0">
       {/* ══ FULL-PAGE GRADIENT BACKGROUND ══ */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 bg-background" />
@@ -263,7 +264,8 @@ const Homepage2 = () => {
                   className="hidden lg:block absolute -inset-x-2 -inset-y-1 pointer-events-none rounded-[50%] overflow-hidden"
                   style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.35) 0%, rgba(170,210,255,0.2) 25%, rgba(255,180,200,0.16) 50%, rgba(200,255,220,0.14) 75%, rgba(255,220,180,0.24) 100%)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', boxShadow: 'inset 0 2px 6px rgba(255,255,255,0.4), inset 0 -2px 6px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05)' }}
                 />
-                <img src={vendibookFavicon} alt="Vendibook" className="h-11 w-11 object-contain lg:h-40 lg:w-auto drop-shadow-lg" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.25))' }} />
+                <img src="/brand/vendibook-logo-email-white.png" alt="Vendibook" className="h-11 w-32 object-contain lg:hidden" />
+                <img src={vendibookFavicon} alt="" className="hidden lg:block lg:h-40 lg:w-auto drop-shadow-lg" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.25))' }} />
               </Link>
 
               {/* Search bar — 3D glass field in header */}
@@ -277,7 +279,7 @@ const Homepage2 = () => {
                       onChange={(e) => setQuery(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                       onFocus={() => setShowTrending(true)}
-                      placeholder={isRecording ? 'Listening...' : 'Search by keyword or location...'}
+                      placeholder={isRecording ? 'Listening...' : 'Search trucks, trailers, cities'}
                       className="relative w-full h-12 lg:h-10 pl-8 pr-24 md:pr-12 rounded-xl bg-transparent text-primary-foreground text-base placeholder:text-white/50 focus:outline-none transition-all"
                     />
                     {/* Mobile: Geolocation button */}
