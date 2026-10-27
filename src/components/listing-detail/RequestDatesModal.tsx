@@ -619,10 +619,6 @@ export const RequestDatesModal: React.FC<RequestDatesModalProps> = ({
                         <span>{rentalDays} day{rentalDays !== 1 ? 's' : ''} × ${settings.priceDaily?.toLocaleString()}</span>
                         <span>${dailyPrice.toLocaleString()}</span>
                       </div>
-                      <div className="flex items-center justify-between text-sm text-muted-foreground mb-1">
-                        <span>Platform fee</span>
-                        <span>${dailyFees.renterFee.toLocaleString()}</span>
-                      </div>
                       <Separator className="my-2" />
                       <div className="flex items-center justify-between">
                         <span className="font-medium text-foreground">Est. total</span>
