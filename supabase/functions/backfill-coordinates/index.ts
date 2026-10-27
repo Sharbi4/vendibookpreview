@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { isAdminOrInternalCaller, internalOnlyResponse } from "../_shared/internalAuth.ts";
+import { googleGatewayConfigured, googleGeocode } from "../_shared/googleGateway.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -171,11 +172,7 @@ serve(async (req: Request) => {
   }
 
   try {
-    const GOOGLE_KEYS = [
-      Deno.env.get("GOOGLE_API_KEY"),
-      Deno.env.get("GOOGLE_MAPS_BROWSER_KEY"),
-      Deno.env.get("GOOGLE_MAPS_API_KEY"),
-    ].filter((k): k is string => !!k);
+    const GOOGLE_KEYS = googleGatewayConfigured() ? ["gateway"] : [];
     const MAPBOX_TOKEN = Deno.env.get("MAPBOX_PUBLIC_TOKEN") ?? "";
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
