@@ -36,12 +36,10 @@ async function geocodeWithGoogle(
   storedState: string,
   keys: string[],
 ): Promise<{ lat: number; lng: number; postal: string; locality: string; via: string } | null> {
-  const encoded = encodeURIComponent(address);
-  for (const key of keys) {
+  // Keys are no longer sent to Google directly; one gateway attempt is made.
+  for (const _ of keys.length ? [0] : []) {
     try {
-      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encoded}&key=${key}`;
-      const res = await fetch(url);
-      const data = await res.json();
+      const data = await googleGeocode({ address });
       if (data.status === "REQUEST_DENIED") {
         console.warn(`Google key rejected (${data.error_message ?? "denied"}), trying next key`);
         continue;

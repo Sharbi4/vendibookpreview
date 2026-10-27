@@ -4,6 +4,8 @@
  * server from the same coordinates.
  */
 
+import { googleGatewayConfigured, googleGeocode } from "./googleGateway.ts";
+
 export type LatLng = { lat: number; lng: number };
 
 // Read through globalThis so this module also type-checks and unit-tests
@@ -51,16 +53,11 @@ export async function geocodeAddress(address: string): Promise<LatLng | null> {
   const pair = trimmed.match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
   if (pair) return coerceCoords({ lat: pair[1], lng: pair[2] });
 
-  const apiKey = env("GOOGLE_MAPS_API_KEY");
-  if (apiKey) {
+  if (googleGatewayConfigured()) {
     try {
-      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(trimmed)}&key=${apiKey}&components=country:US`;
-      const response = await fetch(url);
-      if (response.ok) {
-        const data = await response.json();
-        const loc = data?.status === "OK" ? data.results?.[0]?.geometry?.location : null;
-        if (loc) return { lat: Number(loc.lat), lng: Number(loc.lng) };
-      }
+      const data = await googleGeocode({ address: trimmed, components: "country:US" });
+      const loc = data?.status === "OK" ? data.results?.[0]?.geometry?.location : null;
+      if (loc) return { lat: Number(loc.lat), lng: Number(loc.lng) };
     } catch {
       // fall through to Mapbox
     }
