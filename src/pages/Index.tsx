@@ -1,4 +1,5 @@
 import { PostPurchasePreview } from '@/components/home/PostPurchasePreview';
+import HomeBuyingBanner from '@/components/home/HomeBuyingBanner';
 import { buildHomepageSpotlight } from '@/lib/listings/homepageSpotlight';
 import { excludeTestListings } from '@/lib/excludeTestListings';
 import { Link } from 'react-router-dom';
@@ -174,6 +175,8 @@ const Index = () => {
             </div>
           </section>
         )}
+
+        <HomeBuyingBanner listings={saleListings} />
 
         <section className="hb-section hb-section-tint" aria-label="Just listed for sale">
           <div className="hb-wrap">

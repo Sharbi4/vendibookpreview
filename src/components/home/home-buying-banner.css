@@ -1,0 +1,37 @@
+.hb-buying-wrap { padding-top: 24px; padding-bottom: 24px; }
+.hb-buying-banner { position: relative; isolation: isolate; min-height: 228px; overflow: hidden; border-radius: 18px; background: #171a1c; color: #fff; box-shadow: 0 18px 44px -28px #10171988; }
+.hb-buying-photos { position: absolute; inset: 0 0 0 32%; overflow: hidden; }
+.hb-buying-photos img { position: absolute; width: 100%; height: 100%; object-fit: cover; object-position: center 55%; opacity: 0; transform: scale(1.035); transition: opacity 1.2s ease, transform 6.5s linear; }
+.hb-buying-photos img.is-active { opacity: 1; transform: scale(1); }
+.hb-buying-shade { position: absolute; inset: 0; background: linear-gradient(90deg, #171a1c 2%, #171a1cf5 26%, #171a1c99 48%, #171a1c08 75%), linear-gradient(0deg, #101719b8, transparent 55%); }
+.hb-buying-copy { position: relative; z-index: 1; padding: 27px 36px 30px; width: fit-content; }
+.hb-buying-eyebrow { margin: 0 0 10px; font-size: 10px; font-weight: 600; line-height: 1.5; letter-spacing: .18em; text-transform: uppercase; color: #e0d5cd; }
+.hb-buying-copy h2 { margin: 0; font-size: clamp(26px, 3vw, 37px); font-weight: 500; letter-spacing: -.035em; line-height: 1.04; color: #fff; }
+.hb-buying-cta { display: inline-flex; align-items: center; gap: 14px; min-height: 42px; margin-top: 19px; padding: 0 17px; border: 1px solid #ff925c; border-radius: 6px; background: linear-gradient(125deg, #d73d13, #ed5827); box-shadow: 0 5px 22px #f7552438, inset 0 1px #ffffff28; color: #fff; font-size: 12px; font-weight: 650; text-decoration: none; transition: box-shadow .25s, background .25s; }
+.hb-buying-cta:hover { background: #d84113; box-shadow: 0 6px 30px #f7552470; }
+.hb-buying-cta svg { transition: transform .25s; }
+.hb-buying-cta:hover svg { transform: translate(2px,-2px); }
+.hb-buying-caption { position: absolute; right: 30px; bottom: 50px; width: 34%; text-align: right; text-shadow: 0 1px 10px #000; pointer-events: none; }
+.hb-buying-caption span { font-size: 9px; letter-spacing: .16em; text-transform: uppercase; color: #fff; }
+.hb-buying-caption p { margin: 5px 0 0; font-size: 12px; line-height: 1.5; font-weight: 500; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hb-buying-controls { position: absolute; right: 22px; bottom: 9px; display: flex; align-items: center; }
+.hb-buying-dot, .hb-buying-pause { display: grid; place-items: center; width: 38px; height: 38px; padding: 0; border: 0; background: transparent; color: #fff; cursor: pointer; }
+.hb-buying-dot span { height: 2px; width: 22px; background: #ffffff65; transition: background .3s; }
+.hb-buying-dot[aria-pressed=true] span { background: #ff794b; }
+.hb-buying-pause:disabled { opacity: .5; cursor: default; }
+.hb-buying-banner a:focus-visible, .hb-buying-banner button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+@media (max-width: 640px) {
+  .hb-buying-banner { min-height: 294px; border-radius: 14px; }
+  .hb-buying-photos { left: 0; }
+  .hb-buying-shade { background: linear-gradient(90deg,#171a1cc9, #171a1c12), linear-gradient(0deg,#171a1cf2 0%,#171a1c85 42%,#171a1c10 100%); }
+  .hb-buying-copy { padding: 92px 22px 30px; }
+  .hb-buying-copy h2 { font-size: 30px; }
+  .hb-buying-eyebrow { font-size: 9px; }
+  .hb-buying-cta { margin-top: 15px; font-size: 11px; }
+  .hb-buying-caption { top: 18px; right: 18px; bottom: auto; width: 75%; }
+  .hb-buying-caption p { font-size: 10px; }
+  .hb-buying-controls { right: 12px; bottom: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hb-buying-banner *, .hb-buying-banner *::before { transition: none !important; transform: none !important; }
+}
