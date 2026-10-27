@@ -6,6 +6,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Phone, Mail, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { FunctionsHttpError } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 
 interface WhiteGlovePopupProps {
@@ -106,7 +107,11 @@ export const WhiteGlovePopup = ({ delayMs = 15000 }: WhiteGlovePopupProps) => {
       }, 3000);
     } catch (error) {
       console.error('Failed to submit white glove request:', error);
-      toast.error('Something went wrong. Please try again.');
+      // Surface the server's specific message (e.g. a missing detail) when there is one.
+      const serverMessage = error instanceof FunctionsHttpError
+        ? (await error.context.json().catch(() => null))?.error
+        : null;
+      toast.error(typeof serverMessage === 'string' && serverMessage ? serverMessage : 'Something went wrong. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
