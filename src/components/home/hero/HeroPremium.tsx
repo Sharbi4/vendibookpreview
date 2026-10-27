@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import HeroListingRotator from './HeroListingRotator';
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 import { trackLeadEvent } from '@/lib/leadTracking';
-import heroPhoto from '@/assets/how-buying-hero.jpg';
+import heroPhoto from '@/assets/home-hero-food-truck-night.jpg.asset.json';
 import './hero-premium.css';
 
 /**
