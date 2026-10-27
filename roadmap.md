@@ -1,5 +1,7 @@
 # Roadmap
 
+- [open] Strengthen existing food truck rental pages: accurate search snippets, useful comparison guidance, canonical internal links and browser/test verification; preview only.
+
 - [done] Focused outbound Atlas prompt/source/docs corrected and synced to same ID; protected agent/phone readback unchanged. Further outbound work stopped at owner request; no calls/SMS/publication.
 - [done] Sofia Pro Soft confirmed across proportional text and top headings; removed cramped legacy spacing, verified actual heading font and desktop/mobile search filters without overflow. Preview only.
 
