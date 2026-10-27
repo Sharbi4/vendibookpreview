@@ -104,7 +104,7 @@ const HeroPremium = ({ showGoogleSignIn = true, showRotator = true, guaranteeHre
           </Link>
           <p className="hp-hero-actions-note">
             Free to list.{' '}
-            <Link to="/how-purchasing-works" data-cta-location="home_hero_how_buying">
+            <Link to="/buy-on-vendibook" data-cta-location="home_hero_how_buying">
               How buying works<ArrowRight aria-hidden="true" />
             </Link>
           </p>
