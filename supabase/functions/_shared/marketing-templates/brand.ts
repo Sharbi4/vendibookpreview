@@ -18,6 +18,8 @@ import {
   SITE_URL,
   SUPPORT_EMAIL,
   SUPPORT_HOURS,
+  SUPPORT_PHONE,
+  SUPPORT_PHONE_HREF,
 } from "../email-brand/tokens.ts";
 import { brandHeadHtml, ctaButtonHtml, injectBrandHead } from "../email-brand/bulletproof.ts";
 
@@ -112,7 +114,7 @@ export function marketingFooter(opts: {
   <img src="${esc(logo)}" alt="Vendibook" width="140" style="display:inline-block;width:140px;max-width:140px;height:auto;border:0;margin:0 0 14px;" />
   ${opts.note ? `<p style="${small}margin:0 0 12px;">${esc(opts.note)}</p>` : ""}
   <p style="${small}margin:0 0 12px;">
-    Questions? <a href="mailto:${SUPPORT_EMAIL}" style="${link}">${SUPPORT_EMAIL}</a> · ${esc(SUPPORT_HOURS)}
+    Questions? <a href="mailto:${SUPPORT_EMAIL}" style="${link}">${SUPPORT_EMAIL}</a> · <a href="${SUPPORT_PHONE_HREF}" style="${link}">${SUPPORT_PHONE}</a> · ${esc(SUPPORT_HOURS)}
   </p>
   <p style="${small}margin:0 0 12px;">
     <a href="${esc(opts.unsubscribeUrl)}" style="${link}">Unsubscribe</a> ·

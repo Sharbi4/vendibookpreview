@@ -11,6 +11,7 @@ import * as React from 'npm:react@18.3.1'
 import { Hr, Img, Section, Text } from 'npm:@react-email/components@0.0.22'
 import { EmailButton } from '../email-brand/components.tsx'
 import { s, SITE_URL, LOGO_URL, SUPPORT_PHONE } from './_styles.ts'
+import { SUPPORT_PHONE_HREF } from '../email-brand/tokens.ts'
 
 // Editorial spot illustrations — flat hand-drawn, dark charcoal + orange.
 // Hosted on the email-assets bucket so they load in every inbox.
@@ -352,7 +353,7 @@ export const BrandFooter = ({ role }: { role?: Role } = {}) => {
       </Text>
 
       <Text style={{ fontSize: '11px', color: '#78716c', margin: '12px 0 0' }}>
-        Vendibook · Questions? {SUPPORT_PHONE} or support@vendibook.com
+        Vendibook · Questions? <a href={SUPPORT_PHONE_HREF} style={{ color: 'inherit' }}>{SUPPORT_PHONE}</a> or support@vendibook.com
       </Text>
     </Section>
   )

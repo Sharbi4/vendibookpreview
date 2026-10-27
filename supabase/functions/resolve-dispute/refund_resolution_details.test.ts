@@ -150,7 +150,7 @@ async function buildResolveDisputePayloads(
       alert: { tone, title: "Resolution", body: resolutionText },
       ctaLabel: "View dashboard",
       ctaUrl: "https://vendibook.com/dashboard",
-      footnote: "Questions? Email support@vendibook.com or call (725) 755-9598.",
+      footnote: "Questions? Email support@vendibook.com or call (866) 690-6227.",
     },
   });
 
