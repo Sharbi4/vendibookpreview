@@ -956,10 +956,6 @@ export const VendorSpaceBookingModal: React.FC<VendorSpaceBookingModalProps> = (
                     <span>Base price</span>
                     <span>${rentalInfo.basePrice.toLocaleString()}</span>
                   </div>
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>Service fee</span>
-                    <span>${rentalInfo.serviceFee.toLocaleString()}</span>
-                  </div>
                 </div>
               )}
 
