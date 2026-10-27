@@ -377,20 +377,10 @@ Deno.serve(async (req) => {
       collect(stateRows);
     }
 
-    // Owner decision 2026-10-26: currently featured listings that match the
-    // shopper's other filters appear at the top of location searches even when
-    // they are outside the searched area.
+    // Owner decision 2026-10-27 (reverses 2026-10-26): location searches only
+    // return listings inside the searched area. Featured listings still rank
+    // first, but only when they are within the distance the shopper chose.
     const outOfAreaFeaturedIds = new Set<string>();
-    if (hasCoords || hasStructuredLocation) {
-      const { data: featRows, error: featErr } = await buildBaseQuery()
-        .eq('featured_enabled', true)
-        .gt('featured_expires_at', new Date().toISOString())
-        .limit(50);
-      if (featErr) throw featErr;
-      for (const r of featRows ?? []) {
-        if (!rowsById.has(r.id)) { rowsById.set(r.id, r); outOfAreaFeaturedIds.add(r.id); }
-      }
-    }
 
     const listings = [...rowsById.values()];
     void fetchRadius;
