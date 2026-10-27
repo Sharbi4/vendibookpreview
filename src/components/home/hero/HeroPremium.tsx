@@ -55,8 +55,8 @@ const HeroPremium = ({ showGoogleSignIn = true, showRotator = true, guaranteeHre
         className="hp-hero-photo"
         src={heroPhoto.url}
         alt=""
-        width={1600}
-        height={912}
+        width={1920}
+        height={1280}
         // @ts-expect-error fetchpriority is valid HTML; React 18 only accepts the lowercase attribute
         fetchpriority="high"
         loading="eager"
