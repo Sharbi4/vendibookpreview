@@ -111,18 +111,18 @@ export const CATEGORY_INDEX_CONFIGS: CategoryIndexConfig[] = [
     categories: ['food_truck', 'food_trailer'],
     mode: 'rent',
     h1: 'Food Trucks & Food Trailers for Rent',
-    title: 'Food Trucks for Rent | Food Trailers for Rent | Vendibook',
+    title: 'Food Trucks for Rent to Operate | Compare Rentals | Vendibook',
     description:
-      'Rent a food truck or food trailer for your business. Browse short-term, monthly, and long-term equipment rentals listed by owners nationwide on Vendibook.',
+      'Find a food truck for rent to operate your business. Compare owner-listed trucks and trailers, equipment, locations and rental rates. Check terms for your dates.',
     intro:
-      'Find food trucks and food trailers available to rent for business use, including short-term, monthly, and long-term rental opportunities. Every listing is owner-managed with photos, equipment details, transparent rates, and direct messaging — so you can compare options and book with confidence.',
+      'Looking to rent a food truck to sell food? Compare owner-listed food trucks and concession trailers for your own business, pop-up or seasonal operation. Start with location and kitchen equipment, then check the listed rates and ask the host to confirm availability, minimum rental period and requirements for your dates.',
     clarification:
       'This is equipment rental: you rent the truck or trailer and operate it yourself for your own food business. Looking to hire a truck to cater an event instead? Contact the owner through any listing to ask about staffed services.',
     sections: [
       {
         heading: 'Food trucks for rent',
         paragraphs: [
-          'Renting a complete food truck is the fastest way to get a mobile kitchen on the road. Operators use rental trucks to test a concept, cover a seasonal rush, or keep revenue flowing while a permanent build is completed. Each listing shows the kitchen equipment, power and water setup, and the owner\'s rates before you ever send a message.',
+          'A self-propelled food truck combines a vehicle and mobile kitchen. Before renting, compare the listed cooking equipment with your menu and confirm refrigeration, power, water, driving requirements and maintenance responsibilities with the host. Renting equipment does not include permission to operate at a particular site.',
         ],
         links: [
           { href: '/search?category=food_truck&mode=rent', label: 'Search food trucks for rent' },
@@ -152,7 +152,7 @@ export const CATEGORY_INDEX_CONFIGS: CategoryIndexConfig[] = [
       {
         heading: 'Long-term rentals & leasing',
         paragraphs: [
-          'Need equipment for a full season or longer? Long-term food truck rental and lease-style arrangements are available on select listings. Terms, mileage expectations, and maintenance responsibilities are agreed between you and the owner, and are documented in the booking before payment. A marketplace rental is not a financing lease — if ownership is the goal, compare purchase and financing options below.',
+          'Need a food truck for a full season or longer? Ask the host whether the listing supports your rental period and request terms for mileage, maintenance, insurance and early return. Do not assume a daily rate can be multiplied into a monthly quote. A rental does not transfer ownership or imply a rent-to-own agreement; compare purchase and financing options if ownership is your goal.',
         ],
       },
       {
@@ -193,11 +193,11 @@ export const CATEGORY_INDEX_CONFIGS: CategoryIndexConfig[] = [
       },
       {
         q: 'Can I rent a food trailer instead of a truck?',
-        a: 'Yes. Food trailers and concession trailers are listed alongside trucks. Trailers typically cost less and tow behind a standard vehicle — check each listing for towing requirements and delivery options.',
+        a: 'Yes. Compare the food trailers and concession trailers listed here with trucks for the same dates. Confirm loaded weight, tow-vehicle capacity, hitch and brake requirements, or ask the host whether delivery is available. Neither delivery nor towing compatibility is guaranteed.',
       },
       {
         q: 'Can I rent a food truck monthly?',
-        a: 'Often, yes. Rental terms are set by each owner, and many offer weekly and monthly arrangements alongside daily rates. Review the terms on the individual listing or message the owner to discuss a monthly rental.',
+        a: 'Monthly availability depends on the listing and your dates. Check any listed monthly rate, minimum rental period and cancellation terms, then ask the host to confirm the complete quote and responsibilities. A daily rate is not a monthly quote.',
       },
       {
         q: 'How much does it cost to rent a food truck?',
