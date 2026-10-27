@@ -582,7 +582,7 @@ const STATE_RENT_SPECS: StateRentSpec[] = [
       { slug: 'san-antonio-tx', name: 'San Antonio' },
     ],
     context:
-      'Texas is one of the strongest mobile food markets in the country, and rental demand concentrates in the Houston, Dallas–Fort Worth, Austin, and San Antonio corridors. As of July 1, 2026, Texas mobile food vendors operate under a single statewide DSHS license instead of county-by-county permits — so equipment rented in one Texas metro can trade across the state with far less paperwork.',
+      'Compare Houston, Dallas, Austin and San Antonio rental searches below. Confirm where the equipment is located, whether pickup or delivery fits your plan, and the permits and site permission required for your operation before reserving.',
   },
   {
     stateName: 'Florida',
@@ -592,14 +592,14 @@ const STATE_RENT_SPECS: StateRentSpec[] = [
       { slug: 'tampa-fl', name: 'Tampa' },
     ],
     context:
-      'Florida\'s year-round event and tourism calendar makes it a natural market for renting a food truck or trailer — operators commonly rent equipment for seasonal peaks, festivals, and beach-market pop-ups before committing to a purchase. Miami and Tampa are the state\'s most active rental corridors on Vendibook.',
+      'Use the Miami and Tampa rental searches to compare locations. For an event or seasonal operation, confirm your dates, site access, power requirements and any delivery arrangements with the host before reserving.',
   },
   {
     stateName: 'California',
     stateCode: 'CA',
     metros: [{ slug: 'los-angeles-ca', name: 'Los Angeles' }],
     context:
-      'California is the birthplace of modern food truck culture, and Los Angeles is one of Vendibook\'s most active rental markets. Operators rent trucks and trailers to test concepts, cover events, and run monthly arrangements while permanent builds are completed. California operators should confirm county health permits and commissary agreements before booking.',
+      'Explore the Los Angeles truck and trailer searches below. Confirm the equipment supports your menu and ask the relevant local authorities about health permits, commissary requirements and operating locations before booking.',
   },
 ];
 
@@ -610,7 +610,7 @@ const stateRentFaqs = (stateName: string) => [
   },
   {
     q: `Can I rent a food truck monthly in ${stateName}?`,
-    a: `Often, yes. Rental terms are set by each owner, and many ${stateName} listings offer weekly and monthly arrangements alongside daily rates. Review the terms on the individual listing or message the owner to discuss a monthly rental.`,
+    a: `Check each listing for monthly rates and minimum rental periods, then ask the host to confirm availability and the full quote for your dates in ${stateName}. Monthly terms are not offered on every listing.`,
   },
   {
     q: `How much does it cost to rent a food truck in ${stateName}?`,
@@ -618,7 +618,7 @@ const stateRentFaqs = (stateName: string) => [
   },
   {
     q: `Do I need permits to operate a rented food truck in ${stateName}?`,
-    a: `Yes — operating permits are tied to you as the operator, not to the equipment. Most ${stateName} operators need a mobile food vendor permit, health-department certification, and a commissary agreement. Vendibook's PermitPath tool walks through the steps for your city.`,
+    a: `Requirements depend on your business, menu and operating location in ${stateName}. Renting equipment does not grant permission to sell food or use a site. Confirm permits, food-safety credentials and any commissary requirements with the relevant authorities; use PermitPath as a planning checklist.`,
   },
   {
     q: `Can I list my food truck for rent in ${stateName}?`,
@@ -634,9 +634,9 @@ CITY_CATEGORY_CONFIGS.push(
     mode: 'rent',
     state: { name: s.stateName, code: s.stateCode },
     h1: `Food Trucks & Food Trailers for Rent in ${s.stateName}`,
-    title: `Food Trucks & Food Trailers for Rent in ${s.stateName} | Vendibook`,
-    description: `Browse food trucks and food trailers for rent in ${s.stateName}. Compare available rental listings, rates, equipment, and monthly terms from owners on Vendibook.`,
-    intro: `Find food trucks and food trailers available to rent across ${s.stateName} for business use — short-term, monthly, and long-term rentals listed directly by owners. ${s.context} When statewide inventory is limited, this page also surfaces nationwide rental listings so you can compare more options.`,
+    title: `Food Trucks for Rent in ${s.stateName} | Compare Equipment | Vendibook`,
+    description: `Find food trucks and trailers for rent in ${s.stateName} for your business. Compare equipment, locations and listed rates; confirm dates and terms with the host.`,
+    intro: `Looking to rent a food truck to operate your business in ${s.stateName}? Compare owner-listed trucks and trailers by equipment, location and rental period. ${s.context} Wider-area options, when shown, are labelled separately and are not local availability.`,
     clarification:
       'This is equipment rental: you rent the truck or trailer and operate it yourself for your own food business. Rental terms are set by each owner and shown on the listing.',
     sections: [
@@ -649,6 +649,13 @@ CITY_CATEGORY_CONFIGS.push(
           { href: `/rent/food-trucks/${m.slug}`, label: `Food trucks for rent in ${m.name}` },
           { href: `/rent/food-trailers/${m.slug}`, label: `Food trailers for rent in ${m.name}` },
         ]),
+      },
+      {
+        heading: 'Before reserving rental equipment',
+        paragraphs: [
+          `Compare the complete quote for the same dates, including any delivery, cleaning, fuel, insurance requirements and deposit. Confirm equipment, pickup and return times, maintenance responsibilities and cancellation terms with the host. A date inquiry is not a confirmed booking.`,
+        ],
+        links: [{ href: '/tools/permitpath', label: 'Plan your permits and operating requirements' }],
       },
       {
         heading: 'Should you rent or buy?',

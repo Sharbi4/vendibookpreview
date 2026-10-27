@@ -231,19 +231,19 @@ export const generateCityCategoryFAQSchema = (
         },
         {
           q: `Do I need a license to operate a ${lowerSingular} in ${city}?`,
-          a: `Yes — operating a ${lowerSingular} in ${city}, ${state} requires a mobile food vendor permit, food handler certification, and (in most cases) a business license. Vendibook hosts can guide you through local ${state} requirements.`,
+          a: `Requirements depend on your business, menu and operating location in ${city}, ${state}. Renting equipment does not grant permits or site permission. Confirm food-safety, licensing and any commissary requirements with the relevant authorities before operating.`,
         },
         {
           q: `Can I book a ${lowerSingular} in ${city} instantly?`,
-          a: `Many ${city} listings on Vendibook support Instant Book, allowing you to reserve a ${lowerSingular} immediately without waiting for host approval. Look for the ⚡ Instant badge on listings.`,
+          a: `Only listings marked Instant Book offer that booking option. Other listings require host approval. Check the listing for your dates and review the booking status; sending an inquiry does not confirm a reservation.`,
         },
         {
           q: `What\'s included when I rent a ${lowerSingular} in ${city}?`,
-          a: `Most ${city} rentals include the fully-equipped ${lowerSingular}, basic kitchen equipment, propane/utility hookup guidance, and host support. Specific inclusions vary — check each listing for details on equipment, generators, and delivery options.`,
+          a: `Inclusions vary by listing. Review the equipment list and confirm refrigeration, generators, power, water, fuel, cleaning, insurance requirements and any deposit with the host. Do not assume a fully equipped kitchen or delivery is included.`,
         },
         {
           q: `Can ${city} ${lowerLabel} be delivered to my event location?`,
-          a: `Yes — many Vendibook hosts in ${city}, ${state} offer delivery within a defined radius for an additional fee. Filter by "delivery available" or message the host directly to arrange transport.`,
+          a: `Delivery depends on the listing, destination and dates. Ask the host to confirm whether delivery is offered, the service area, access requirements and the total charge before reserving. Delivery is not guaranteed.`,
         },
         {
           q: `Is renting cheaper than buying a ${lowerSingular} in ${city}?`,

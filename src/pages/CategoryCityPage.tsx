@@ -72,33 +72,39 @@ const RENTAL_CITY_OVERRIDES: Record<string, RentalCityOverride> = {
     h1: 'Food Trailers for Rent in Miami, FL',
     title: 'Food Trailers for Rent in Miami, FL | Concession Trailer Rentals | Vendibook',
     description:
-      'Rent a food trailer in Miami, FL for your business. Compare owner-listed concession trailers with photos, equipment, rates, and daily, weekly, or monthly terms.',
+      'Compare food trailers for rent in Miami, FL for your business. Review equipment, photos and listed rates; confirm dates and towing or delivery with the host.',
     intro:
-      'Miami is one of Vendibook\'s most active trailer rental markets. Browse food trailers and concession trailers available to rent for events, pop-ups, markets, and full-time operations across Miami-Dade. Every listing is owner-managed with photos, equipment details, and transparent rates — daily, weekly, and monthly terms are set per listing.',
+      'Compare owner-listed concession trailers for your Miami food business. Check the listed equipment and location, then confirm dates, minimum rental period, towing or delivery arrangements and operating requirements with the host.',
   },
   'food-trailers/los-angeles-ca': {
     h1: 'Food Trailers for Rent in Los Angeles, CA',
     title: 'Food Trailers for Rent in Los Angeles, CA | Vendibook',
     description:
-      'Rent a food trailer in Los Angeles, CA. Owner-listed concession trailers with photos, equipment, transparent rates, and flexible daily to monthly terms.',
+      'Compare food trailers for rent in Los Angeles for your business. Review photos, equipment and listed rates; confirm dates and towing or delivery with the host.',
     intro:
-      'Rent a food trailer in Los Angeles for your next market, pop-up, or full-time operation. LA\'s year-round event calendar makes trailer rentals a practical way to test or expand a mobile food concept. Compare owner-listed trailers with equipment details and rates before you message a host.',
+      'Compare concession trailers for your Los Angeles food business, pop-up or seasonal operation. Check kitchen equipment against your menu and confirm the tow vehicle, pickup or delivery plan, rental dates and local operating requirements before reserving.',
   },
   'food-trucks/los-angeles-ca': {
     h1: 'Food Trucks for Rent in Los Angeles, CA',
     title: 'Food Trucks for Rent in Los Angeles, CA | Vendibook',
     description:
-      'Rent a food truck in Los Angeles, CA for your business. Browse owner-listed trucks with kitchen equipment, rates, and daily, weekly, or monthly rental terms.',
+      'Find a food truck for rent in Los Angeles for your business. Compare equipment and listed rates, then confirm dates, pickup and rental terms with the host.',
     intro:
-      'Los Angeles is the birthplace of modern food truck culture and one of Vendibook\'s strongest rental markets. Rent a fully equipped food truck to test a concept, cover a seasonal rush, or operate while your build is completed. Terms are set by each owner — review the listing or message the host about monthly arrangements.',
+      'Looking to rent a food truck to sell food in Los Angeles? Compare the listed kitchen equipment and rates for your business. Ask the host to confirm available dates, driving and insurance requirements, maintenance responsibilities and any monthly terms.',
+  },
+  'food-trailers/houston-tx': {
+    h1: 'Food Trailers for Rent in Houston, TX',
+    title: 'Food Trailers for Rent in Houston, TX | Vendibook',
+    description: 'Find food trailers for rent in Houston for your business. Compare concession trailer equipment and listed rates; confirm dates, towing and pickup with the host.',
+    intro: 'Compare concession trailers for your Houston food business. Check the kitchen layout and equipment against your menu, then confirm dates, loaded weight, tow-vehicle requirements and pickup or delivery arrangements with the host.',
   },
   'food-trucks/houston-tx': {
     h1: 'Food Trucks for Rent in Houston, TX',
     title: 'Food Trucks for Rent in Houston, TX | Vendibook',
     description:
-      'Rent a food truck in Houston, TX for your business. Owner-listed trucks with kitchen equipment, transparent rates, and daily, weekly, or monthly terms.',
+      'Find a food truck for rent in Houston, TX to operate your business. Compare listed equipment and rates; confirm rental dates and requirements with the host.',
     intro:
-      'Houston is a food truck capital and one of Vendibook\'s most active rental markets. Rent a fully equipped truck to test a concept, cover events, or run a monthly arrangement — and since July 1, 2026, Texas mobile food vendors operate under a single statewide DSHS license, so a truck rented in Houston can trade across Texas with far less paperwork.',
+      'Looking to rent a food truck to sell food in Houston? Compare owner-listed equipment for your menu, then confirm available dates, pickup location, power and water setup, insurance and operating requirements. Check the full quote for your rental period rather than assuming a daily rate covers monthly use.',
   },
 };
 
@@ -172,13 +178,15 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
 
   const seoTitle = override?.title ?? (mode === 'buy'
     ? `${categoryLabel} for Sale in ${city.name}, ${city.stateCode} | Used & New | Vendibook`
-    : `${categoryLabel} for Rent in ${city.name}, ${city.stateCode} | Daily, Weekly, Monthly | Vendibook`);
+    : `${categoryLabel} for Rent in ${city.name}, ${city.stateCode} | Vendibook`);
   const metaDescription = override?.description ?? (mode === 'buy'
     ? `Buy ${categoryLabel.toLowerCase()} in ${city.name}, ${city.stateCode}. Browse verified used and new listings from local sellers. Financing & inspection support. List price, photos, specs upfront.`
-    : `Rent ${categoryLabel.toLowerCase()} in ${city.name}, ${city.stateCode} by the day, week, or month. Instant booking, verified hosts, transparent pricing — start serving in days, not months.`);
+    : `Compare ${categoryLabel.toLowerCase()} for rent in ${city.name}, ${city.stateCode}. Review listed rates, photos and equipment; confirm availability and terms with the host.`);
   const canonicalPath = `/${mode}/${categorySlug}/${cityStateSlug}`;
 
-  const seoIntro = override?.intro ?? (city.seoIntros?.[dbCategory] || '');
+  const seoIntro = override?.intro ?? (mode === 'rent'
+    ? `Compare ${categoryLabel.toLowerCase()} for your business in ${city.name}, ${city.stateCode}. Review each listing for equipment, location and rates, then confirm dates and requirements with the host before reserving.`
+    : (city.seoIntros?.[dbCategory] || ''));
 
   // State rental hub (Phase 2 SEO): exists for the states where we built
   // /food-trucks-for-rent/<state> pages — TX, FL, CA.
@@ -223,7 +231,7 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
     { mode: dbMode as any, category: dbCategory, location: `${city.name}, ${city.stateCode}`, canonicalPath }
   );
 
-  const breadcrumbSchema = generateCityCategoryBreadcrumbSchema(mode, categorySlug!, categoryLabel, cityStateSlug!, city.name, city.stateCode);
+  const breadcrumbSchema = generateCityCategoryBreadcrumbSchema(mode, categorySlug ?? '', categoryLabel, cityStateSlug ?? '', city.name, city.stateCode);
   const baseFaqSchema = generateCityCategoryFAQSchema(city.name, city.stateCode, categoryLabel, mode);
 
   // Extra rental FAQs for the business-equipment intent (kept in sync with
@@ -231,7 +239,7 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
   const rentalExtraFaqs = mode === 'rent' ? [
     {
       q: `Can I rent a ${categoryLabel.toLowerCase().replace(/s$/, '')} monthly in ${city.name}?`,
-      a: `Often, yes. Rental terms are set by each owner, and many ${city.name} listings offer weekly and monthly arrangements alongside daily rates. Review the terms on the individual listing or message the owner to discuss a monthly rental.`,
+      a: `Check the listing for monthly rates and minimum rental periods, then ask the host to confirm availability and the full quote for your dates in ${city.name}. Not every listing offers monthly terms.`,
     },
     {
       q: 'Is this a catering rental or equipment rental?',
@@ -401,6 +409,14 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
               <h2 className="text-lg font-semibold">Buying a food trailer in the Atlanta area</h2>
               <p className="text-muted-foreground">Confirm the seller’s actual pickup location before planning an inspection. Ask for the loaded weight, tow requirements, equipment list, service records, and a working demonstration. Delivery availability and the service radius depend on the seller and transport provider; request a quote for your destination before committing.</p>
               <p className="text-muted-foreground">Expanding your search beyond Atlanta? Compare <Link className="underline" to="/food-trailers-for-sale/georgia">food trailers throughout Georgia</Link> or <Link className="underline" to="/food-trucks-for-sale/georgia">Georgia food trucks for sale</Link>. For budgeting, <Link className="underline" to="/financing#calculator">estimate an equipment payment</Link> before applying.</p>
+            </section>
+          )}
+
+          {mode === 'rent' && (dbCategory === 'food_truck' || dbCategory === 'food_trailer') && (
+            <section className="space-y-3 pt-4 border-t border-border">
+              <h2 className="text-lg font-semibold">Before renting in {city.name}</h2>
+              <p className="text-muted-foreground">Compare kitchen equipment against your menu and confirm power, water, refrigeration and insurance requirements. For a trailer, confirm loaded weight, tow-vehicle capacity and hitch compatibility. Ask the host about pickup, return times and any delivery arrangements for your dates.</p>
+              <p className="text-muted-foreground">Review the complete booking total, any deposit and cancellation terms before paying. Renting equipment does not include operating permits or permission to use an event site. Check requirements with the relevant authorities and use the <Link className="underline" to="/tools/permitpath">PermitPath checklist</Link> to plan your next steps.</p>
             </section>
           )}
 
