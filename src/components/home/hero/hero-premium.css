@@ -11,8 +11,8 @@
 .hp-hero-shade {
   position: absolute; inset: 0; z-index: -1;
   background:
-    linear-gradient(90deg, hsl(24 18% 6% / .9) 0%, hsl(24 18% 6% / .72) 42%, hsl(24 18% 6% / .38) 72%, hsl(24 18% 6% / .5) 100%),
-    linear-gradient(0deg, hsl(24 18% 6% / .55) 0%, transparent 40%);
+    linear-gradient(90deg, hsl(24 18% 6% / .93) 0%, hsl(24 18% 6% / .8) 42%, hsl(24 18% 6% / .42) 72%, hsl(24 18% 6% / .5) 100%),
+    linear-gradient(0deg, hsl(24 18% 6% / .58) 0%, transparent 40%);
 }
 .hp-hero-inner {
   margin: 0 auto; display: grid; gap: 28px; max-width: 1240px;

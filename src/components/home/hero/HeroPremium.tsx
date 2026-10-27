@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import HeroListingRotator from './HeroListingRotator';
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 import { trackLeadEvent } from '@/lib/leadTracking';
-import heroPhoto from '@/assets/how-buying-hero.jpg';
+import heroPhoto from '@/assets/home-hero-food-truck-night.jpg.asset.json';
 import './hero-premium.css';
 
 /**
@@ -53,10 +53,10 @@ const HeroPremium = ({ showGoogleSignIn = true, showRotator = true, guaranteeHre
     <section className="hp-hero" aria-labelledby="home-hero-heading">
       <img
         className="hp-hero-photo"
-        src={heroPhoto}
+        src={heroPhoto.url}
         alt=""
-        width={1600}
-        height={912}
+        width={1920}
+        height={1280}
         // @ts-expect-error fetchpriority is valid HTML; React 18 only accepts the lowercase attribute
         fetchpriority="high"
         loading="eager"
