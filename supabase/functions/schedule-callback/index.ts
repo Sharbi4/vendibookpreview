@@ -46,7 +46,7 @@ serve(async (req) => {
     const bestTime = text(body.best_time, 120) || [text(body.scheduledDate, 20), text(body.scheduledTime, 20)].filter(Boolean).join(" ")
       || (text(body.preferredTime, 60) === "asap" ? "As soon as possible" : text(body.preferredTime, 60));
     const contactWay = String(body.preferred_contact ?? body.preferredContact ?? "phone");
-    const preferred = CONTACT_WAYS[contactWay] ? contactWay : "phone";
+    let preferred = CONTACT_WAYS[contactWay] ? contactWay : "phone";
     const comments = text(body.comments, 1500);
     const business = text(body.restaurantName, 120);
     const source = text(body.source, 60) || "contact-page";
@@ -54,6 +54,10 @@ serve(async (req) => {
 
     if (!name) return json({ error: "Please tell us your name." }, 400);
     if (!phone && !email) return json({ error: "Please add a phone number or email so we can reach you." }, 400);
+    // If the visitor left the phone blank but gave an email (e.g. the kitchen
+    // white-glove popup, where phone is optional), reach them by email
+    // instead of rejecting the request.
+    if (!phone && email) preferred = "email";
     if (preferred !== "email" && !phone) return json({ error: "Please add the best number to reach you." }, 400);
     if (preferred === "email" && !email && !caller?.email) return json({ error: "Please add your email address." }, 400);
 
