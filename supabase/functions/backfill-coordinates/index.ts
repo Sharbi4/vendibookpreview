@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { isAdminOrInternalCaller, internalOnlyResponse } from "../_shared/internalAuth.ts";
+import { googleGatewayConfigured, googleGeocode } from "../_shared/googleGateway.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -36,12 +37,10 @@ async function geocodeWithGoogle(
   storedState: string,
   keys: string[],
 ): Promise<{ lat: number; lng: number; postal: string; locality: string; via: string } | null> {
-  const encoded = encodeURIComponent(address);
-  for (const key of keys) {
+  // Keys are no longer sent to Google directly; one gateway attempt is made.
+  for (const _ of keys.length ? [0] : []) {
     try {
-      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encoded}&key=${key}`;
-      const res = await fetch(url);
-      const data = await res.json();
+      const data = await googleGeocode({ address });
       if (data.status === "REQUEST_DENIED") {
         console.warn(`Google key rejected (${data.error_message ?? "denied"}), trying next key`);
         continue;
@@ -173,11 +172,7 @@ serve(async (req: Request) => {
   }
 
   try {
-    const GOOGLE_KEYS = [
-      Deno.env.get("GOOGLE_API_KEY"),
-      Deno.env.get("GOOGLE_MAPS_BROWSER_KEY"),
-      Deno.env.get("GOOGLE_MAPS_API_KEY"),
-    ].filter((k): k is string => !!k);
+    const GOOGLE_KEYS = googleGatewayConfigured() ? ["gateway"] : [];
     const MAPBOX_TOKEN = Deno.env.get("MAPBOX_PUBLIC_TOKEN") ?? "";
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
