@@ -1426,10 +1426,6 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
               {pricingInfo.roundedUpNote && (
                 <p className="text-[11px] text-muted-foreground">{pricingInfo.roundedUpNote}</p>
               )}
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Service fee</span>
-                <span className="tabular-nums">{formatAmount(pricingInfo.serviceFee)}</span>
-              </div>
 
               {depositValue > 0 && (
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
