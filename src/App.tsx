@@ -119,6 +119,7 @@ const Insurance = lazy(() => import("./pages/Insurance"));
 const Search = lazy(() => import("./pages/Search"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const HowPurchasingWorks = lazy(() => import("./pages/HowPurchasingWorks"));
+const BuyOnVendibook = lazy(() => import("./pages/BuyOnVendibook"));
 const VendibookFreight = lazy(() => import("./pages/VendibookFreight"));
 const AtlasAgentPage = lazy(() => import("./pages/AtlasAgentPage"));
 const ShipYourFoodTruck = lazy(() => import("./pages/ShipYourFoodTruck"));
@@ -468,6 +469,7 @@ const AnimatedRoutes = () => {
           <Route path="/legal/:slug" element={<PageTransition><LegalDocumentPage /></PageTransition>} />
           <Route path="/how-it-works" element={<PageTransition><HowItWorks /></PageTransition>} />
           <Route path="/how-purchasing-works" element={<PageTransition><HowPurchasingWorks /></PageTransition>} />
+          <Route path="/buy-on-vendibook" element={<PageTransition><BuyOnVendibook /></PageTransition>} />
           <Route path="/guides/meetup-inspection" element={<PageTransition><MeetupInspectionGuide /></PageTransition>} />
           <Route path="/vendibook-freight" element={<PageTransition><VendibookFreight /></PageTransition>} />
           <Route path="/atlas" element={<PageTransition><AtlasAgentPage /></PageTransition>} />
