@@ -1,6 +1,26 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <!-- APPROVE equipment financing: vendor-provided account loader. -->
+    <script>
+      function init_kwipped_approve_snippet() {
+        if (!document.querySelector('approve-plugin')) {
+          document.body.appendChild(document.createElement('approve-plugin'));
+        }
+        if (document.getElementById('vendibook-approve-loader')) return;
+        var script = document.createElement('script');
+        script.id = 'vendibook-approve-loader';
+        script.type = 'text/javascript';
+        script.async = true;
+        script.src = 'https://plugin.approvepayments.com/plugin/4.0/loader/ZWuUVF07aZI0sE48tFFhb1cTMHOVaQq0CyLHFQA0';
+        document.body.appendChild(script);
+      }
+      if (document.readyState !== 'loading') {
+        init_kwipped_approve_snippet();
+      } else {
+        window.addEventListener('DOMContentLoaded', init_kwipped_approve_snippet, { once: true });
+      }
+    </script>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-NNWR0V8SH2"></script>
     <script>
