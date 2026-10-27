@@ -53,7 +53,7 @@ const HeroPremium = ({ showGoogleSignIn = true, showRotator = true, guaranteeHre
     <section className="hp-hero" aria-labelledby="home-hero-heading">
       <img
         className="hp-hero-photo"
-        src={heroPhoto}
+        src={heroPhoto.url}
         alt=""
         width={1600}
         height={912}
