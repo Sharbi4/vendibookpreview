@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -178,18 +178,99 @@ const FEATURED_CARDS = [
   { key: 'financing', img: cardFinancingImg, title: 'Financing', sub: 'Apply with Equinox Funding before you make an offer', cta: 'See financing', href: '/financing' },
 ] as const;
 
+/* ── Touch: phones have no hover, so the card in view lights up instead ── */
+
+/**
+ * On touch screens, marks the card nearest the middle of the screen (axis y)
+ * or of a swipe row (axis x) with `is-active`, which plays the same orange
+ * fill and call to action as the desktop hover. Also fades the cards in, one
+ * after another, the first time the list scrolls into view. Off on mouse
+ * devices and with reduced motion.
+ */
+function useTouchSpotlight(listRef: RefObject<HTMLUListElement>, axis: 'x' | 'y', onActive?: (index: number) => void) {
+  const onActiveRef = useRef(onActive);
+  onActiveRef.current = onActive;
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list || typeof window.matchMedia !== 'function') return;
+    const touch = window.matchMedia('(hover: none)');
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const items = () => Array.from(list.querySelectorAll<HTMLElement>('[data-spotlight]'));
+
+    let reveal: IntersectionObserver | null = null;
+    if (!still.matches && typeof IntersectionObserver === 'function') {
+      list.classList.add('will-reveal');
+      reveal = new IntersectionObserver((entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          list.classList.add('is-revealed');
+          reveal?.disconnect();
+        }
+      }, { threshold: 0.15 });
+      reveal.observe(list);
+    }
+
+    let frame = 0;
+    let active: HTMLElement | null = null;
+    const update = () => {
+      frame = 0;
+      const all = items();
+      let best: HTMLElement | null = null;
+      if (touch.matches && !still.matches) {
+        const box = list.getBoundingClientRect();
+        const onScreen = box.bottom > 0 && box.top < window.innerHeight;
+        const center = axis === 'x' ? box.left + box.width / 2 : window.innerHeight * 0.55;
+        let bestDistance = Infinity;
+        for (const el of all) {
+          const r = el.getBoundingClientRect();
+          const mid = axis === 'x' ? r.left + r.width / 2 : r.top + r.height / 2;
+          const distance = Math.abs(mid - center);
+          if (distance < bestDistance) { bestDistance = distance; best = el; }
+        }
+        if (!onScreen || (best && axis === 'y' && bestDistance > best.getBoundingClientRect().height)) best = null;
+      }
+      if (best !== active) {
+        active?.classList.remove('is-active');
+        best?.classList.add('is-active');
+        active = best;
+        if (best) onActiveRef.current?.(all.indexOf(best));
+      }
+    };
+    const schedule = () => { if (!frame) frame = window.requestAnimationFrame(update); };
+    schedule();
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    list.addEventListener('scroll', schedule, { passive: true });
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+      list.removeEventListener('scroll', schedule);
+      reveal?.disconnect();
+      active?.classList.remove('is-active');
+    };
+  }, [listRef, axis]);
+}
+
 export function HomeFeaturedCards() {
+  const listRef = useRef<HTMLUListElement>(null);
+  const [current, setCurrent] = useState(0);
+  useTouchSpotlight(listRef, 'x', setCurrent);
+  const goTo = (i: number) => {
+    const card = listRef.current?.children[i] as HTMLElement | undefined;
+    card?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+  };
   return (
     <section className="hb-section" aria-labelledby="hb-featured-title">
       <div className="hb-wrap">
         <header className="hb-head">
           <h2 id="hb-featured-title">Buy it, rent it, or finance it</h2>
         </header>
-        <ul className="hb-cards">
+        <ul className="hb-cards" ref={listRef}>
           {FEATURED_CARDS.map((card) => (
             <li key={card.key}>
               <Link
                 to={card.href}
+                data-spotlight
                 className="hb-card"
                 data-cta-location={`home_featured_${card.key}`}
                 onClick={() => trackLeadEvent('homepage_premium_discovery_click', { source: 'home_featured_cards', card: card.key, destination: card.href })}
@@ -204,6 +285,12 @@ export function HomeFeaturedCards() {
             </li>
           ))}
         </ul>
+        {/* Swipe position on phones (hidden from the 4-up desktop grid). */}
+        <div className="hb-cards-dots" aria-hidden="true">
+          {FEATURED_CARDS.map((card, i) => (
+            <button key={card.key} type="button" tabIndex={-1} className={i === current ? 'is-current' : undefined} onClick={() => goTo(i)} />
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -243,17 +330,20 @@ const CATEGORY_TILES = [
 ] as const;
 
 export function HomeCategoryTiles() {
+  const listRef = useRef<HTMLUListElement>(null);
+  useTouchSpotlight(listRef, 'y');
   return (
     <section className="hb-section" aria-labelledby="hb-tiles-title">
       <div className="hb-wrap">
         <header className="hb-head">
           <h2 id="hb-tiles-title">Shop by type</h2>
         </header>
-        <ul className="hb-tiles">
+        <ul className="hb-tiles" ref={listRef}>
           {CATEGORY_TILES.map((tile) => (
             <li key={tile.href}>
               <Link
                 to={tile.href}
+                data-spotlight
                 className="hb-tile"
                 data-cta-location="home_category_tiles"
                 onClick={() => trackLeadEvent('homepage_premium_discovery_click', { source: 'home_category_tiles', destination: tile.href })}
