@@ -33,6 +33,7 @@ import {
   SUPPORT_EMAIL,
   SUPPORT_HOURS,
   SUPPORT_PHONE,
+  SUPPORT_PHONE_HREF,
   TERMS_URL,
   color,
   currentYear,
@@ -372,7 +373,7 @@ export const SupportRow = ({ note }: { note?: string }) => (
   <Text style={{ ...t.small, margin: '16px 0 0' }}>
     {note ? `${note} ` : 'Need help? '}
     Email <Link href={`mailto:${SUPPORT_EMAIL}`} style={t.link}>{SUPPORT_EMAIL}</Link> or call{' '}
-    {SUPPORT_PHONE} ({SUPPORT_HOURS}).
+    <Link href={SUPPORT_PHONE_HREF} style={t.link}>{SUPPORT_PHONE}</Link> ({SUPPORT_HOURS}).
   </Text>
 )
 
@@ -392,6 +393,8 @@ export const TransactionalFooter = () => (
       <Link href={HELP_URL} style={footerLinkStyle}>Help center</Link>
       <span style={{ color: color.borderStrong }}>{'  ·  '}</span>
       <Link href={`mailto:${SUPPORT_EMAIL}`} style={footerLinkStyle}>{SUPPORT_EMAIL}</Link>
+      <span style={{ color: color.borderStrong }}>{'  ·  '}</span>
+      <Link href={SUPPORT_PHONE_HREF} style={footerLinkStyle}>{SUPPORT_PHONE}</Link>
       <span style={{ color: color.borderStrong }}>{'  ·  '}</span>
       <Link href={TERMS_URL} style={footerLinkStyle}>Terms</Link>
       <span style={{ color: color.borderStrong }}>{'  ·  '}</span>
@@ -414,6 +417,8 @@ export const MarketingFooter = ({ unsubscribeUrl }: { unsubscribeUrl?: string })
       {BRAND_NAME}
     </Text>
     <Text style={t.legal}>
+      <Link href={SUPPORT_PHONE_HREF} style={footerLinkStyle}>{SUPPORT_PHONE}</Link>
+      <span style={{ color: color.borderStrong }}>{'  ·  '}</span>
       <Link href={HELP_URL} style={footerLinkStyle}>Help center</Link>
       <span style={{ color: color.borderStrong }}>{'  ·  '}</span>
       <Link href={TERMS_URL} style={footerLinkStyle}>Terms</Link>

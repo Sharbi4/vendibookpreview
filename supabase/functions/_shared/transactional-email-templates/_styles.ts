@@ -12,7 +12,7 @@ import { color, FONT_STACK, LOGO_LIGHT_URL, SITE_URL as BRAND_SITE_URL, t } from
 
 export const SITE_NAME = 'Vendibook'
 export const SITE_URL = BRAND_SITE_URL
-export const SUPPORT_PHONE = '(866) 690-6227'
+export { SUPPORT_PHONE } from '../email-brand/tokens.ts'
 /** Canonical email logo (email-assets bucket, ~170KB, 1000×293). */
 export const LOGO_URL = LOGO_LIGHT_URL
 export const LOGO_WIDTH = 200

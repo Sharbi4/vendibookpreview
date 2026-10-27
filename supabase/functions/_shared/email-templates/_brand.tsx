@@ -6,7 +6,8 @@ import * as React from 'npm:react@18.3.1'
 import { Img, Section, Text } from 'npm:@react-email/components@0.0.22'
 
 export const SITE_URL = 'https://vendibook.com'
-export const SUPPORT_PHONE = '(866) 690-6227'
+import { SUPPORT_PHONE, SUPPORT_PHONE_HREF } from '../email-brand/tokens.ts'
+export { SUPPORT_PHONE } from '../email-brand/tokens.ts'
 export const LOGO_URL =
   'https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-logo-email-2026-10.png?v=2026-10'
 
@@ -65,7 +66,7 @@ export const AuthBrandFooter = () => (
       ))}
     </Text>
     <Text style={{ fontSize: '11px', color: '#a3a3a3', margin: '12px 0 0' }}>
-      Vendibook · Questions? {SUPPORT_PHONE} or support@vendibook.com
+      Vendibook · Questions? <a href={SUPPORT_PHONE_HREF} style={{ color: 'inherit' }}>{SUPPORT_PHONE}</a> or support@vendibook.com
     </Text>
   </Section>
 )
