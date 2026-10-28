@@ -10999,6 +10999,51 @@ export type Database = {
           },
         ]
       }
+      sale_checkout_drafts: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          email: string
+          email_24h_sent_at: string | null
+          email_2h_sent_at: string | null
+          id: string
+          listing_id: string
+          request_only: boolean
+          resume_path: string | null
+          total_price: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          email: string
+          email_24h_sent_at?: string | null
+          email_2h_sent_at?: string | null
+          id?: string
+          listing_id: string
+          request_only?: boolean
+          resume_path?: string | null
+          total_price?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          email?: string
+          email_24h_sent_at?: string | null
+          email_2h_sent_at?: string | null
+          id?: string
+          listing_id?: string
+          request_only?: boolean
+          resume_path?: string | null
+          total_price?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       sale_fulfillment_updates: {
         Row: {
           actor_id: string | null
