@@ -508,6 +508,7 @@ export type Database = {
           id: string
           listing_id: string
           recovery_token: string
+          resume_path: string | null
           start_date: string | null
           total_price: number | null
           updated_at: string
@@ -524,6 +525,7 @@ export type Database = {
           id?: string
           listing_id: string
           recovery_token?: string
+          resume_path?: string | null
           start_date?: string | null
           total_price?: number | null
           updated_at?: string
@@ -540,6 +542,7 @@ export type Database = {
           id?: string
           listing_id?: string
           recovery_token?: string
+          resume_path?: string | null
           start_date?: string | null
           total_price?: number | null
           updated_at?: string

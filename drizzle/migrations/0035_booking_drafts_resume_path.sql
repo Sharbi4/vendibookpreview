@@ -1,0 +1,1 @@
+ALTER TABLE public.booking_drafts ADD COLUMN IF NOT EXISTS resume_path TEXT;
