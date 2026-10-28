@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -30,24 +30,27 @@ export default function LegalNamePrompt({ children }: { children: ReactNode }) {
       ]);
       if (!current || !p || admin) return;
       if (!isPlausibleFullName(p.full_name, p.first_name, p.last_name)) {
-        setFirst(p.first_name ?? "");
-        setLast(p.last_name ?? "");
+        // Google sign-ups often arrive with only "Gabriel" in full_name: start from it.
+        const [guessFirst = "", ...rest] = (p.full_name ?? "").trim().split(/\s+/);
+        setFirst(p.first_name || guessFirst);
+        setLast(p.last_name || rest.join(" "));
         setOpen(true);
       }
     })().catch(() => {});
     return () => { current = false; };
   }, [user?.id]);
 
-  const save = async () => {
+  const save = async (e?: FormEvent) => {
+    e?.preventDefault();
     const err = legalNameError(first, last);
     if (err) return setError(err);
     if (!user) return;
     setSaving(true);
     const f = first.trim(), l = last.trim();
-    const { error: e } = await supabase.from("profiles")
+    const { error: saveError } = await supabase.from("profiles")
       .update({ first_name: f, last_name: l, full_name: `${f} ${l}` }).eq("id", user.id);
     setSaving(false);
-    if (e) return setError(e.message?.startsWith("Please use your own name") ? e.message : "Couldn't save your name. Please try again.");
+    if (saveError) return setError(saveError.message?.startsWith("Please use your own name") ? saveError.message : "Couldn't save your name. Please try again.");
     setOpen(false);
   };
 
@@ -62,6 +65,10 @@ export default function LegalNamePrompt({ children }: { children: ReactNode }) {
               Trust and safety come first at Vendibook. Buyers, sellers and hosts need to know who they're dealing with, so every member uses their real first and last name.
             </DialogDescription>
           </DialogHeader>
+          {/* A form, not loose children: `[&>button]:hidden` (which hides the
+              dialog's close X) also hid a direct-child Save button, leaving
+              members stuck with no way to continue (support call 2026-10-28). */}
+          <form onSubmit={save} className="grid gap-4" noValidate>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label htmlFor="lnp-first">Legal first name</Label>
@@ -72,8 +79,9 @@ export default function LegalNamePrompt({ children }: { children: ReactNode }) {
               <Input id="lnp-last" autoComplete="family-name" className="text-base" value={last} onChange={(e) => { setLast(e.target.value); setError(null); }} />
             </div>
           </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button onClick={save} disabled={saving} className="w-full">{saving ? "Saving…" : "Save and continue"}</Button>
+          {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
+          <Button type="submit" disabled={saving} className="w-full">{saving ? "Saving…" : "Save and continue"}</Button>
+          </form>
         </DialogContent>
       </Dialog>
     </>
