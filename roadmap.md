@@ -61,4 +61,4 @@
 - [ ] Renter ads campaign (Meta): wording, images, budget, create paused
 
 - [ ] Calendly link in financing email + Contact page (blocked: real URL not provided)
-- [ ] Read-only diagnosis: inbound Atlas transfer_to_support 0ms failure (no edits)
+- [x] Read-only diagnosis: inbound Atlas transfer_to_support 0ms failure (no edits)
