@@ -17,6 +17,8 @@ import { getAccessToken, getDocument, isSignNowConfigured, signnowBase } from ".
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  // Build marker: shows whether a GitHub push redeploys edge functions on its own.
+  "X-Vendibook-Build": "2026-10-28a",
 };
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
