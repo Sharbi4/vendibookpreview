@@ -3,7 +3,7 @@
 
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-export const CONTACT_URL = 'https://vendibook.com/contact'
+export const CONTACT_URL = 'https://vendibook.com/contact#meeting'
 
 export function isValidLeadEmail(email: string): boolean {
   const e = email.trim().toLowerCase()

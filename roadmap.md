@@ -1,5 +1,7 @@
 # Roadmap
 
+- [done] Financing and abandoned rental emails now offer personal callback and 30-minute sales-team meeting options; deployed both senders, authenticated live previews returned 200, 3 validation tests pass and Contact destinations verified. Meeting currently uses Allison to find a time (no direct Calendly URL configured); callback anchor change is preview-only. No customer emails sent or frontend published.
+
 - [done] Email contact audit: canonical (866) 690-6227 and tel link reused across auth/transactional/marketing footers; 122 affected services deployed, 7 tests pass, authenticated live preview returns 200 with correct phone/link and no old number. No email sent or frontend published.
 
 - [done] Strengthened national/TX/FL/CA rental snippets and city rental guidance (including Houston trailers), removed unsupported claims; 32 tests passed and desktop/mobile real listing navigation verified. Preview only; current Houston truck/trailer and LA truck city pages returned no local listings, so inventory remains a ranking constraint.
