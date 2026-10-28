@@ -40,6 +40,7 @@ import { template as sellerDailyDigest } from './seller-daily-digest.tsx'
 import { template as adminDailyDigest } from './admin-daily-digest.tsx'
 import { template as feedbackRequest } from './feedback-request.tsx'
 import { template as bookingAbandoned } from './booking-abandoned.tsx'
+import { template as saleCheckoutAbandoned } from './sale-checkout-abandoned.tsx'
 import { template as supportReply } from './support-reply.tsx'
 import { template as financingFollowup } from './financing-followup.tsx'
 import { template as featuredPaymentReceipt } from './featured-payment-receipt.tsx'
@@ -87,6 +88,7 @@ import { template as permitPlusPaymentFailed } from './permitpath-plus-payment-f
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'booking-abandoned': bookingAbandoned,
+  'sale-checkout-abandoned': saleCheckoutAbandoned,
   'welcome': welcome,
   'booking-confirmation': bookingConfirmation,
   'payment-receipt': paymentReceipt,

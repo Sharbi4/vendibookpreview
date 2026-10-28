@@ -3,6 +3,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
+import { buyerCommitted, saleResumeUrl } from "./saleRecovery.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -147,8 +148,87 @@ Deno.serve(async (req) => {
     }
   }
 
+  // ── Equipment sale checkouts (same sweep, no extra schedule) ──
+  let saleSent2h = 0;
+  let saleSent24h = 0;
+  const money = (n: number | null) =>
+    typeof n === "number" && n > 0
+      ? n.toLocaleString("en-US", { style: "currency", currency: "USD" })
+      : undefined;
+
+  const sendSaleEmail = async (draft: any, variant: "2h" | "24h") => {
+    const { data: listing } = await supabase
+      .from("listings")
+      .select("id, title, status, mode")
+      .eq("id", draft.listing_id)
+      .maybeSingle();
+    // Sold, paused or removed listings get no nudge.
+    if (!listing || listing.status !== "published") {
+      await supabase.from("sale_checkout_drafts").update({ completed_at: now.toISOString() }).eq("id", draft.id);
+      return false;
+    }
+
+    const [{ data: txs }, { count: reqCount }] = await Promise.all([
+      supabase.from("sale_transactions").select("status")
+        .eq("buyer_id", draft.user_id).eq("listing_id", draft.listing_id)
+        .gte("created_at", draft.created_at),
+      supabase.from("sale_purchase_requests").select("id", { count: "exact", head: true })
+        .eq("buyer_id", draft.user_id).eq("listing_id", draft.listing_id)
+        .gte("created_at", draft.created_at),
+    ]);
+    if (buyerCommitted((txs || []).map((t: any) => t.status), reqCount ?? 0)) {
+      await supabase.from("sale_checkout_drafts").update({ completed_at: now.toISOString() }).eq("id", draft.id);
+      return false;
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles").select("first_name, full_name").eq("id", draft.user_id).maybeSingle();
+    const buyerName = profile?.first_name || (profile?.full_name || "").split(" ")[0] || undefined;
+
+    const { error } = await invokeTransactionalEmail({
+      templateName: "sale-checkout-abandoned",
+      recipientEmail: draft.email,
+      idempotencyKey: `sale-abandon-${variant}-${draft.id}-${draft.updated_at}`,
+      templateData: {
+        buyerName,
+        listingTitle: listing.title,
+        totalPrice: money(draft.total_price),
+        resumeUrl: saleResumeUrl(draft.resume_path, listing.id, !!draft.request_only),
+        requestOnly: !!draft.request_only,
+        variant,
+      },
+    });
+    if (error) {
+      errors.push(`sale-${variant}/${draft.id}: ${error.message}`);
+      return false;
+    }
+    return true;
+  };
+
+  const { data: sale2h } = await supabase
+    .from("sale_checkout_drafts").select("*")
+    .is("completed_at", null).is("email_2h_sent_at", null)
+    .lte("updated_at", cutoff2h).gt("updated_at", cutoff72h).limit(100);
+  for (const draft of sale2h || []) {
+    if (await sendSaleEmail(draft, "2h")) {
+      await supabase.from("sale_checkout_drafts").update({ email_2h_sent_at: now.toISOString() }).eq("id", draft.id);
+      saleSent2h++;
+    }
+  }
+
+  const { data: sale24h } = await supabase
+    .from("sale_checkout_drafts").select("*")
+    .is("completed_at", null).is("email_24h_sent_at", null).not("email_2h_sent_at", "is", null)
+    .lte("updated_at", cutoff24h).gt("updated_at", cutoff72h).limit(100);
+  for (const draft of sale24h || []) {
+    if (await sendSaleEmail(draft, "24h")) {
+      await supabase.from("sale_checkout_drafts").update({ email_24h_sent_at: now.toISOString() }).eq("id", draft.id);
+      saleSent24h++;
+    }
+  }
+
   return new Response(
-    JSON.stringify({ ok: true, sent2h, sent24h, errors }),
+    JSON.stringify({ ok: true, sent2h, sent24h, saleSent2h, saleSent24h, errors }),
     { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
   );
 });
