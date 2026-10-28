@@ -1,6 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 import { adminAlertEmails, adminNoticeKey } from '../_shared/adminRecipients.ts'
+import { bookingUrlFromEnv, isValidLeadEmail } from './validation.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,9 +15,7 @@ const corsHeaders = {
 // success call, and notifies the team. Template structure and copy are fixed
 // here — the client only supplies the lead's own details.
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const EQUINOX_APPLY_URL = 'https://equinox-funding.com/efapplication/'
-const CONTACT_URL = 'https://vendibook.com/contact'
 
 function json(data: Record<string, unknown>, status = 200): Response {
   return new Response(JSON.stringify(data), {
