@@ -59,3 +59,6 @@
 
 - [x] Facebook tracking for paid rental bookings (consent-gated) — needs publish
 - [ ] Renter ads campaign (Meta): wording, images, budget, create paused
+
+- [ ] Calendly link in financing email + Contact page (blocked: real URL not provided)
+- [x] Read-only diagnosis: inbound Atlas transfer_to_support 0ms failure (no edits)
