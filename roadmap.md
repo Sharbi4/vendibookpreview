@@ -1,6 +1,6 @@
 # Roadmap
 
-- [open] Add personal callback and 30-minute sales-team meeting options to financing and abandoned rental checkout emails; verify links and deploy email updates without sending customer emails.
+- [done] Financing and abandoned rental emails now offer personal callback and 30-minute sales-team meeting options; deployed both senders, authenticated live previews returned 200, 3 validation tests pass and Contact destinations verified. Meeting currently uses Allison to find a time (no direct Calendly URL configured); callback anchor change is preview-only. No customer emails sent or frontend published.
 
 - [done] Email contact audit: canonical (866) 690-6227 and tel link reused across auth/transactional/marketing footers; 122 affected services deployed, 7 tests pass, authenticated live preview returns 200 with correct phone/link and no old number. No email sent or frontend published.
 
