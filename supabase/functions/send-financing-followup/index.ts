@@ -30,8 +30,7 @@ function str(v: unknown, max: number): string {
 }
 
 export function bookingUrl(): string {
-  const raw = (Deno.env.get('CALENDLY_CUSTOMER_SUCCESS_URL') ?? '').trim()
-  return /^https:\/\/calendly\.com\/[\w./-]+$/.test(raw) ? raw : CONTACT_URL
+  return bookingUrlFromEnv(Deno.env.get('CALENDLY_CUSTOMER_SUCCESS_URL'))
 }
 
 Deno.serve(async (req) => {
@@ -46,7 +45,7 @@ Deno.serve(async (req) => {
   }
 
   const email = str(body.email, 200).toLowerCase()
-  if (!email || !EMAIL_RE.test(email)) return json({ error: 'A valid email is required' }, 400)
+  if (!isValidLeadEmail(email)) return json({ error: 'A valid email is required' }, 400)
 
   const name = str(body.name, 120)
   const firstName = name.split(/\s+/)[0] || undefined
