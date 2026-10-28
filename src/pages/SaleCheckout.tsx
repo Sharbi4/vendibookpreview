@@ -40,6 +40,7 @@ import { parseFormattedAddress } from '@/lib/fulfillment/parseAddress';
 import { getPublicDisplayName } from '@/lib/displayName';
 import { useSellerPaymentReadiness } from '@/hooks/useSellerPaymentReadiness';
 import SaleCheckoutWizard from '@/components/checkout/sale/SaleCheckoutWizard';
+import { saveSaleDraftForRecovery, markSaleDraftCompleted } from '@/lib/saleDraftRecovery';
 import CheckoutAgreementCards from '@/components/checkout/CheckoutAgreementCards';
 import CheckoutFinancingBanner from '@/components/checkout/CheckoutFinancingBanner';
 
@@ -766,6 +767,7 @@ const SaleCheckout = ({ requestOnly = true }: { requestOnly?: boolean }) => {
         termsGate.reset();
         toast({ title: 'Purchase request submitted!', description: 'The seller will contact you.' });
         checkoutFunnel.markCompleted();
+        void markSaleDraftCompleted(user?.id, listingId);
         navigate(`/order-tracking/${transactionId}`);
       } catch (error) {
         console.error('Error:', error);
@@ -856,6 +858,7 @@ const SaleCheckout = ({ requestOnly = true }: { requestOnly?: boolean }) => {
         termsGate.reset();
         toast({ title: 'Purchase request submitted', description: 'The seller will review your request. Nothing has been charged.' });
         trackBuyerSeoDownstream('checkout_started', listingId, { payment_path: 'invoice_request' });
+        void markSaleDraftCompleted(user?.id, listingId);
         navigate(`/dashboard/invoices?request=${data.request_id}`);
         return;
       }
@@ -1105,6 +1108,17 @@ const SaleCheckout = ({ requestOnly = true }: { requestOnly?: boolean }) => {
     setAgreementsRecorded(true);
     setStep(5);
     setFurthestStep(5);
+    // Final step reached: save a recovery draft so an abandoned checkout gets a follow-up email.
+    if (user?.id && listingId) {
+      void saveSaleDraftForRecovery({
+        userId: user.id,
+        listingId,
+        email: buyerInfo.email.trim() || user.email || '',
+        totalPrice,
+        requestOnly,
+        resumePath: `${window.location.pathname}${window.location.search}`,
+      });
+    }
   };
 
   /**
