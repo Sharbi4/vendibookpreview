@@ -27,4 +27,5 @@ where u.id = p.id
   and coalesce(u.raw_app_meta_data->>'provider', 'email') <> 'email'
   and coalesce(p.identity_verified, false) = false
   and p.name_parts_confirmed is distinct from false
+  and p.legal_first_name is null  -- already confirmed through the prompt: never ask again on a re-run
   and not exists (select 1 from public.user_roles ur where ur.user_id = p.id and ur.role = 'admin');
