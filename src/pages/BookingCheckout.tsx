@@ -42,6 +42,7 @@ import { calculateRentalFees, formatCurrency } from '@/lib/commissions';
 import { quoteRentalPeriod } from '@/lib/listings/rentalPricing';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { useCheckoutFunnel } from '@/hooks/useCheckoutFunnel';
+import { saveBookingDraftForRecovery, markBookingDraftCompleted } from '@/lib/bookingDraftRecovery';
 import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
 
 import CheckoutOrderSummary, { type OrderSummaryLine } from '@/components/checkout/CheckoutOrderSummary';
@@ -630,11 +631,33 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
     return () => window.removeEventListener('pagehide', onHide);
   }, [listingId, step]);
 
+  // Reaching the review step saves a recovery draft so an abandoned checkout
+  // gets a follow-up email (send-booking-abandonment-emails sweep).
+  useEffect(() => {
+    if (step < 3 || completedRef.current) return;
+    if (!user?.id || !user?.email || !listingId || !userInfo) return;
+    const params = new URLSearchParams();
+    if (startDate) params.set('start', format(startDate, 'yyyy-MM-dd'));
+    if (endDate) params.set('end', format(endDate, 'yyyy-MM-dd'));
+    const qs = params.toString();
+    void saveBookingDraftForRecovery({
+      userId: user.id,
+      listingId,
+      email: user.email,
+      startDate: startDate ? format(startDate, 'yyyy-MM-dd') : null,
+      endDate: endDate ? format(endDate, 'yyyy-MM-dd') : null,
+      totalPrice: fees.customerTotal || null,
+      resumePath: `${checkoutBasePath}/${listingId}${qs ? `?${qs}` : ''}`,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, user?.id, user?.email, listingId, userInfo, startDate, endDate, fees.customerTotal]);
+
   /** Booking is paid (server-verified) or the request was sent. */
   const completeCheckout = (bookingId: string, flow: 'instant' | 'request') => {
     completedRef.current = true;
     markCompleted();
     trackRentalCheckout('booking_completed', { listingId, bookingId, flow, step: 3 });
+    if (user?.id && listingId) void markBookingDraftCompleted(user.id, listingId);
     clearRentalDraft(draftKey);
     navigate(flow === 'instant' ? `/dashboard/bookings/${bookingId}?confirmed=1` : `/dashboard/bookings/${bookingId}`);
   };
