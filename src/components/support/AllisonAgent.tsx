@@ -8,7 +8,7 @@ import { createAtlasTools, type AtlasListingCard, type AtlasOfferDraft, type Atl
 import { ALLISON_START_EVENT, ALLISON_TOOL_NAMES } from '@/lib/atlas/allisonConfig';
 import { asksToPauseNavigation } from '@/lib/atlas/atlasNavigation';
 import { ATLAS_START_EVENT } from '@/lib/atlas/atlasFlag';
-import { handoffBriefing, type AgentHandoff } from '@/lib/atlas/agentHandoff';
+import { handoffBriefing, scheduleAgentHandoff, type AgentHandoff } from '@/lib/atlas/agentHandoff';
 import { pageOutline } from '@/lib/atlas/atlasPage';
 import { SCREEN_NOTE_PREFIX, attentionBriefing, createAttentionNudger, currentJourney, journeyBriefing, watchAttention } from '@/lib/atlas/journeyContext';
 import { Button } from '@/components/ui/button';
@@ -43,6 +43,8 @@ export default function AllisonAgent() {
   const question = useRef('');
   const nudgerRef = useRef<ReturnType<typeof createAttentionNudger> | null>(null);
   const salesTransfer = useRef<(summary: string, paused: boolean) => Promise<void>>(async () => {});
+  const cancelHandoff = useRef<() => void>(() => {});
+  useEffect(() => () => cancelHandoff.current(), []);
   const tools = useMemo(() => createAtlasTools({ navigate, showResults: setCards, openOffer: setOffer, openMessage: setMessage, currentListingId: () => window.location.pathname.match(/^\/listing\/([^/]+)/)?.[1] ?? null, currentUserId: () => userRef.current?.id ?? null, onNavigationChange: setPaused, transferToSales: (summary, paused) => salesTransfer.current(summary, paused) }), [navigate]);
   const clientTools = useMemo(() => Object.fromEntries(ALLISON_TOOL_NAMES.map(name => [name, async (params: Record<string, unknown>) => {
     if (name === 'get_support_knowledge') return JSON.stringify(getAllisonKnowledge(String(params?.question ?? '')));
@@ -71,10 +73,17 @@ export default function AllisonAgent() {
   });
   const sessionRef = useRef(conversation); sessionRef.current = conversation;
   salesTransfer.current = async (summary, navigationPaused) => {
-    generation.current++;
-    await sessionRef.current.endSession();
-    setOpen(false);
-    window.dispatchEvent(new CustomEvent(ATLAS_START_EVENT, { detail: { mode, summary, navigationPaused } }));
+    cancelHandoff.current();
+    const attempt = ++generation.current;
+    cancelHandoff.current = scheduleAgentHandoff({
+      isCurrent: () => generation.current === attempt,
+      endSession: () => sessionRef.current.endSession(),
+      startNext: () => {
+        setOpen(false);
+        window.dispatchEvent(new CustomEvent(ATLAS_START_EVENT, { detail: { mode, summary, navigationPaused } }));
+      },
+      onError: () => setError('The transfer to Atlas could not finish. You can continue here or use the support form.'),
+    });
   };
   const live = conversation.status === 'connected';
   // Keep Allison aware of where the customer is: page changes, then what they point at or read.

@@ -7,7 +7,7 @@ import { invokeEdge } from '@/lib/edge/invokeFunction';
 import { ATLAS_NAME } from '@/lib/atlas/atlasConfig';
 import { asksToPauseNavigation } from '@/lib/atlas/atlasNavigation';
 import { ALLISON_START_EVENT } from '@/lib/atlas/allisonConfig';
-import { handoffBriefing, type AgentHandoff } from '@/lib/atlas/agentHandoff';
+import { handoffBriefing, scheduleAgentHandoff, type AgentHandoff } from '@/lib/atlas/agentHandoff';
 import { ATLAS_PAGE_EVENT, pageOutline } from '@/lib/atlas/atlasPage';
 import { SCREEN_NOTE_PREFIX, attentionBriefing, createAttentionNudger, currentJourney, journeyBriefing, watchAttention } from '@/lib/atlas/journeyContext';
 import { createAtlasTools, liveListingIds, type AtlasListingCard, type AtlasOfferDraft, type AtlasSellerDraft } from '@/lib/atlas/atlasTools';
@@ -77,6 +77,8 @@ export default function AtlasAgent() {
   const [peek, setPeek] = useState(false);
   const [navigationPaused, setNavigationPaused] = useState(false);
   const supportTransfer = useRef<(summary: string, paused: boolean) => Promise<void>>(async () => {});
+  const cancelHandoff = useRef<() => void>(() => {});
+  useEffect(() => () => cancelHandoff.current(), []);
   const incomingHandoff = useRef<AgentHandoff>();
   const starting = useRef(false);
   const generation = useRef(0);
@@ -368,6 +370,7 @@ export default function AtlasAgent() {
   }, []);
 
   const hangUp = () => {
+    cancelHandoff.current();
     generation.current++;
     void conversation.endSession();
     setSaved(loadAtlasMemory());
@@ -375,10 +378,20 @@ export default function AtlasAgent() {
   };
 
   supportTransfer.current = async (summary, paused) => {
-    generation.current++;
-    await conversation.endSession();
-    setPhase('idle');
-    window.dispatchEvent(new CustomEvent(ALLISON_START_EVENT, { detail: { mode, summary, navigationPaused: paused } }));
+    cancelHandoff.current();
+    const attempt = ++generation.current;
+    cancelHandoff.current = scheduleAgentHandoff({
+      isCurrent: () => generation.current === attempt,
+      endSession: () => conversation.endSession(),
+      startNext: () => {
+        setPhase('idle');
+        window.dispatchEvent(new CustomEvent(ALLISON_START_EVENT, { detail: { mode, summary, navigationPaused: paused } }));
+      },
+      onError: () => {
+        setPhase('error');
+        setError({ text: 'The transfer to Allison could not finish. Open Contact us for support or try again.', offerTyping: false });
+      },
+    });
   };
   useEffect(() => {
     const stopForSupport = () => { generation.current++; void conversation.endSession(); setPhase('idle'); };
