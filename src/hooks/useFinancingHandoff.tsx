@@ -52,13 +52,19 @@ export function useFinancingHandoff() {
   const saveLead = useCallback(
     async (values: FinancingLeadValues, ctx: Pending, mode: 'signed_in' | 'form') => {
       try {
-        await (supabase as any).from('financing_leads').insert({
-          listing_id: ctx.listingId ?? null,
-          user_id: user?.id ?? null,
-          name: values.name || null,
-          email: values.email,
-          source: ctx.source,
+        // Server-side capture: saves the lead, emails the applicant a follow-up
+        // with next steps + a link to book a 30-minute customer success call,
+        // and notifies the team. Best-effort — never blocks the handoff.
+        const { error } = await supabase.functions.invoke('send-financing-followup', {
+          body: {
+            name: values.name || undefined,
+            email: values.email,
+            listingId: ctx.listingId,
+            source: ctx.source,
+            userId: user?.id,
+          },
         });
+        if (error) throw error;
         trackFinancingLeadCaptured(ctx.source, ctx.listingId, mode);
       } catch (err) {
         // Never block the handoff on lead capture.
