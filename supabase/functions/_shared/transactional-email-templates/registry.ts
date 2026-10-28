@@ -88,6 +88,7 @@ import { template as permitPlusPaymentFailed } from './permitpath-plus-payment-f
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'booking-abandoned': bookingAbandoned,
+  'sale-checkout-abandoned': saleCheckoutAbandoned,
   'welcome': welcome,
   'booking-confirmation': bookingConfirmation,
   'payment-receipt': paymentReceipt,
