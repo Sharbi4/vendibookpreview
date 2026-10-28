@@ -246,6 +246,13 @@
       "when": 1793050827393,
       "tag": "0034_callback_dialer_calls",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1793163323885,
+      "tag": "0035_booking_drafts_resume_path",
+      "breakpoints": true
     }
   ]
 }

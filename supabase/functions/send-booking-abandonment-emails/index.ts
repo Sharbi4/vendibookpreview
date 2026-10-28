@@ -38,6 +38,24 @@ Deno.serve(async (req) => {
 
     if (!listing) return false;
 
+    // Never nudge a renter who actually paid (or whose draft was completed
+    // after this batch was selected).
+    const { data: paidBooking } = await supabase
+      .from("booking_requests")
+      .select("id")
+      .eq("shopper_id", draft.user_id)
+      .eq("listing_id", draft.listing_id)
+      .eq("payment_status", "paid")
+      .limit(1)
+      .maybeSingle();
+    if (paidBooking) {
+      await supabase
+        .from("booking_drafts")
+        .update({ completed_at: now.toISOString() })
+        .eq("id", draft.id);
+      return false;
+    }
+
     const { data: profile } = await supabase
       .from("profiles")
       .select("first_name, full_name")
@@ -52,7 +70,18 @@ Deno.serve(async (req) => {
         ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
         : undefined;
 
-    const resumeUrl = `https://vendibook.com/listing/${listing.id}?resume=${draft.recovery_token}`;
+    // Resume reopens the checkout with the renter's dates preselected.
+    const safePath =
+      typeof draft.resume_path === "string" && draft.resume_path.startsWith("/book/")
+        ? draft.resume_path
+        : null;
+    const params = new URLSearchParams();
+    if (draft.start_date) params.set("start", draft.start_date);
+    if (draft.end_date) params.set("end", draft.end_date);
+    const qs = params.toString();
+    const resumeUrl = safePath
+      ? `https://vendibook.com${safePath}`
+      : `https://vendibook.com/book/${listing.id}${qs ? `?${qs}` : ""}`;
 
     const { error } = await invokeTransactionalEmail({
         templateName: "booking-abandoned",
