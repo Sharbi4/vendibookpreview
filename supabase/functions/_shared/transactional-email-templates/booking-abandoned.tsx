@@ -1,10 +1,7 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Container, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
-import { BrandHead, EmailButton } from '../email-brand/components.tsx'
+import { Text } from 'npm:@react-email/components@0.0.22'
+import { CtaButton, SecondaryButton, H1, Eyebrow, SupportRow, VendibookEmailLayout, t } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
-import { s, SITE_URL } from './_styles.ts'
-
-import { BrandFooter, BrandHeader } from './_blocks.tsx'
 interface Props {
   shopperName?: string
   listingTitle?: string
@@ -19,31 +16,23 @@ const E = ({ shopperName, listingTitle, startDate, endDate, resumeUrl, variant =
     ? `${shopperName ? shopperName + ', s' : 'S'}till thinking it over?`
     : `${shopperName ? shopperName + ', y' : 'Y'}ou left something behind`
   const lede = isFollowup
-    ? `${listingTitle ? `"${listingTitle}"` : 'Your selected listing'} is still available for ${startDate || 'your dates'}${endDate ? ` – ${endDate}` : ''}. Dates fill up fast — pick up where you left off in one tap.`
-    : `You started a booking for ${listingTitle ? `"${listingTitle}"` : 'a listing'}${startDate ? ` on ${startDate}` : ''}${endDate ? ` – ${endDate}` : ''} but didn't finish. Your selection is saved — finish in 60 seconds.`
+    ? `Thinking about ${listingTitle ? `"${listingTitle}"` : 'your selected listing'} for ${startDate || 'your dates'}${endDate ? ` – ${endDate}` : ''}? Return to your saved selection to check current availability and pricing.`
+    : `You started a booking for ${listingTitle ? `"${listingTitle}"` : 'a listing'}${startDate ? ` on ${startDate}` : ''}${endDate ? ` – ${endDate}` : ''} but didn't finish. Return to your saved selection when you’re ready.`
   return (
-    <Html lang="en" dir="ltr">
-      <BrandHead />
-      <Preview>{isFollowup ? 'Your booking is still saved' : 'Finish your booking in 60 seconds'}</Preview>
-      <Body style={s.main}>
-        <Container style={s.container}>
-          <BrandHeader hero="booking" listingImageUrl={coverImageUrl} listingTitle={listingTitle} />
-          <Section style={s.card}>
-            <Text style={s.smallHeader}>{isFollowup ? 'STILL AVAILABLE' : 'BOOKING SAVED'}</Text>
-            <Heading style={s.h1}>{headline}</Heading>
-            <Text style={s.lede}>{lede}</Text>
-            <Section style={s.ctaWrap}>
-              <EmailButton href={resumeUrl || `${SITE_URL}/dashboard`} style={s.button}>
-                Resume booking
-              </EmailButton>
-            </Section>
-            <Text style={s.footnote}>
-              No payment is taken until you confirm. Need help? Reply to this email.
-            </Text>
-          </Section>
-        <BrandFooter /></Container>
-      </Body>
-    </Html>
+    <VendibookEmailLayout preview="Return to your booking or talk with our sales team">
+      <Eyebrow>Booking saved</Eyebrow>
+      <H1>{headline}</H1>
+      <Text style={t.text}>{lede}</Text>
+      <CtaButton href={resumeUrl || 'https://vendibook.com/dashboard'}>Resume booking</CtaButton>
+      <Text style={t.text}>
+        Want help choosing the right truck or trailer, or have questions before booking?
+        Our sales team can talk it through with you. Ask a representative to reach out
+        personally, or arrange a free 30-minute Customer Success Meeting.
+      </Text>
+      <SecondaryButton href="https://vendibook.com/contact#callback">Request a personal callback</SecondaryButton>
+      <SecondaryButton href="https://vendibook.com/contact#meeting">Schedule a 30-minute meeting</SecondaryButton>
+      <SupportRow note="You can also reply to this email for help." />
+    </VendibookEmailLayout>
   )
 }
 
