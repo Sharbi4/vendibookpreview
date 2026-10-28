@@ -41,6 +41,7 @@ import { template as adminDailyDigest } from './admin-daily-digest.tsx'
 import { template as feedbackRequest } from './feedback-request.tsx'
 import { template as bookingAbandoned } from './booking-abandoned.tsx'
 import { template as supportReply } from './support-reply.tsx'
+import { template as financingFollowup } from './financing-followup.tsx'
 import { template as featuredPaymentReceipt } from './featured-payment-receipt.tsx'
 import { template as freightQuote } from './freight-quote.tsx'
 import { template as featuredPaymentAdminAlert } from './featured-payment-admin-alert.tsx'
@@ -120,6 +121,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'admin-daily-digest': adminDailyDigest,
   'feedback-request': feedbackRequest,
   'support-reply': supportReply,
+  'financing-followup': financingFollowup,
   'featured-payment-receipt': featuredPaymentReceipt,
   'freight-quote': freightQuote,
   'featured-payment-admin-alert': featuredPaymentAdminAlert,
