@@ -3,6 +3,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
+import { buyerCommitted, saleResumeUrl } from "./saleRecovery.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
