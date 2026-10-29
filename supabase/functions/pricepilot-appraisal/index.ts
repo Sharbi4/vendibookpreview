@@ -167,14 +167,14 @@ const US_REGION: Record<string, string> = {
 };
 
 const SCOPE_LABEL: Record<MarketScope, string> = {
-  local: 'Local market average',
+  local: 'State market benchmark',
   regional: 'Regional benchmark',
   national: 'Broader market benchmark',
   modeled: 'Modeled midpoint',
 };
 
 const SCOPE_HEADLINE: Record<MarketScope, string> = {
-  local: 'Local market',
+  local: 'State market',
   regional: 'Expanded regional market',
   national: 'Broader U.S. market',
   modeled: 'Modeled estimate',
@@ -428,7 +428,8 @@ Deno.serve(async (req) => {
         pricingMoves: saleMoves,
         sources: describeSources(pool, scope),
         // Observed market evidence — displayed marketplace prices, never closing prices.
-        marketEvidence: buildMarketEvidence(saleEvidenceRows, {
+        marketEvidence: buildMarketEvidence(saleEvidenceRows.filter((row) =>
+          valuation.comparables.some((comp) => comp.id === row.id)), {
           mode: 'sale',
           category: subject.assetCategory,
           city: subject.city ?? null,

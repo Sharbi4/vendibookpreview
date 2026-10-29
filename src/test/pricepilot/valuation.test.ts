@@ -4,6 +4,11 @@ import { observedSaleComp } from '../../../supabase/functions/_shared/pricepilot
 const subject: SubjectProfile = {mode:'sale',assetCategory:'food_truck',state:'AZ',features:{}};
 const comp=(price:number,id=String(price)):CompRecord=>({id,title:'Test unit',city:null,state:'AZ',year:null,make:null,model:null,lengthFt:null,displayedPrice:price,previousDisplayedPrice:null,observedStatus:'active',evidenceType:'vendibook_asking',evidenceConfidence:0.5,features:{},qualityFlags:[]});
 describe('PricePilot calculation contracts',()=>{
+ it('does not report high confidence from same-state prices with missing age and size',()=>{
+  const r=runSaleValuation({...subject,year:2018,lengthFt:18},Array.from({length:10},(_,i)=>comp(30000+i*1000,String(i))));
+  expect(r.strongComparableCount).toBe(0);expect(r.confidenceLabel).not.toBe('high');
+  expect(r.warnings.join(' ')).toContain('Missing equipment details');
+ });
  it('weights sold observations above pending and active observations',()=>{
   const observed={...comp(30000),evidenceType:'facebook_observed' as const};
   expect(compWeight({...observed,observedStatus:'sold'},1)).toBeGreaterThan(compWeight({...observed,observedStatus:'pending'},1));

@@ -415,7 +415,14 @@ export function runSaleValuation(subject: SubjectProfile, comps: CompRecord[]): 
   high = Math.max(high, recommended);
 
   // Confidence: comp count (45) + evidence quality (25) + spread tightness (20) + geography (10)
-  const strongCount = filtered.filter((c) => c.similarity >= 0.6 && c.evidenceConfidence >= 0.4).length;
+  const strongCount = filtered.filter((c) =>
+    c.similarity >= 0.6 && c.evidenceConfidence >= 0.4 &&
+    (!subject.year || (c.year != null && Math.abs(subject.year - c.year) <= 6)) &&
+    (!subject.lengthFt || (c.lengthFt != null && Math.abs(subject.lengthFt - c.lengthFt) <= 6)),
+  ).length;
+  if (strongCount < 3) {
+    warnings.push('Few comparables have matching age and size details. Missing equipment details reduce confidence in this estimate.');
+  }
   const countScore = Math.min(strongCount / 8, 1) * 45;
   const evidenceScore =
     (filtered.reduce((s, c) => s + c.evidenceConfidence, 0) / filtered.length) * 25;
