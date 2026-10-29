@@ -4,6 +4,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { isProTierSlug } from '../_shared/proBoostCredit.ts'
 import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
@@ -16,7 +17,7 @@ const log = (step: string, details?: unknown) =>
 
 const TIER_NAMES: Record<string, string> = {
   starter: "Vendibook Starter",
-  pro: "Vendibook Growth",
+  pro: "Vendibook Pro",
   premium: "Vendibook Operator",
 };
 
@@ -27,9 +28,10 @@ const TIER_ACTIONS: Record<string, { label: string; href: string; blurb?: string
     { label: 'Review analytics on your dashboard', href: '/dashboard/insights', blurb: 'See views, saves, and inquiries over time.' },
   ],
   pro: [
-    { label: 'Feature your first listing', href: '/dashboard/promote', blurb: 'Pin to the top of relevant searches for 7 days.' },
-    { label: 'Generate a stronger description with Listing Studio', href: '/dashboard/tools', blurb: 'AI rewrites your listing for conversion.' },
-    { label: 'Map your permits with PermitPath Plus', href: '/dashboard/permits', blurb: 'City-by-city requirements in one view.' },
+    { label: 'Explore BuyerMatch AI', href: '/dashboard/buyermatch', blurb: 'Submit an eligible sale or rental listing for a reviewed matching search.' },
+    { label: 'Use your Featured Boost credit', href: '/dashboard/listings', blurb: 'Choose an eligible active listing for your included billing-period credit.' },
+    { label: 'Explore PricePilot', href: '/tools/pricepilot', blurb: 'Get comparable-backed pricing insights for your equipment.' },
+    { label: 'Explore PermitPath Plus', href: '/tools/permitpath', blurb: 'Save permit roadmaps, track progress and organize documents.' },
   ],
   premium: [
     { label: 'Open the portfolio dashboard', href: '/dashboard', blurb: 'One view across every listing you manage.' },
@@ -88,12 +90,14 @@ serve(async (req) => {
       .maybeSingle();
     if (!prof?.email) { skipped++; continue; }
 
-    const tier = (row.tier as string) || "pro";
-    const planName = TIER_NAMES[tier] ?? "Vendibook Growth";
-    const actions = TIER_ACTIONS[tier] ?? TIER_ACTIONS.pro;
+    const tier = isProTierSlug(row.tier) ? "pro" : String(row.tier ?? "").toLowerCase();
+    const planName = TIER_NAMES[tier] ?? "your Vendibook membership";
+    const actions = TIER_ACTIONS[tier] ?? [
+      { label: 'Review your membership', href: '/dashboard', blurb: 'Open your dashboard to review your available tools.' },
+    ];
 
     try {
-      await invokeTransactionalEmail({
+      const result = await invokeTransactionalEmail({
           templateName: "subscription-getting-started",
           recipientEmail: prof.email,
           idempotencyKey: `sub-getting-started-${row.id}`,
@@ -103,6 +107,7 @@ serve(async (req) => {
             actions,
           },
         });
+      if (result.error) throw new Error(result.error.message);
       await supabase.from("host_subscriptions")
         .update({ getting_started_sent_at: new Date().toISOString() })
         .eq("id", row.id);

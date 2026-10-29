@@ -14,15 +14,16 @@ interface Props {
 }
 
 const DEFAULT_ACTIONS: Action[] = [
-  { label: 'Feature your first listing', href: `${SITE_URL}/dashboard/promote`, blurb: 'Pin to the top of relevant searches for 7 days.' },
-  { label: 'Generate a stronger description with Listing Studio', href: `${SITE_URL}/dashboard/tools`, blurb: 'AI rewrites your listing for conversion.' },
-  { label: 'Map your permits with PermitPath Plus', href: `${SITE_URL}/dashboard/permits`, blurb: 'City-by-city requirements in one view.' },
+  { label: 'Explore BuyerMatch AI', href: `${SITE_URL}/dashboard/buyermatch`, blurb: 'Submit an eligible sale or rental listing for a reviewed matching search.' },
+  { label: 'Use your Featured Boost credit', href: `${SITE_URL}/dashboard/listings`, blurb: 'Choose an eligible active listing for your included billing-period credit.' },
+  { label: 'Explore PricePilot', href: `${SITE_URL}/tools/pricepilot`, blurb: 'Get comparable-backed pricing insights for your equipment.' },
+  { label: 'Explore PermitPath Plus', href: `${SITE_URL}/tools/permitpath`, blurb: 'Save permit roadmaps, track progress and organize documents.' },
 ]
 
-const Email = ({ firstName, planName = 'Vendibook Growth', actions = DEFAULT_ACTIONS }: Props) => (
+const Email = ({ firstName, planName = 'Vendibook Pro', actions = DEFAULT_ACTIONS }: Props) => (
   <Html lang="en" dir="ltr">
     <BrandHead />
-    <Preview>Get the most out of {planName} — 3 quick wins</Preview>
+    <Preview>Get the most out of {planName} — explore your included tools</Preview>
     <Body style={s.main}>
       <Container style={s.container}>
         <BrandHeader hero="payment" />
@@ -30,10 +31,10 @@ const Email = ({ firstName, planName = 'Vendibook Growth', actions = DEFAULT_ACT
           <Text style={s.kicker}>GETTING STARTED</Text>
           <Heading style={s.h1}>{firstName ? `${firstName}, get the most out of ${planName}.` : `Get the most out of ${planName}.`}</Heading>
           <Text style={s.lede}>
-            You've had {planName} for 24 hours. Here are the three actions that pay back your subscription in the first week.
+            Your membership brings your next steps together. Explore these tools from your dashboard whenever you're ready.
           </Text>
 
-          {actions.slice(0, 3).map((a, i) => (
+          {actions.slice(0, 4).map((a, i) => (
             <Section key={i} style={s.accentRow}>
               <Text style={s.accentLabel}>STEP {i + 1}</Text>
               <Text style={{ ...s.accentValuePlain, marginBottom: 6 }}>
@@ -59,5 +60,5 @@ export const template = {
   component: Email,
   subject: (d: Record<string, any>) => `Get the most out of ${d?.planName ?? 'your plan'}`,
   displayName: 'Subscription — getting started (24h follow-up)',
-  previewData: { firstName: 'Alex', planName: 'Vendibook Growth' },
+  previewData: { firstName: 'Alex', planName: 'Vendibook Pro' },
 } satisfies TemplateEntry
