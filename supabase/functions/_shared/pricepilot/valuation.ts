@@ -122,14 +122,15 @@ function weightedQuantile(items: { value: number; weight: number }[], q: number)
   const target = q * total;
   let cum = 0;
   for (let i = 0; i < sorted.length; i++) {
-    const prev = cum;
     cum += sorted[i].weight;
     if (cum >= target) {
-      // Interpolate inside this item's weight span for a smooth estimate.
-      const span = sorted[i].weight || 1;
-      const frac = Math.min(1, Math.max(0, (target - prev) / span));
-      const prevValue = i > 0 ? sorted[i - 1].value : sorted[i].value;
-      return prevValue + (sorted[i].value - prevValue) * frac;
+      // Inverse weighted CDF. At an exact boundary use the midpoint, as for
+      // the ordinary median of an even-sized sample. Interpolating backward
+      // within a weight bucket systematically understated the median.
+      if (Math.abs(cum - target) < 1e-10 && i + 1 < sorted.length) {
+        return (sorted[i].value + sorted[i + 1].value) / 2;
+      }
+      return sorted[i].value;
     }
   }
   return sorted[sorted.length - 1].value;
@@ -226,7 +227,10 @@ const SOURCE_WEIGHT: Record<EvidenceType, number> = {
 };
 
 export function compWeight(comp: CompRecord, similarity: number): number {
-  return (0.35 + 0.65 * similarity) * clamp(comp.evidenceConfidence, 0.1, 1) * SOURCE_WEIGHT[comp.evidenceType];
+  const statusWeight = comp.evidenceType === 'facebook_observed'
+    ? comp.observedStatus === 'sold' ? 1 : comp.observedStatus === 'pending' ? 0.8 : 0.6
+    : 1;
+  return (0.35 + 0.65 * similarity) * clamp(comp.evidenceConfidence, 0.1, 1) * SOURCE_WEIGHT[comp.evidenceType] * statusWeight;
 }
 
 // ---------------------------------------------------------------------------
@@ -343,7 +347,7 @@ export function runSaleValuation(subject: SubjectProfile, comps: CompRecord[]): 
   ];
 
   const usable = comps.filter(
-    (c) => typeof c.displayedPrice === 'number' && c.displayedPrice !== null && c.displayedPrice >= 500,
+    (c) => typeof c.displayedPrice === 'number' && Number.isFinite(c.displayedPrice) && c.displayedPrice >= 500,
   );
 
   const scored: ScoredComp[] = usable.map((c) => {
@@ -407,6 +411,8 @@ export function runSaleValuation(subject: SubjectProfile, comps: CompRecord[]): 
     low = round100(recommended * 0.85);
     high = round100(recommended * 1.15);
   }
+  low = Math.min(low, recommended);
+  high = Math.max(high, recommended);
 
   // Confidence: comp count (45) + evidence quality (25) + spread tightness (20) + geography (10)
   const strongCount = filtered.filter((c) => c.similarity >= 0.6 && c.evidenceConfidence >= 0.4).length;
@@ -471,7 +477,7 @@ export function runRentalValuation(subject: SubjectProfile, comps: CompRecord[])
   ];
 
   const usable = comps.filter(
-    (c) => typeof c.displayedPrice === 'number' && c.displayedPrice !== null && c.displayedPrice >= 25,
+    (c) => typeof c.displayedPrice === 'number' && Number.isFinite(c.displayedPrice) && c.displayedPrice >= 25,
   );
 
   if (usable.length < 3) {
@@ -516,10 +522,10 @@ export function runRentalValuation(subject: SubjectProfile, comps: CompRecord[])
 
   const weeklyRates = scored
     .map((c) => (c.features?.__weeklyRate as number) || 0)
-    .filter((n) => n > 0);
+    .filter((n) => typeof n === 'number' && Number.isFinite(n) && n > 0);
   const monthlyRates = scored
     .map((c) => (c.features?.__monthlyRate as number) || 0)
-    .filter((n) => n > 0);
+    .filter((n) => typeof n === 'number' && Number.isFinite(n) && n > 0);
 
   const weekly = weeklyRates.length >= 3
     ? Math.round(median(weeklyRates) / 5) * 5

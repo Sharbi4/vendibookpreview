@@ -47,6 +47,7 @@ export default function PermitsTab() {
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<SavedRoadmap | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
 
   // Load list (and items across all roadmaps for renewals strip).
   useEffect(() => {
@@ -81,11 +82,15 @@ export default function PermitsTab() {
     let cancelled = false;
     (async () => {
       setDetailLoading(true);
+      setDetailError(null);
       try {
         const r = await getRoadmap(roadmapId);
-        if (!cancelled) setDetail(r);
+        if (!cancelled) {
+          setDetail(r);
+          if (!r) setDetailError('This roadmap is unavailable or belongs to another account.');
+        }
       } catch (e: any) {
-        if (!cancelled) toast.error(e?.message || 'Could not load roadmap');
+        if (!cancelled) setDetailError(e?.message || 'Could not load roadmap. Please return to your saved permits and try again.');
       } finally {
         if (!cancelled) setDetailLoading(false);
       }
@@ -193,6 +198,12 @@ export default function PermitsTab() {
 
   // ---------- Detail view ----------
   if (roadmapId) {
+    if (detailError) return (
+      <div role="alert" className="space-y-4 py-12 text-center">
+        <p>{detailError}</p>
+        <Button variant="outline" onClick={backToList}>Back to saved permits</Button>
+      </div>
+    );
     if (detailLoading || !detail) {
       return (
         <div className="flex items-center justify-center py-24">

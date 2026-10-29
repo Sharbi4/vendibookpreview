@@ -27,7 +27,7 @@ const TAB_TARGETS: Record<string, string> = {
   membership: '/pricing',
   referral: '/referral',
   tools: '/tools',
-  permits: '/tools/permitpath',
+  permits: '/dashboard/permits',
 };
 
 /** Returns the target path, or null when the URL is not a legacy deep link. */
@@ -46,7 +46,7 @@ export function legacyDashboardRedirect(params: URLSearchParams): string | null 
 
   const target = tab ? TAB_TARGETS[tab.toLowerCase()] : undefined;
   if (!target) return '/dashboard';
-  if (target === '/tools/permitpath' && params.get('roadmap')) {
+  if (target === '/dashboard/permits' && params.get('roadmap')) {
     return `${target}?roadmap=${encodeURIComponent(params.get('roadmap') as string)}`;
   }
   return target;

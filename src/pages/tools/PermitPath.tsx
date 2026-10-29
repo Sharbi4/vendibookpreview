@@ -149,6 +149,10 @@ const PermitPath = () => {
   const permitAccess = usePermitPathAccess();
   const [plusUpsellOpen, setPlusUpsellOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
+  const legacyRoadmapId = searchParams.get('roadmap');
+  useEffect(() => {
+    if (legacyRoadmapId) navigate(`/dashboard/permits?roadmap=${encodeURIComponent(legacyRoadmapId)}`, { replace: true });
+  }, [legacyRoadmapId, navigate]);
   const [isLoading, setIsLoading] = useState(false);
   const [form, setForm] = useState({ city: '', state: '', businessType: 'food_truck' });
   const [profile, setProfile] = useState<VendorProfile>({});
@@ -227,7 +231,7 @@ const PermitPath = () => {
       setSearchParams(next, { replace: true });
       const saved = await persistRefresh(id, result);
       if (saved) {
-        navigate(`/dashboard?view=host&tab=permits&roadmap=${saved.id}`);
+        navigate(`/dashboard/permits?roadmap=${saved.id}`);
       }
       return;
     }
@@ -277,7 +281,7 @@ const PermitPath = () => {
       } catch { /* ignore */ }
       const saved = await persistSaveNew(pending);
       if (saved) {
-        navigate(`/dashboard?view=host&tab=permits&roadmap=${saved.id}`);
+        navigate(`/dashboard/permits?roadmap=${saved.id}`);
       }
     })();
   }, [user, permitAccess.isPlus, permitAccess.isLoading, searchParams, persistSaveNew, navigate, setSearchParams]);
@@ -683,13 +687,13 @@ const PermitPath = () => {
           if (!result) return;
           const saved = await persistRefresh(m.id, result);
           setSaveDialogOpen(false);
-          if (saved) navigate(`/dashboard?view=host&tab=permits&roadmap=${saved.id}`);
+          if (saved) navigate(`/dashboard/permits?roadmap=${saved.id}`);
         }}
         onSaveNew={async (label) => {
           if (!result) return;
           const saved = await persistSaveNew(result, label);
           setSaveDialogOpen(false);
-          if (saved) navigate(`/dashboard?view=host&tab=permits&roadmap=${saved.id}`);
+          if (saved) navigate(`/dashboard/permits?roadmap=${saved.id}`);
         }}
       />
 

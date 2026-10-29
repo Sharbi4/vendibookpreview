@@ -15,6 +15,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { gateToolAccess } from '../_shared/gateToolAccess.ts';
 import { buildMarketEvidence, type ComparableRow } from '../_shared/marketComparables.ts';
+import { observedSaleComp } from '../_shared/pricepilot/observedComp.ts';
 import { assessEquipmentValue } from '../_shared/pricepilot/equipmentValue.ts';
 import { gatherSources } from '../_shared/firecrawl-research.ts';
 
@@ -249,29 +250,13 @@ Deno.serve(async (req) => {
         .eq('valuation_mode', 'sale')
         .eq('asset_category', subject.assetCategory)
         .eq('usable_for_valuation', true)
-        .not('displayed_price', 'is', null)
         .limit(200);
       if (obsErr) console.warn('comp query failed:', obsErr.message);
       saleEvidenceRows = (observed ?? []) as unknown as ComparableRow[];
 
-      for (const row of observed ?? []) {
-        comps.push({
-          id: row.id,
-          title: row.source_title,
-          city: row.city,
-          state: row.state,
-          year: row.year,
-          make: row.make,
-          model: row.model,
-          lengthFt: row.length_ft ? Number(row.length_ft) : null,
-          displayedPrice: row.displayed_price ? Number(row.displayed_price) : null,
-          previousDisplayedPrice: row.previous_displayed_price ? Number(row.previous_displayed_price) : null,
-          observedStatus: row.observed_status,
-          evidenceType: 'facebook_observed',
-          evidenceConfidence: row.evidence_confidence ? Number(row.evidence_confidence) : 0.5,
-          features: (row.normalized_features as Record<string, unknown>) ?? {},
-          qualityFlags: Array.isArray(row.quality_flags) ? (row.quality_flags as string[]) : [],
-        });
+      for (const row of saleEvidenceRows) {
+        const comp = observedSaleComp(row);
+        if (comp) comps.push(comp);
       }
 
       // 2. Current Vendibook asking prices (lower-weight evidence).
@@ -280,6 +265,10 @@ Deno.serve(async (req) => {
           .from('listings')
           .select('id, title, city, state, year_built, make, model, length_inches, price_sale')
           .eq('status', 'published')
+          .not('published_at', 'is', null)
+          .is('deleted_at', null)
+          .eq('moderation_status', 'clear')
+          .eq('unlisted', false)
           .eq('mode', 'sale')
           .eq('category', subject.assetCategory)
           .gt('price_sale', 0)
@@ -338,6 +327,7 @@ Deno.serve(async (req) => {
           Math.round(Math.min(valuation.estimatedMarketHigh, Math.max(valuation.estimatedMarketLow, n)));
         const f = 1 + equipment.priceBias;
         valuation.recommendedListPrice = clamp(valuation.recommendedListPrice * f);
+        valuation.distribution.recommended = valuation.recommendedListPrice;
         valuation.quickSalePrice = clamp(valuation.quickSalePrice * f);
         valuation.premiumPositionPrice = clamp(valuation.premiumPositionPrice * f);
         valuation.adjustmentSummary.push({
@@ -509,6 +499,10 @@ Deno.serve(async (req) => {
         .from('listings')
         .select('id, title, city, state, year_built, length_inches, price_daily, price_weekly, price_monthly')
         .eq('status', 'published')
+          .not('published_at', 'is', null)
+          .is('deleted_at', null)
+          .eq('moderation_status', 'clear')
+          .eq('unlisted', false)
         .eq('mode', 'rent')
         .eq('category', subject.assetCategory)
         .gt('price_daily', 0)

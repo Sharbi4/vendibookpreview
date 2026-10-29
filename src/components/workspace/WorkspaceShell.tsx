@@ -87,6 +87,7 @@ const WORKSPACE_NAV: WorkspaceNavSection[] = [
 const TOOLS: WorkspaceNavItem[] = [
   { label: 'PricePilot', to: '/tools/pricepilot', icon: Gauge, pro: true },
   { label: 'PermitPath', to: '/tools/permitpath', icon: FileCheck2 },
+  { label: 'Saved permits', to: '/dashboard/permits', icon: FileCheck2 },
 ];
 
 const mobileNav = [

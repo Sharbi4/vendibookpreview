@@ -88,6 +88,7 @@ const WorkspaceSellerOnboarding = lazy(() => import("./pages/workspace/Workspace
 const WorkspaceBookingNew = lazy(() => import("./pages/workspace/WorkspaceBookingNew"));
 const WorkspaceBookingDetail = lazy(() => import("./pages/workspace/WorkspaceBookingDetail"));
 const WorkspaceReporting = lazy(() => import("./pages/workspace/WorkspaceReporting"));
+const WorkspacePermits = lazy(() => import("./pages/workspace/WorkspacePermits"));
 const WorkspaceAnalytics = lazy(() => import("./pages/workspace/WorkspaceAnalytics"));
 const WorkspaceAccount = lazy(() => import("./pages/workspace/WorkspaceAccount"));
 const WorkspaceAccountSettings = lazy(() => import("./pages/workspace/WorkspaceAccountSettings"));
@@ -388,6 +389,7 @@ const AnimatedRoutes = () => {
           <Route path="/dashboard/bookings/new/:listingId" element={<PageTransition><WorkspaceBookingNew /></PageTransition>} />
           <Route path="/dashboard/bookings/:bookingId" element={<PageTransition><WorkspaceBookingDetail /></PageTransition>} />
           <Route path="/dashboard/reporting" element={<PageTransition><WorkspaceReporting /></PageTransition>} />
+          <Route path="/dashboard/permits" element={<PageTransition><WorkspacePermits /></PageTransition>} />
           <Route path="/dashboard/analytics" element={<PageTransition><WorkspaceAnalytics /></PageTransition>} />
           <Route path="/walkthrough/schedule/:listingId" element={<PageTransition><WalkthroughSchedule /></PageTransition>} />
           <Route path="/walkthrough/next-steps" element={<PageTransition><WalkthroughNextSteps /></PageTransition>} />

@@ -30,18 +30,22 @@ interface NarrativeRequest {
   photos?: string[];
 }
 
-/** A narrative is usable only if it parsed and carries at least one text field. */
-function isValidNarrative(n: unknown): n is PricePilotNarrative {
-  if (!n || typeof n !== 'object') return false;
-  const o = n as Record<string, unknown>;
-  return typeof o.headline === 'string' || typeof o.summary === 'string';
-}
-
-function parseNarrative(content: unknown): PricePilotNarrative | null {
+export function parseNarrative(content: unknown): PricePilotNarrative | null {
   if (typeof content !== 'string' || !content.trim()) return null;
   try {
     const parsed: unknown = JSON.parse(content);
-    return isValidNarrative(parsed) ? parsed : null;
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
+    const obj = parsed as Record<string, unknown>;
+    const text = (v: unknown) => typeof v === 'string' && v.trim() ? v.trim().slice(0, 2000) : undefined;
+    const list = (v: unknown) => Array.isArray(v) ? v.map(text).filter((s): s is string => !!s).slice(0, 4) : [];
+    const headline = text(obj.headline);
+    const summary = text(obj.summary);
+    if (!headline && !summary) return null;
+    // Provider output is untrusted. Never pass objects as React text or
+    // non-arrays to report components, even when one other field is valid.
+    return { headline, summary, drivers_positive: list(obj.drivers_positive),
+      drivers_negative: list(obj.drivers_negative), what_could_change: list(obj.what_could_change),
+      caveats: list(obj.caveats), photo_observations: list(obj.photo_observations) };
   } catch {
     return null;
   }

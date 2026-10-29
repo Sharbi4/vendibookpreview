@@ -21,7 +21,8 @@ describe('legacyDashboardRedirect', () => {
     expect(go('view=shopper&tab=orders')).toBe('/dashboard/transactions');
     expect(go('tab=listings')).toBe('/dashboard/listings');
     expect(go('view=shopper&tab=favorites')).toBe('/dashboard/saved');
-    expect(go('view=host&tab=permits&roadmap=r1')).toBe('/tools/permitpath?roadmap=r1');
+    expect(go('view=host&tab=permits&roadmap=r1')).toBe('/dashboard/permits?roadmap=r1');
+    expect(go('tab=permits')).toBe('/dashboard/permits');
   });
 
   it('never loops: unknown tabs and bare views land on the plain home', () => {

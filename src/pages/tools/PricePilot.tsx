@@ -466,7 +466,7 @@ export default function PricePilot() {
                           className="rounded-[24px] bg-sale-card px-6 py-12 text-center md:px-12">
                           <h3 className="text-2xl font-bold tracking-tight text-foreground">Sign in to begin</h3>
                           <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
-                            Your appraisal saves to your account so you can revisit it whenever you're ready to list.
+                            Review your price range, comparable evidence and next steps before choosing your listing price.
                           </p>
                           <Button variant="cta" size="cta" className="mt-6" asChild>
                             <Link to={signInHref}>Sign in to continue <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
