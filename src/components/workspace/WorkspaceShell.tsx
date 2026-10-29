@@ -60,6 +60,8 @@ const WORKSPACE_NAV: WorkspaceNavSection[] = [
       { label: 'Listings', to: '/dashboard/listings', icon: List },
       { label: 'Offers', to: '/dashboard/offers', icon: Tag },
       { label: 'BuyerMatch', to: '/dashboard/buyermatch', icon: Target, pro: true },
+      { label: 'Analytics', to: '/dashboard/analytics', icon: Gauge, pro: true },
+      { label: 'Reporting', to: '/dashboard/reporting', icon: FileText },
     ],
   },
   {
