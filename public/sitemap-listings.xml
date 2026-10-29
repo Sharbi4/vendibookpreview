@@ -24,7 +24,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/0621cf3c-9519-473b-b300-641bd0a0c953</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -46,7 +46,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/09d2c81f-5990-4145-9b71-a85f5bab5ee0</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -57,7 +57,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/0aaeebb9-ca8b-4b4a-884e-ddaf97822452</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -112,7 +112,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/109f57be-b1c6-41bb-a2a1-bc8c3efa8e51</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -233,7 +233,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/208387b2-6318-4488-963f-3741be63d929</loc>
-    <lastmod>2026-10-13</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -310,7 +310,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/26bd6a6a-f814-4f31-923d-68e7e326ff06</loc>
-    <lastmod>2026-10-20</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -453,7 +453,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/3db28709-0a13-4fb6-8aad-5f79b5e70fea</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -486,7 +486,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/3fb06155-e9e4-4905-87a6-75a315aa628c</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -552,7 +552,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/4b61d281-df71-45d7-8a14-1c0043aa53be</loc>
-    <lastmod>2026-10-26</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -574,7 +574,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/5485ce08-9cd6-4c4c-851e-824e4b7d9451</loc>
-    <lastmod>2026-10-26</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -607,7 +607,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/565dd7d3-5eae-47eb-b304-0fe5e998dbaa</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -640,7 +640,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/587b1919-9828-46ef-bba8-76da9553f962</loc>
-    <lastmod>2026-10-26</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -658,6 +658,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/ce5ab03f-9d2e-4052-b7c3-1a1347ad5b5d/5894832e-034c-48ba-8315-1321e9b32080/1784989676916-sqm31s.jpeg</image:loc>
       <image:title>BBQ Food Trailer (large smoker included)</image:title>
       <image:caption>BBQ Food Trailer (large smoker included) in Myakka City, FL on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/5a307919-1547-494a-b690-1a3018dba8e8</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/8e508a7f-ce03-4b6f-af4c-1aa97e7fd4f6/5a307919-1547-494a-b690-1a3018dba8e8/1793298534691-2kqbrg.jpeg</image:loc>
+      <image:title>1994 Full Kitchen Food Bus Forsale</image:title>
+      <image:caption>1994 Full Kitchen Food Bus Forsale in Aurora, CO on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -728,7 +739,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/6b466651-d042-4150-932e-09a76290866b</loc>
-    <lastmod>2026-10-19</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -827,7 +838,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/7757ad2a-dae9-4d1c-a9bf-68d703bb53ba</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -838,7 +849,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/779d5773-de60-4075-b92d-32387da86dd3</loc>
-    <lastmod>2026-10-19</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -893,7 +904,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/812d82b1-f4ba-48fb-b82f-3fa4c74ced37</loc>
-    <lastmod>2026-10-22</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -926,7 +937,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/8775ded0-664c-4aee-99ba-99f6fc7124e0</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -992,7 +1003,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/99578bd4-d236-4371-b8f6-563a5d10d7a5</loc>
-    <lastmod>2026-10-25</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1003,7 +1014,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/99d179ad-16ad-4bb3-9ccb-cd1a8e157284</loc>
-    <lastmod>2026-10-26</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1025,7 +1036,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/9ad68341-90d5-4dd7-b745-17041bdbc0c2</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1036,7 +1047,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/9c92006e-fe3c-4e52-9474-51d4a950eb26</loc>
-    <lastmod>2026-10-25</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1091,7 +1102,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/a0ea674d-c739-4e0a-977e-422f76b4a3c3</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1113,7 +1124,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/a2a2f761-da8c-4f59-ad5c-6a8b54f67083</loc>
-    <lastmod>2026-10-14</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1135,7 +1146,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/a4b11455-33a8-4789-a3e6-350306c117f4</loc>
-    <lastmod>2026-10-26</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1157,7 +1168,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/a9b1d750-78a1-452a-b79b-c37fcd01dbdc</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1179,7 +1190,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/acb2ab5c-afc8-45e1-96d0-45b9d6ca001a</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1190,7 +1201,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/ad19febb-ea7b-42b5-a77c-98cb4d565e81</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1201,7 +1212,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/adaf827c-a8cb-47ea-a021-f3828e5b5482</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1223,7 +1234,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/b40a07a3-f333-4f1d-9cf8-ae44963f6927</loc>
-    <lastmod>2026-10-26</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1245,7 +1256,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/b6f99adb-53a4-4f02-90f8-cc66c87ad33b</loc>
-    <lastmod>2026-10-25</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1300,7 +1311,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/c001129e-dfb8-42e2-bb4f-cf83dc0a2027</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1388,7 +1399,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/ca6282fe-bd1a-4cfc-b12f-f8b658de9882</loc>
-    <lastmod>2026-10-24</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1476,7 +1487,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/d20b2e3b-ac23-40c8-882e-038909520493</loc>
-    <lastmod>2026-10-17</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1608,7 +1619,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/e6efa74a-cdda-4195-9546-b440016346cc</loc>
-    <lastmod>2026-10-26</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1685,7 +1696,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/f13ba587-0d95-48f3-9a18-3bb92e540e05</loc>
-    <lastmod>2026-10-23</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1696,7 +1707,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/f1a879a6-6c16-4c17-b902-a2c84b1036ff</loc>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1707,7 +1718,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/f4d5e5ae-31eb-4ba0-9d2b-13df7279d020</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1773,7 +1784,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/fcdfd8df-0dd3-4ea7-9121-be902c5081ad</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
