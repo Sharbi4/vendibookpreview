@@ -555,7 +555,7 @@ async function callAi(systemPrompt: string, userPrompt: string, key: string, str
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-3-pro-preview",
+      model: "google/gemini-3.1-pro-preview",
       messages: [
         { role: "system", content: sys },
         { role: "user", content: userPrompt },
