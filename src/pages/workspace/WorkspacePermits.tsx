@@ -6,7 +6,9 @@ export default function WorkspacePermits() {
   return (
     <WorkspaceShell>
       <div className={ws.page}>
-        <PermitsTab />
+        <div className="min-w-0 rounded-2xl bg-[#101013] p-4 text-white sm:p-6">
+          <PermitsTab />
+        </div>
       </div>
     </WorkspaceShell>
   );
