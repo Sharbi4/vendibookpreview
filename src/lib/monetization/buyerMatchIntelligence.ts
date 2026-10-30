@@ -50,9 +50,11 @@ export interface BuyerMatchCampaign {
 }
 export interface BuyerMatchLink { id: string; campaign_id: string; listing_id: string; source: string; token: string; created_at: string }
 export interface BuyerMatchReport { id: string; campaign_id: string; summary: string; published_at: string }
+export interface BuyerMatchProgressUpdate { id: string; campaign_id: string; steps: Record<string, 'planned' | 'in_progress' | 'complete'>; created_at: string; next_update_at: string }
 export interface BuyerMatchData {
   config: BuyerMatchConfig; campaigns: BuyerMatchCampaign[]; reports: BuyerMatchReport[];
   listings: BuyerMatchListing[]; events: CampaignEvent[]; links: BuyerMatchLink[];
+  progress?: BuyerMatchProgressUpdate[];
 }
 
 /** Minimum photo set buyers ask for: exterior, serving window, kitchen line, equipment plates. */

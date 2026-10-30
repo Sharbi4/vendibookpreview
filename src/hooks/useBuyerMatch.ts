@@ -24,15 +24,16 @@ export function useBuyerMatch() {
     queryFn: async () => {
       if (!user) throw new Error('Sign in required');
       const config = await buyerMatchAction('config');
-      const [campaigns, reports, listings, events, links] = await Promise.all([
+      const [campaigns, reports, listings, events, links, progress] = await Promise.all([
         db.from('buyermatch_campaigns').select('*').order('created_at', { ascending: false }),
         db.from('buyermatch_reports').select('*').order('published_at', { ascending: false }),
         db.from('listings').select('id,title,cover_image_url,mode,price_sale,price_daily,price_hourly,price_weekly,price_monthly,city,state,description,image_urls,included_items').eq('host_id', user.id).in('mode',['sale','rent']).eq('status','published').is('deleted_at',null).or('unlisted.eq.false,unlisted.is.null'),
         db.from('buyermatch_events').select('id,event_key,campaign_id,listing_id,event_type,occurred_at,source,verification_status,outcome,next_step,feedback').order('occurred_at', { ascending: false }),
         db.from('buyermatch_links').select('*').order('created_at', { ascending: false }),
+        db.from('buyermatch_progress_updates').select('id,campaign_id,steps,created_at,next_update_at').order('created_at', { ascending: false }),
       ]);
-      for (const result of [campaigns, reports, listings, events, links]) if (result.error) throw new Error(result.error.message);
-      return { config, campaigns: campaigns.data ?? [], reports: reports.data ?? [], listings: listings.data ?? [], events: events.data ?? [], links: links.data ?? [] };
+      for (const result of [campaigns, reports, listings, events, links, progress]) if (result.error) throw new Error(result.error.message);
+      return { config, campaigns: campaigns.data ?? [], reports: reports.data ?? [], listings: listings.data ?? [], events: events.data ?? [], links: links.data ?? [], progress: progress.data ?? [] };
     },
   });
 }

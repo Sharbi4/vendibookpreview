@@ -16,6 +16,21 @@ function show(){return render(<QueryClientProvider client={new QueryClient({defa
 const pastCampaign={id:'c1',listing_id:'listing',status:'paused',created_at:'2026-10-01T00:00:00Z',listing_snapshot:{id:'listing',title:'Food truck'}};
 beforeEach(()=>{cleanup();mocks.action.mockReset();mocks.error=null;mocks.signals={};mocks.data={config:{entitled:true,is_admin:false,submissions_enabled:true,fulfillment_enabled:false,max_campaigns:3},campaigns:[],reports:[],listings:[{id:'listing',title:'Food truck'}],events:[],links:[]};});
 describe('BuyerMatch seller experience',()=>{
+ it('shows the selected listing preparation report without inventing verified outreach',()=>{
+  mocks.data!.campaigns=[{...pastCampaign,status:'pending_activation'}];
+  mocks.data!.progress=[{id:'progress',campaign_id:'c1',steps:{priority:'complete',community_access:'in_progress'},created_at:'2026-10-30T18:00:00Z',next_update_at:'2026-10-30T18:30:00Z'}];
+  mocks.action.mockResolvedValue({});show();
+  expect(screen.getByText('The latest on your matching search.')).toBeInTheDocument();
+  expect(screen.getByText('Campaign activation is pending.')).toBeInTheDocument();
+  expect(screen.getByText(/No verified activity yet/)).toBeInTheDocument();
+  expect(screen.queryByText('Searches haven’t started yet.')).not.toBeInTheDocument();
+ });
+ it('never attaches another campaign report to the selected listing',()=>{
+  mocks.data!.campaigns=[pastCampaign];
+  mocks.data!.progress=[{id:'other',campaign_id:'c2',steps:{priority:'complete'},created_at:'2026-10-30T18:00:00Z',next_update_at:'2026-10-30T18:30:00Z'}];
+  mocks.action.mockResolvedValue({});show();
+  expect(screen.queryByText('The latest on your matching search.')).not.toBeInTheDocument();
+ });
  it('shows no sample numbers when locked and routes the upgrade to membership management with the catalog price',()=>{
   mocks.data!.config.entitled=false;show();
   expect(screen.queryByText('Example preview')).not.toBeInTheDocument();

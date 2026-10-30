@@ -8,11 +8,12 @@ import BuyerMatchPreview from '@/components/monetization/BuyerMatchPreview';
 import BuyerMatchInsights from '@/components/monetization/BuyerMatchInsights';
 import BuyerMatchListings from '@/components/monetization/BuyerMatchListings';
 import BuyerMatchRecommendations from '@/components/monetization/BuyerMatchRecommendations';
+import BuyerMatchProgress, { progressTimestamp } from '@/components/monetization/BuyerMatchProgress';
 import { bm, place, shortDate, usd } from '@/components/monetization/buyerMatchUi';
 import { buyerMatchAction, useBuyerMatch } from '@/hooks/useBuyerMatch';
 import {
   listingRecommendations, CAMPAIGN_STATUS, EVENT_LABELS,
-  type BuyerMatchCampaign, type BuyerMatchLink, type BuyerMatchListing, type BuyerMatchReport, type CampaignEvent,
+  type BuyerMatchCampaign, type BuyerMatchLink, type BuyerMatchListing, type BuyerMatchReport, type CampaignEvent, type BuyerMatchProgressUpdate,
 } from '@/lib/monetization/buyerMatchIntelligence';
 
 type Act = (name: string, payload: Record<string, unknown>) => void;
@@ -26,6 +27,7 @@ export default function WorkspaceBuyerMatch() {
   const data = query.data; const campaigns = data?.campaigns ?? [];
   const entitled = !!data?.config.entitled;
   const selected = campaigns.find(c => c.id === params.get('campaign')) ?? campaigns[0];
+  const progress = data?.progress?.find(p => p.campaign_id === selected?.id);
   const eligible = (data?.listings ?? []).filter(l => !campaigns.some(c => c.listing_id === l.id));
   const selectedListing = data?.listings.find(l => l.id === listing);
   const [activate, setActivate] = useState(params.get('activate') === '1');
@@ -58,8 +60,8 @@ export default function WorkspaceBuyerMatch() {
       </>}
 
       {entitled && !data.config.fulfillment_enabled && <section className="border-l-2 border-[#FF5124] pl-5">
-        <h2 className="text-[16px] font-semibold">Searches haven&rsquo;t started yet.</h2>
-        <p className={bm.body + ' mt-1 max-w-2xl'}>You can send listings for review now. Research and outreach begin only after our team approves a listing and confirms the search is running. Nothing is sent to buyers or renters before then.</p>
+        <h2 className="text-[16px] font-semibold">{progress ? 'Campaign activation is pending.' : 'Searches haven’t started yet.'}</h2>
+        <p className={bm.body + ' mt-1 max-w-2xl'}>{progress ? 'Your team’s preparation update is below. Confirmed outreach and buyer or renter responses will appear separately as they are reviewed.' : 'You can send listings for review now. Research and outreach begin only after our team approves a listing and confirms the search is running. Nothing is sent to buyers or renters before then.'}</p>
       </section>}
       {entitled && !data.config.submissions_enabled && <p className={bm.body}>New matching searches are paused right now. Existing searches and reports are unchanged.</p>}
 
@@ -93,7 +95,7 @@ export default function WorkspaceBuyerMatch() {
         <div className="mt-8">
           {params.get('campaign') === 'all' && campaigns.length > 1
             ? <section className="space-y-6"><p className={bm.body}>Verified activity across {campaigns.length} searches.</p><BuyerMatchInsights events={data.events ?? []}/></section>
-            : selected && <CampaignDashboard key={selected.id} campaign={selected} live={data.listings.find(l => l.id === selected.listing_id)} events={(data.events ?? []).filter(e => e.campaign_id === selected.id)} links={(data.links ?? []).filter(k => k.campaign_id === selected.id)} reports={data.reports.filter(r => r.campaign_id === selected.id)} entitled={entitled} busy={action.isPending} act={act}/>}
+            : selected && <CampaignDashboard key={selected.id} campaign={selected} progress={progress} live={data.listings.find(l => l.id === selected.listing_id)} events={(data.events ?? []).filter(e => e.campaign_id === selected.id)} links={(data.links ?? []).filter(k => k.campaign_id === selected.id)} reports={data.reports.filter(r => r.campaign_id === selected.id)} entitled={entitled} busy={action.isPending} act={act}/>}
         </div>
       </section>}
 
@@ -143,8 +145,9 @@ function Stages({ c }: { c: BuyerMatchCampaign }) {
   </ol>;
 }
 
-function CampaignDashboard({ campaign: c, live, events, links, reports, entitled, busy, act }: {
+function CampaignDashboard({ campaign: c, live, events, links, reports, progress, entitled, busy, act }: {
   campaign: BuyerMatchCampaign; live?: BuyerMatchListing; events: CampaignEvent[]; links: BuyerMatchLink[]; reports: BuyerMatchReport[];
+  progress?: BuyerMatchProgressUpdate;
   entitled: boolean; busy: boolean; act: Act;
 }) {
   // Prefer the live listing (what buyers see today); fall back to the snapshot taken at submission.
@@ -164,7 +167,7 @@ function CampaignDashboard({ campaign: c, live, events, links, reports, entitled
         <div className="flex flex-wrap items-center justify-between gap-3"><span className={bm.chip}><span aria-hidden className="h-1.5 w-1.5 rounded-full bg-[#FF5124]"/>{CAMPAIGN_STATUS[c.status] ?? c.status}</span><Link to={'/listing/' + c.listing_id} className={bm.link + ' inline-flex items-center gap-1'}>View listing<ArrowUpRight className="h-3.5 w-3.5"/></Link></div>
         <h3 className="mt-5 font-display text-[26px] leading-tight sm:text-[30px]">{listing.title}</h3>
         <p className={bm.body + ' mt-1'}>{[matchingListingPrice(listing), place(listing), 'sent ' + shortDate(c.created_at)].filter(Boolean).join(' · ')}</p>
-        <p className="mt-5 text-[15px] leading-7">{STATUS_LINE[c.status] ?? 'Your history stays here.'}</p>
+        <p className="mt-5 text-[15px] leading-7">{progress && c.status === 'pending_activation' ? 'Your team has shared a preparation update below. Activation and verified outreach are still pending.' : STATUS_LINE[c.status] ?? 'Your history stays here.'}</p>
         <Stages c={c}/>
         {(c.geography || c.buyer_criteria) && <dl className="mt-6 space-y-2 border-t border-[#ECE6DD] pt-5 text-[14px]">
           {c.geography && <div className="flex gap-3"><dt className="w-24 shrink-0 text-[#8A847B]">Looking in</dt><dd>{c.geography}</dd></div>}
@@ -173,16 +176,18 @@ function CampaignDashboard({ campaign: c, live, events, links, reports, entitled
       </div>
     </section>
 
+    {progress && <BuyerMatchProgress update={progress}/>}
+
     <BuyerMatchInsights events={events} sessions={engagement.data?.unique_sessions}/>
 
     <div className="grid gap-12 lg:grid-cols-2">
       <section>
         <h3 className={bm.h3}>Activity</h3>
         <ol className="mt-5 space-y-5 border-l border-[#E2DBD0] pl-5">
-          {events.map(e => <li key={e.id} className="relative"><span aria-hidden className="absolute -left-[25px] top-1.5 h-2 w-2 rounded-full bg-[#FF5124]"/><p className={bm.note}>{shortDate(e.occurred_at)} · {e.source}{e.verification_status !== 'verified' ? ' · not yet verified' : ''}</p><p className="mt-0.5 text-[14px] font-semibold">{EVENT_LABELS[e.event_type] ?? e.event_type}</p>{e.outcome && <p className={bm.body}>{e.outcome}</p>}{e.next_step && <p className="mt-1 text-[13px] text-[#1C1B1A]"><span className="font-semibold text-[#FF5124]">Next:</span> {e.next_step}</p>}</li>)}
+          {events.map(e => <li key={e.id} className="relative"><span aria-hidden className="absolute -left-[25px] top-1.5 h-2 w-2 rounded-full bg-[#FF5124]"/><p className={bm.note}>{progressTimestamp(e.occurred_at)}{e.verification_status !== 'verified' ? ' · not yet verified' : ''}</p><p className="mt-0.5 text-[14px] font-semibold">{EVENT_LABELS[e.event_type] ?? e.event_type}</p>{e.outcome && <p className={bm.body}>{e.outcome}</p>}{e.next_step && <p className="mt-1 text-[13px] text-[#1C1B1A]"><span className="font-semibold text-[#FF5124]">Next:</span> {e.next_step}</p>}</li>)}
           <li className="relative"><span aria-hidden className="absolute -left-[25px] top-1.5 h-2 w-2 rounded-full bg-[#1C1B1A]"/><p className={bm.note}>{shortDate(c.created_at)}</p><p className="mt-0.5 text-[14px] font-semibold">Listing sent for review</p></li>
         </ol>
-        {!events.length && <p className={bm.body + ' mt-4'}>No research or outreach logged yet.</p>}
+        {!events.length && <p className={bm.body + ' mt-4'}>{progress ? 'No verified outreach or replies recorded yet. Team preparation is shown above.' : 'No research or outreach logged yet.'}</p>}
       </section>
       <section>
         <h3 className={bm.h3}>Before buyers see it</h3>
@@ -203,13 +208,13 @@ function CampaignDashboard({ campaign: c, live, events, links, reports, entitled
         </div>
         {!!daily.length && <div className="mt-6 flex h-14 max-w-md items-end gap-1" aria-label="Visits per day, last 14 days">{daily.map(d => <div key={d.day} title={`${d.day}: ${d.visits} visits`} className="flex-1 rounded-t-sm bg-[#D9D1C5]" style={{ height: `${Math.max(6, (d.visits / peak) * 100)}%` }}/>)}</div>}
       </>}
-      {!links.length ? <p className={bm.body + ' mt-5'}>Links appear after outreach for this listing is approved.</p> : <ul className="mt-5 space-y-2">{links.map(k => <li key={k.id} className="flex items-center gap-3 rounded-xl bg-white px-4 py-3 shadow-[0_1px_2px_rgba(28,27,26,0.05)]"><div className="min-w-0 flex-1"><p className="text-[13px] font-semibold">{k.source} · {shortDate(k.created_at)}</p><p className="mt-0.5 break-all text-[12px] text-[#8A847B]">{linkUrl(k)}</p></div><button type="button" aria-label="Copy tracking link" className="grid h-9 w-9 place-items-center rounded-full hover:bg-[#F3EEE7]" onClick={async () => { try { await navigator.clipboard.writeText(linkUrl(k)); setCopied(k.id); } catch { setCopied('failed'); } }}><Copy className="h-4 w-4"/></button></li>)}</ul>}
+      {!links.length ? <p className={bm.body + ' mt-5'}>Links appear after outreach for this listing is approved.</p> : <ul className="mt-5 space-y-2">{links.map(k => <li key={k.id} className="flex items-center gap-3 rounded-xl bg-white px-4 py-3 shadow-[0_1px_2px_rgba(28,27,26,0.05)]"><div className="min-w-0 flex-1"><p className="text-[13px] font-semibold">Reviewed outreach link · {progressTimestamp(k.created_at)}</p><p className="mt-0.5 break-all text-[12px] text-[#8A847B]">{linkUrl(k)}</p></div><button type="button" aria-label="Copy tracking link" className="grid h-9 w-9 place-items-center rounded-full hover:bg-[#F3EEE7]" onClick={async () => { try { await navigator.clipboard.writeText(linkUrl(k)); setCopied(k.id); } catch { setCopied('failed'); } }}><Copy className="h-4 w-4"/></button></li>)}</ul>}
       {copied && <p role="status" className={bm.note + ' mt-2'}>{copied === 'failed' ? 'Could not copy. Select the link to copy it manually.' : 'Link copied.'}</p>}
     </section>
 
     {!!feedback.length && <section className="border-t border-[#ECE6DD] pt-8"><h3 className={bm.h3}>What buyers told us</h3><dl className="mt-5 grid grid-cols-2 gap-6 sm:grid-cols-4">{([['interested', 'Interested'], ['needs_financing', 'Needs financing'], ['price_concern', 'Price concern'], ['not_interested', 'Not interested']] as const).map(([f, label]) => <div key={f} className="flex flex-col-reverse"><dt className={bm.label}>{label}</dt><dd className={bm.numSm}>{feedback.filter(e => e.feedback === f).length}</dd></div>)}</dl></section>}
 
-    {!!reports.length && <section className="border-t border-[#ECE6DD] pt-8"><h3 className={bm.h3}>Reviewed reports</h3>{reports.map(r => <div key={r.id} className="mt-4"><p className={bm.note}>{shortDate(r.published_at)}</p><p className="mt-1 text-[15px] leading-7">{r.summary}</p></div>)}</section>}
+    {!!reports.length && <section className="border-t border-[#ECE6DD] pt-8"><h3 className={bm.h3}>Reviewed reports</h3>{reports.map(r => <div key={r.id} className="mt-4"><p className={bm.note}>{progressTimestamp(r.published_at)}</p><p className="mt-1 text-[15px] leading-7">{r.summary}</p></div>)}</section>}
 
     {entitled && <BuyerMatchRecommendations campaignId={c.id}/>}
 
