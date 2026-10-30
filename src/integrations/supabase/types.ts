@@ -15535,6 +15535,7 @@ export type Database = {
         Args: { _ip: unknown; _terms_id: string; _ua: string }
         Returns: undefined
       }
+      activate_pro_featured: { Args: { p_user: string }; Returns: string }
       admin_grant_complimentary_featured: {
         Args: { p_days?: number; p_listing_id: string }
         Returns: {
