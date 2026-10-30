@@ -12,4 +12,12 @@ For the October 30 owner-supplied report, only Dennis's Aurora campaign was iden
 
 The owner's scheduled Codex tasks remain paused. This feature does not restart them or generate activity automatically. A subsequent real report must be published through the same reviewed workflow.
 
+## Reviewed external activity snapshots
+
+`publish_buyermatch_status_report(_campaign,_key,_report,_next_update_at,_evidence)` adds a structured, customer-safe snapshot to the same private audit trail. The function accepts only the fixed report fields validated in migration `20261030230000_buyermatch_status_reports.sql`: nonnegative integer counts, three boolean operational statuses, and elapsed UTC reporting/placement timestamps. Free text, source names and private identities are rejected. Exact retries are idempotent; changed content requires a new report key.
+
+The UI shows the reporting period separately from the time the reviewed report was saved, and the detailed placement breakdown retains its own earlier timestamp. Live, pending approval, participation review and Marketplace review are distinct; none increment verified lead/outreach metrics. Prospect review is never called a qualified buyer. New operational snapshots replace the previous preparation display, while its audit history remains.
+
+The owner-pasted October 30 3:00–3:30 PM Phoenix report describes one newly prepared Aurora draft, three bus drafts awaiting approval, discovery paused and prospect contact held. Its last detailed placement breakdown (2:00–2:30 PM) is six live, five pending admin approval, one participation review, and one Marketplace listing in review. The report's inconsistent “12 published” and “qualified prospect” language is not treated as 12 live posts or an independently qualified buyer. Other seller acquisition drafts and the Hollywood rental campaign are excluded from Dennis's snapshot. No outreach is sent or approved by importing the report.
+
 Verification: `node scripts/test-buyermatch-progress.mjs` covers owner isolation, private columns, admin-only writes, anonymous denial, invalid payloads, deduplication and unchanged campaign status. UI tests are `src/test/buyerMatchProgress.test.tsx` and `src/test/buyerMatchDashboard.test.tsx`.

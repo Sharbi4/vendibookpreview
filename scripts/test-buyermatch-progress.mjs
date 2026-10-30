@@ -17,6 +17,7 @@ create policy owner on buyermatch_campaigns for select to authenticated using(se
 insert into buyermatch_campaigns(id,seller_id) values('${id(10)}','${id(2)}'),('${id(11)}','${id(3)}');
 `);
 await db.exec(readFileSync('supabase/migrations/20261030190000_buyermatch_progress.sql','utf8'));
+await db.exec(readFileSync('supabase/migrations/20261030230000_buyermatch_status_reports.sql','utf8'));
 const asUser=async n=>{await db.exec('reset role');await q("select set_config('request.jwt.claim.sub',$1,false)",[id(n)]);await db.exec('set role authenticated');};
 const next='2099-01-01T00:00:00Z';
 let passed=0;
@@ -45,4 +46,17 @@ for(const steps of [{'Private group name':'complete'},{priority:'Jane Smith'},{p
  await test('rejects arbitrary or empty payload '+JSON.stringify(steps),async()=>{await asUser(1);await assert.rejects(()=>publish(steps),/Unsupported progress step|Progress steps required/);});
 }
 await test('rejects misleading expected time beyond allowed horizon',async()=>{await asUser(1);await assert.rejects(()=>publish({},'future',next),/Progress steps required/);await db.exec('rollback; begin');await asUser(1);await assert.rejects(()=>publish({review:'planned'},'future',next),/next seven days/);});
+const report={period_start:'2026-01-01T12:00:00Z',period_end:'2026-01-01T12:30:00Z',placements_as_of:'2026-01-01T11:30:00Z',posts_live:6,posts_pending:5,posts_review:1,marketplace_pending:1,prospects_under_review:1,drafts_pending:3,new_prospects:0,new_replies:0,new_conversions:0,discovery_paused:true,follow_up_held:true,new_draft_prepared:true};
+const statusReport=(data=report)=>q("select publish_buyermatch_status_report($1,'status-one',$2::jsonb,now()+interval '30 minutes','Owner-pasted Muse report') id",[id(10),JSON.stringify(data)]);
+await test('status report is owner-readable, idempotent and does not change campaign state',async()=>{
+ await asUser(1);const a=await statusReport();const b=await statusReport();assert.equal(a[0].id,b[0].id);
+ await asUser(2);assert.deepEqual((await q('select report from buyermatch_progress_updates'))[0].report,report);
+ assert.equal((await q('select status from buyermatch_campaigns'))[0].status,'pending_activation');
+});
+await test('status report cannot be written by a subscriber',async()=>{await asUser(2);await assert.rejects(()=>statusReport(),/Administrator required/);});
+await test('status report stays hidden from another subscriber',async()=>{await asUser(1);await statusReport();await asUser(3);assert.equal((await q('select report from buyermatch_progress_updates')).length,0);});
+for(const change of [{lead_name:'Private Person'},{posts_live:'six'},{posts_live:-1},{posts_live:1.5},{new_replies:null},{discovery_paused:'yes'},{period_end:'2099-01-01T12:00:00Z'},{period_end:'2026-01-01T12:00:00Z secret'},{placements_as_of:'2026-01-01T13:00:00Z'}]) {
+ await test('rejects unsafe or inconsistent status report '+JSON.stringify(change),async()=>{await asUser(1);await assert.rejects(()=>statusReport({...report,...change}),/approved public fields|nonnegative integers|status must be boolean|Report time|elapsed activity/);});
+}
+await test('cannot overwrite a published report under the same key',async()=>{await asUser(1);await statusReport();await assert.rejects(()=>statusReport({...report,posts_live:99}),/different report/);});
 console.log(`${passed} progress access/audit cases passed`);await db.close();

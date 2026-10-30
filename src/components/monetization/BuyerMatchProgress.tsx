@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Clock3, Check, ArrowUpRight } from 'lucide-react';
-import type { BuyerMatchProgressUpdate } from '@/lib/monetization/buyerMatchIntelligence';
+import type { BuyerMatchProgressUpdate, BuyerMatchStatusReport } from '@/lib/monetization/buyerMatchIntelligence';
 import { bm } from './buyerMatchUi';
 
 const STEPS: Record<string, [string, string]> = {
@@ -29,7 +29,7 @@ export default function BuyerMatchProgress({ update }: { update: BuyerMatchProgr
         <p><span className="block text-white/60">Next update expected</span><time dateTime={update.next_update_at}>{progressTimestamp(update.next_update_at)}</time>{overdue && <span className="block text-[#FFC5B0]">Awaiting the next team report</span>}</p>
       </div>
     </div>
-    <ul className="grid gap-x-10 px-6 py-3 sm:px-9 lg:grid-cols-2">
+    {update.report ? <StatusReport report={update.report}/> : <ul className="grid gap-x-10 px-6 py-3 sm:px-9 lg:grid-cols-2">
       {Object.entries(STEPS).filter(([key])=>update.steps[key]).map(([key,[title,detail]])=>{
         const status=update.steps[key];const Icon=status==='complete'?Check:status==='in_progress'?ArrowUpRight:Clock3;
         return <li key={key} className="flex min-w-0 gap-3 border-b border-[#F0ECE6] py-5 last:border-0">
@@ -37,7 +37,30 @@ export default function BuyerMatchProgress({ update }: { update: BuyerMatchProgr
           <div className="min-w-0"><div className="flex flex-wrap items-center gap-x-3 gap-y-1"><h4 className="text-sm font-semibold">{title}</h4><span className="text-[11px] font-medium text-[#A33E22]">{STATUS[status] ?? 'Pending review'}</span></div><p className={bm.body+' mt-1'}>{detail}</p></div>
         </li>;
       })}
-    </ul>
+    </ul>}
     <p className="px-6 pb-6 pt-3 text-xs leading-5 text-[#746E66] sm:px-9">Group names, prospect identities and contact details stay private. Updates appear here after team review; expected times are estimates.</p>
   </section>;
+}
+
+function StatusReport({ report: r }: { report: BuyerMatchStatusReport }) {
+  return <div className="space-y-7 px-6 py-7 sm:px-9">
+    <div><p className={bm.eyebrow}>Latest reporting period</p><p className={bm.body+' mt-2'}><time dateTime={r.period_start}>{progressTimestamp(r.period_start)}</time> – <time dateTime={r.period_end}>{progressTimestamp(r.period_end)}</time></p>
+      <p className={bm.note+' mt-2'}>Reported by the campaign team. These totals are not independently verified BuyerMatch events.</p></div>
+    <section aria-label="Reported placements"><h4 className="text-sm font-semibold">Visibility in progress</h4>
+      <p className={bm.note+' mt-1'}>Last detailed placement breakdown: <time dateTime={r.placements_as_of}>{progressTimestamp(r.placements_as_of)}</time>. Pending placements are not live.</p>
+      <dl className="mt-5 grid grid-cols-2 gap-5 sm:grid-cols-4">{([
+        [r.posts_live,'Group posts reported live'],[r.posts_pending,'Awaiting group approval'],[r.posts_review,'Participation review'],[r.marketplace_pending,'Marketplace listings in review'],
+      ] as const).map(([count,label])=><div key={label}><dt className={bm.note}>{label}</dt><dd className="mt-2 text-3xl font-medium tabular-nums">{count}</dd></div>)}</dl>
+    </section>
+    <section className="border-t border-[#ECE6DD] pt-6" aria-label="Reported matching activity"><h4 className="text-sm font-semibold">Matching and follow-up</h4>
+      <ul className={bm.body+' mt-3 space-y-2'}>
+        <li>{r.prospects_under_review} prospect{r.prospects_under_review===1?'':'s'} under review. This does not establish a qualified buyer or confirmed interest.</li>
+        <li>{r.drafts_pending} listing draft{r.drafts_pending===1?'':'s'} awaiting team approval. Drafts have not been posted.</li>
+        {r.new_draft_prepared && <li>A fresh placement draft was prepared during this reporting period.</li>}
+        {r.discovery_paused && <li>New prospect discovery is paused while the team reviews new approaches and watches for replies.</li>}
+        {r.follow_up_held && <li>Prospect follow-up is on hold; repeat contact has not been authorized.</li>}
+      </ul>
+      <p className="mt-4 rounded-xl bg-[#F7F4EE] px-4 py-3 text-sm leading-6">This period: {r.new_prospects} new prospects · {r.new_replies} replies · {r.new_conversions} confirmed conversions reported.</p>
+    </section>
+  </div>;
 }

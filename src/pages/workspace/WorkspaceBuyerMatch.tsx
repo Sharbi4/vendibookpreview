@@ -60,8 +60,8 @@ export default function WorkspaceBuyerMatch() {
       </>}
 
       {entitled && !data.config.fulfillment_enabled && <section className="border-l-2 border-[#FF5124] pl-5">
-        <h2 className="text-[16px] font-semibold">{progress ? 'Campaign activation is pending.' : 'Searches haven’t started yet.'}</h2>
-        <p className={bm.body + ' mt-1 max-w-2xl'}>{progress ? 'Your team’s preparation update is below. Confirmed outreach and buyer or renter responses will appear separately as they are reviewed.' : 'You can send listings for review now. Research and outreach begin only after our team approves a listing and confirms the search is running. Nothing is sent to buyers or renters before then.'}</p>
+        <h2 className="text-[16px] font-semibold">{progress?.report ? 'Your latest team report is available.' : progress ? 'Campaign activation is pending.' : 'Searches haven’t started yet.'}</h2>
+        <p className={bm.body + ' mt-1 max-w-2xl'}>{progress ? 'Your team’s update is below. Verified BuyerMatch tracking awaits activation; reviewed outreach and buyer or renter responses are counted separately.' : 'You can send listings for review now. Research and outreach begin only after our team approves a listing and confirms the search is running. Nothing is sent to buyers or renters before then.'}</p>
       </section>}
       {entitled && !data.config.submissions_enabled && <p className={bm.body}>New matching searches are paused right now. Existing searches and reports are unchanged.</p>}
 
@@ -167,7 +167,7 @@ function CampaignDashboard({ campaign: c, live, events, links, reports, progress
         <div className="flex flex-wrap items-center justify-between gap-3"><span className={bm.chip}><span aria-hidden className="h-1.5 w-1.5 rounded-full bg-[#FF5124]"/>{CAMPAIGN_STATUS[c.status] ?? c.status}</span><Link to={'/listing/' + c.listing_id} className={bm.link + ' inline-flex items-center gap-1'}>View listing<ArrowUpRight className="h-3.5 w-3.5"/></Link></div>
         <h3 className="mt-5 font-display text-[26px] leading-tight sm:text-[30px]">{listing.title}</h3>
         <p className={bm.body + ' mt-1'}>{[matchingListingPrice(listing), place(listing), 'sent ' + shortDate(c.created_at)].filter(Boolean).join(' · ')}</p>
-        <p className="mt-5 text-[15px] leading-7">{progress && c.status === 'pending_activation' ? 'Your team has shared a preparation update below. Activation and verified outreach are still pending.' : STATUS_LINE[c.status] ?? 'Your history stays here.'}</p>
+        <p className="mt-5 text-[15px] leading-7">{progress && c.status === 'pending_activation' ? 'Your team has shared an update below. Verified BuyerMatch tracking is pending activation.' : STATUS_LINE[c.status] ?? 'Your history stays here.'}</p>
         <Stages c={c}/>
         {(c.geography || c.buyer_criteria) && <dl className="mt-6 space-y-2 border-t border-[#ECE6DD] pt-5 text-[14px]">
           {c.geography && <div className="flex gap-3"><dt className="w-24 shrink-0 text-[#8A847B]">Looking in</dt><dd>{c.geography}</dd></div>}
@@ -187,7 +187,7 @@ function CampaignDashboard({ campaign: c, live, events, links, reports, progress
           {events.map(e => <li key={e.id} className="relative"><span aria-hidden className="absolute -left-[25px] top-1.5 h-2 w-2 rounded-full bg-[#FF5124]"/><p className={bm.note}>{progressTimestamp(e.occurred_at)}{e.verification_status !== 'verified' ? ' · not yet verified' : ''}</p><p className="mt-0.5 text-[14px] font-semibold">{EVENT_LABELS[e.event_type] ?? e.event_type}</p>{e.outcome && <p className={bm.body}>{e.outcome}</p>}{e.next_step && <p className="mt-1 text-[13px] text-[#1C1B1A]"><span className="font-semibold text-[#FF5124]">Next:</span> {e.next_step}</p>}</li>)}
           <li className="relative"><span aria-hidden className="absolute -left-[25px] top-1.5 h-2 w-2 rounded-full bg-[#1C1B1A]"/><p className={bm.note}>{shortDate(c.created_at)}</p><p className="mt-0.5 text-[14px] font-semibold">Listing sent for review</p></li>
         </ol>
-        {!events.length && <p className={bm.body + ' mt-4'}>{progress ? 'No verified outreach or replies recorded yet. Team preparation is shown above.' : 'No research or outreach logged yet.'}</p>}
+        {!events.length && <p className={bm.body + ' mt-4'}>{progress ? 'No verified outreach or replies recorded here yet. Team-reported activity is shown above.' : 'No research or outreach logged yet.'}</p>}
       </section>
       <section>
         <h3 className={bm.h3}>Before buyers see it</h3>

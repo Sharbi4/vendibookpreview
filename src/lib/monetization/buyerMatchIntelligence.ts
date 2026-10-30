@@ -50,7 +50,14 @@ export interface BuyerMatchCampaign {
 }
 export interface BuyerMatchLink { id: string; campaign_id: string; listing_id: string; source: string; token: string; created_at: string }
 export interface BuyerMatchReport { id: string; campaign_id: string; summary: string; published_at: string }
-export interface BuyerMatchProgressUpdate { id: string; campaign_id: string; steps: Record<string, 'planned' | 'in_progress' | 'complete'>; created_at: string; next_update_at: string }
+export interface BuyerMatchStatusReport {
+  period_start: string; period_end: string; placements_as_of: string;
+  posts_live: number; posts_pending: number; posts_review: number; marketplace_pending: number;
+  prospects_under_review: number; drafts_pending: number;
+  new_prospects: number; new_replies: number; new_conversions: number;
+  discovery_paused: boolean; follow_up_held: boolean; new_draft_prepared: boolean;
+}
+export interface BuyerMatchProgressUpdate { id: string; campaign_id: string; steps: Record<string, 'planned' | 'in_progress' | 'complete'>; created_at: string; next_update_at: string; report?: BuyerMatchStatusReport | null }
 export interface BuyerMatchData {
   config: BuyerMatchConfig; campaigns: BuyerMatchCampaign[]; reports: BuyerMatchReport[];
   listings: BuyerMatchListing[]; events: CampaignEvent[]; links: BuyerMatchLink[];
