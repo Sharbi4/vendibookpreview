@@ -15,6 +15,11 @@ create unique index promo_unique on listing_promotions(listing_id,promo_type) wh
 create table notifications(user_id uuid,type text,title text,message text,link text);
 create table sold(listing_id uuid);
 create function featured_listing_sold(uuid) returns boolean language sql as $$select exists(select 1 from sold where listing_id=$1)$$;
+create function protect_featured() returns trigger language plpgsql as $$begin
+ if coalesce(nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'role','')<>'service_role' then
+  new.featured_enabled:=old.featured_enabled;new.featured_expires_at:=old.featured_expires_at;
+ end if;return new;end$$;
+create trigger protect_featured before update on listings for each row execute function protect_featured();
 insert into monetization_products(slug,promo_type,duration_days) values('boost-featured-30','featured_30',30);
 `);
 await db.exec(readFileSync('supabase/migrations/20261030180000_auto_pro_featured.sql','utf8'));
@@ -50,11 +55,13 @@ await test('Free, unpaid and expired subscriptions do not grant boosts',async()=
  await q("insert into host_subscriptions(user_id,tier,status,current_period_end) values($1,'pro','active',now()-interval '1 day')",[id(1)]);assert.equal(await count('pro_boost_credits'),0);
 });
 await test('existing fully covered Featured placement preserves unused credit',async()=>{
- await listing();await q("update listings set featured_enabled=true,featured_expires_at=now()+interval '31 days'");await member();
+ await listing();await db.exec(`select set_config('request.jwt.claims','{"role":"service_role"}',true)`);
+ await q("update listings set featured_enabled=true,featured_expires_at=now()+interval '31 days'");await member();
  assert.equal(await count('monetization_purchases'),0);assert.equal((await q('select status from pro_boost_credits'))[0].status,'available');
 });
 await test('renewal with missing Square start grants only the next period credit',async()=>{
- await listing();await member();await q("update listings set featured_expires_at=now()-interval '1 second'");
+ await listing();await member();await db.exec(`select set_config('request.jwt.claims','{"role":"service_role"}',true)`);
+ await q("update listings set featured_expires_at=now()-interval '1 second'");
  await q("update host_subscriptions set created_at=now()-interval '1 month'");
  await q("update pro_boost_credits set period_start=now()-interval '1 month',period_end=now()-interval '1 second'");
  await q("update host_subscriptions set current_period_end=current_period_end");
@@ -65,6 +72,12 @@ await test('annual aliases and moderation release use the same included benefit'
  await listing();await q("update listings set moderation_status='pending_review'");await member('active','vendibook_pro_annual');
  assert.equal(await count('monetization_purchases'),0);await q("update listings set moderation_status='clear'");
  assert.equal(await count('monetization_purchases'),1);
+});
+await test('member publish activates through guards and restores caller claims',async()=>{
+ const claims=JSON.stringify({role:'authenticated',sub:id(1)});await q("select set_config('request.jwt.claims',$1,true)",[claims]);
+ await member();await listing();assert.equal((await q('select featured_enabled from listings'))[0].featured_enabled,true);
+ assert.deepEqual(JSON.parse((await q("select current_setting('request.jwt.claims') claims"))[0].claims),JSON.parse(claims));
+ await q('update listings set featured_expires_at=null');assert.notEqual((await q('select featured_expires_at from listings'))[0].featured_expires_at,null);
 });
 await test('failed fulfillment rolls back credit and subscription activation together',async()=>{
  await listing();await q('delete from monetization_products');await db.exec('savepoint missing');

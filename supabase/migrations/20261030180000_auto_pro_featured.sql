@@ -12,6 +12,7 @@ DECLARE
   v_purchase_id uuid;
   period_start_at timestamptz;
   ends timestamptz;
+  caller_claims text;
 BEGIN
   PERFORM pg_advisory_xact_lock(hashtextextended('pro-featured:'||p_user::text,0));
   IF EXISTS(SELECT 1 FROM public.profiles WHERE id=p_user AND account_suspended=true) THEN RETURN NULL; END IF;
@@ -62,9 +63,24 @@ BEGIN
     VALUES(item.id,product.id,v_purchase_id,product.promo_type,now(),ends,true)
     ON CONFLICT(listing_id,promo_type) WHERE active=true DO UPDATE
       SET ends_at=greatest(listing_promotions.ends_at,excluded.ends_at),purchase_id=excluded.purchase_id;
-  UPDATE public.listings SET featured_enabled=true,featured_at=now(),
-    featured_expires_at=greatest(featured_expires_at,ends),featured_source='pro'
-    WHERE id=item.id;
+  -- Listing guards intentionally ignore member-authored Featured changes.
+  -- This narrowly scoped trusted write follows locked entitlement validation;
+  -- restore the caller immediately, including on failure, before any other work.
+  caller_claims:=current_setting('request.jwt.claims',true);
+  BEGIN
+    PERFORM set_config('request.jwt.claims',
+      (coalesce(nullif(caller_claims,'')::jsonb,'{}'::jsonb)||'{"role":"service_role"}'::jsonb)::text,true);
+    UPDATE public.listings SET featured_enabled=true,featured_at=now(),
+      featured_expires_at=greatest(featured_expires_at,ends),featured_source='pro'
+      WHERE id=item.id RETURNING * INTO item;
+    PERFORM set_config('request.jwt.claims',coalesce(caller_claims,''),true);
+  EXCEPTION WHEN OTHERS THEN
+    PERFORM set_config('request.jwt.claims',coalesce(caller_claims,''),true);
+    RAISE;
+  END;
+  IF item.featured_enabled IS NOT TRUE OR item.featured_expires_at<ends THEN
+    RAISE EXCEPTION 'Featured activation was not persisted';
+  END IF;
   UPDATE public.pro_boost_credits SET status='used',used_at=now(),listing_id=item.id,
     purchase_id=v_purchase_id,
     metadata=metadata||jsonb_build_object('activation','automatic') WHERE id=credit.id;
