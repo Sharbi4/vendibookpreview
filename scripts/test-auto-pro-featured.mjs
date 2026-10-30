@@ -55,7 +55,9 @@ await test('existing fully covered Featured placement preserves unused credit',a
 });
 await test('renewal with missing Square start grants only the next period credit',async()=>{
  await listing();await member();await q("update listings set featured_expires_at=now()-interval '1 second'");
- await q("update host_subscriptions set current_period_end=current_period_end+interval '1 month'");
+ await q("update host_subscriptions set created_at=now()-interval '1 month'");
+ await q("update pro_boost_credits set period_start=now()-interval '1 month',period_end=now()-interval '1 second'");
+ await q("update host_subscriptions set current_period_end=current_period_end");
  assert.equal(await count('monetization_purchases'),2);
  assert.equal(await count('pro_boost_credits'),2);await q('update host_subscriptions set current_period_end=current_period_end');assert.equal(await count('pro_boost_credits'),2);
 });
