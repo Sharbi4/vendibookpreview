@@ -19,6 +19,7 @@ insert into buyermatch_campaigns(id,seller_id) values('${id(10)}','${id(2)}'),('
 await db.exec(readFileSync('supabase/migrations/20261030190000_buyermatch_progress.sql','utf8'));
 await db.exec(readFileSync('supabase/migrations/20261030230000_buyermatch_status_reports.sql','utf8'));
 await db.exec(readFileSync('supabase/migrations/20261031020000_buyermatch_day_one.sql','utf8'));
+await db.exec(readFileSync('supabase/migrations/20261031180000_buyermatch_monitoring_reports.sql','utf8'));
 const asUser=async n=>{await db.exec('reset role');await q("select set_config('request.jwt.claim.sub',$1,false)",[id(n)]);await db.exec('set role authenticated');};
 const next='2099-01-01T00:00:00Z';
 let passed=0;
@@ -68,5 +69,18 @@ await test('Day 1 snapshot can omit an unconfirmed next report time and retry sa
 });
 for(const change of [{campaign_through:'2025-12-01'},{discovery_runs_approx:-1},{report_kind:'success-guaranteed'},{campaign_through:null}]) {
  await test('rejects invalid Day 1 metadata '+JSON.stringify(change),async()=>{await asUser(1);await assert.rejects(()=>statusReport({...dayOne,...change}),/Invalid day-one report|Campaign end precedes report/);});
+}
+const monitoring={report_kind:'monitoring',period_start:'2026-01-02T16:30:00Z',period_end:'2026-01-02T17:00:00Z',actions_logged:20,facebook_items_reviewed:224,threads_items_reviewed:19,new_prospects:0,qualified_matches:0,comments_published:0,conversations_started:0,new_replies:0,interested_buyers:0,links_shared:0,meetings_requested:0,new_conversions:0,follow_ups_pending:2,follow_up_dates:['2026-11-01','2026-11-07'],cumulative_actions:733,prospects_under_review:2,placement_status:'awaiting_reconciliation'};
+const monitor=(data=monitoring)=>q("select publish_buyermatch_monitoring_report($1,'monitor-one',$2::jsonb,'Owner-pasted monitoring report; placement totals conflict with earlier report') id",[id(10),JSON.stringify(data)]);
+await test('monitoring report is private to owner, idempotent, does not activate or replace historical report',async()=>{
+ await asUser(1);await statusReport();const a=await monitor();assert.equal((await monitor())[0].id,a[0].id);
+ await asUser(2);const rows=await q('select report,monitoring_report,next_update_at from buyermatch_progress_updates');assert.equal(rows.length,2);const snapshot=rows.find(r=>r.monitoring_report);assert.deepEqual(snapshot.monitoring_report,monitoring);assert.equal(snapshot.report,null);assert.equal(snapshot.next_update_at,null);
+ assert.equal((await q('select status from buyermatch_campaigns'))[0].status,'pending_activation');
+ await asUser(3);assert.equal((await q('select report from buyermatch_progress_updates')).length,0);
+});
+await test('subscriber cannot publish monitoring report',async()=>{await asUser(2);await assert.rejects(()=>monitor(),/Administrator required/);});
+await test('monitoring key cannot overwrite a report',async()=>{await asUser(1);await monitor();await assert.rejects(()=>monitor({...monitoring,actions_logged:21}),/different report/);});
+for(const change of [{lead_name:'Private Person'},{actions_logged:-1},{qualified_matches:'2'},{placement_status:'verified'},{follow_up_dates:['Jane Smith']},{follow_up_dates:['2025-01-01']},{follow_up_dates:null},{period_end:'2099-01-01T00:00:00Z'},{cumulative_actions:1}]) {
+ await test('rejects unsafe monitoring data '+JSON.stringify(change),async()=>{await asUser(1);await assert.rejects(()=>monitor({...monitoring,...change}));});
 }
 console.log(`${passed} progress access/audit cases passed`);await db.close();

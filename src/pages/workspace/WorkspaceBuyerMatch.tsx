@@ -8,7 +8,7 @@ import BuyerMatchPreview from '@/components/monetization/BuyerMatchPreview';
 import BuyerMatchInsights from '@/components/monetization/BuyerMatchInsights';
 import BuyerMatchListings from '@/components/monetization/BuyerMatchListings';
 import BuyerMatchRecommendations from '@/components/monetization/BuyerMatchRecommendations';
-import BuyerMatchProgress, { progressTimestamp } from '@/components/monetization/BuyerMatchProgress';
+import { BuyerMatchProgressHistory, progressTimestamp } from '@/components/monetization/BuyerMatchProgress';
 import { bm, place, shortDate, usd } from '@/components/monetization/buyerMatchUi';
 import { buyerMatchAction, useBuyerMatch } from '@/hooks/useBuyerMatch';
 import {
@@ -27,7 +27,8 @@ export default function WorkspaceBuyerMatch() {
   const data = query.data; const campaigns = data?.campaigns ?? [];
   const entitled = !!data?.config.entitled;
   const selected = campaigns.find(c => c.id === params.get('campaign')) ?? campaigns[0];
-  const progress = data?.progress?.find(p => p.campaign_id === selected?.id);
+  const progressHistory = (data?.progress ?? []).filter(p => p.campaign_id === selected?.id).sort((a,b) => Date.parse(b.created_at)-Date.parse(a.created_at));
+  const progress = progressHistory[0];
   const eligible = (data?.listings ?? []).filter(l => !campaigns.some(c => c.listing_id === l.id));
   const selectedListing = data?.listings.find(l => l.id === listing);
   const [activate, setActivate] = useState(params.get('activate') === '1');
@@ -95,7 +96,7 @@ export default function WorkspaceBuyerMatch() {
         <div className="mt-8">
           {params.get('campaign') === 'all' && campaigns.length > 1
             ? <section className="space-y-6"><p className={bm.body}>Verified activity across {campaigns.length} searches.</p><BuyerMatchInsights events={data.events ?? []}/></section>
-            : selected && <CampaignDashboard key={selected.id} campaign={selected} progress={progress} live={data.listings.find(l => l.id === selected.listing_id)} events={(data.events ?? []).filter(e => e.campaign_id === selected.id)} links={(data.links ?? []).filter(k => k.campaign_id === selected.id)} reports={data.reports.filter(r => r.campaign_id === selected.id)} entitled={entitled} busy={action.isPending} act={act}/>}
+            : selected && <CampaignDashboard key={selected.id} campaign={selected} progressHistory={progressHistory} live={data.listings.find(l => l.id === selected.listing_id)} events={(data.events ?? []).filter(e => e.campaign_id === selected.id)} links={(data.links ?? []).filter(k => k.campaign_id === selected.id)} reports={data.reports.filter(r => r.campaign_id === selected.id)} entitled={entitled} busy={action.isPending} act={act}/>}
         </div>
       </section>}
 
@@ -145,11 +146,12 @@ function Stages({ c }: { c: BuyerMatchCampaign }) {
   </ol>;
 }
 
-function CampaignDashboard({ campaign: c, live, events, links, reports, progress, entitled, busy, act }: {
+function CampaignDashboard({ campaign: c, live, events, links, reports, progressHistory, entitled, busy, act }: {
   campaign: BuyerMatchCampaign; live?: BuyerMatchListing; events: CampaignEvent[]; links: BuyerMatchLink[]; reports: BuyerMatchReport[];
-  progress?: BuyerMatchProgressUpdate;
+  progressHistory: BuyerMatchProgressUpdate[];
   entitled: boolean; busy: boolean; act: Act;
 }) {
+  const progress = progressHistory[0];
   // Prefer the live listing (what buyers see today); fall back to the snapshot taken at submission.
   const listing: BuyerMatchListing = { ...c.listing_snapshot, ...(live ?? {}), id: c.listing_id };
   const notes = listingRecommendations(listing as unknown as Record<string, unknown>);
@@ -161,6 +163,7 @@ function CampaignDashboard({ campaign: c, live, events, links, reports, progress
   const linkUrl = (k: BuyerMatchLink) => `${window.location.origin}/listing/${k.listing_id}?ref=bm_${k.token}`;
 
   return <article className="space-y-14">
+    <BuyerMatchProgressHistory updates={progressHistory}/>
     <section className={bm.card + ' grid overflow-hidden md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]'}>
       <div className="relative min-h-[220px] bg-[#F3EEE7]">{listing.cover_image_url ? <img src={listing.cover_image_url} alt={listing.title} className="absolute inset-0 h-full w-full object-cover"/> : <span className="absolute inset-0 grid place-items-center text-[13px] text-[#8A847B]">No cover photo yet</span>}</div>
       <div className="p-6 sm:p-9">
@@ -175,8 +178,6 @@ function CampaignDashboard({ campaign: c, live, events, links, reports, progress
         </dl>}
       </div>
     </section>
-
-    {progress && <BuyerMatchProgress update={progress}/>}
 
     <BuyerMatchInsights events={events} sessions={engagement.data?.unique_sessions}/>
 

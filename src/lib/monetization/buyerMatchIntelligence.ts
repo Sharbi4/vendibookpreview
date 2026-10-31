@@ -58,7 +58,16 @@ export interface BuyerMatchStatusReport {
   discovery_paused: boolean; follow_up_held: boolean; new_draft_prepared: boolean;
   report_kind?: 'day_one'; campaign_through?: string; discovery_runs_approx?: number;
 }
-export interface BuyerMatchProgressUpdate { id: string; campaign_id: string; steps: Record<string, 'planned' | 'in_progress' | 'complete'>; created_at: string; next_update_at: string | null; report?: BuyerMatchStatusReport | null }
+export interface BuyerMatchMonitoringReport {
+  report_kind: 'monitoring'; period_start: string; period_end: string;
+  actions_logged: number; facebook_items_reviewed: number; threads_items_reviewed: number;
+  new_prospects: number; qualified_matches: number; comments_published: number;
+  conversations_started: number; new_replies: number; interested_buyers: number;
+  links_shared: number; meetings_requested: number; new_conversions: number;
+  follow_ups_pending: number; follow_up_dates: string[]; cumulative_actions: number;
+  prospects_under_review: number; placement_status: 'awaiting_reconciliation';
+}
+export interface BuyerMatchProgressUpdate { id: string; campaign_id: string; steps: Record<string, 'planned' | 'in_progress' | 'complete'>; created_at: string; next_update_at: string | null; report?: BuyerMatchStatusReport | BuyerMatchMonitoringReport | null }
 export interface BuyerMatchData {
   config: BuyerMatchConfig; campaigns: BuyerMatchCampaign[]; reports: BuyerMatchReport[];
   listings: BuyerMatchListing[]; events: CampaignEvent[]; links: BuyerMatchLink[];
