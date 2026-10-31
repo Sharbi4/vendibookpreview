@@ -12,6 +12,8 @@ For the October 30 owner-supplied report, only Dennis's Aurora campaign was iden
 
 The owner's scheduled Codex tasks remain paused. This feature does not restart them or generate activity automatically. A subsequent real report must be published through the same reviewed workflow.
 
+Day 1 reports may include the three validated fields `report_kind: day_one`, `campaign_through` (calendar date), and `discovery_runs_approx` (nonnegative integer). They show a launch recap and clearly separate placement submissions from live placements. Unknown next-update times are nullable and displayed as “After the next campaign review”; never invent a deadline merely to satisfy a database field. Timestamped update retries compare nullable next-update values with `IS DISTINCT FROM`.
+
 ## Reviewed external activity snapshots
 
 `publish_buyermatch_status_report(_campaign,_key,_report,_next_update_at,_evidence)` adds a structured, customer-safe snapshot to the same private audit trail. The function accepts only the fixed report fields validated in migration `20261030230000_buyermatch_status_reports.sql`: nonnegative integer counts, three boolean operational statuses, and elapsed UTC reporting/placement timestamps. Free text, source names and private identities are rejected. Exact retries are idempotent; changed content requires a new report key.

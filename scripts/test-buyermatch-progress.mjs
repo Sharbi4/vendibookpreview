@@ -18,6 +18,7 @@ insert into buyermatch_campaigns(id,seller_id) values('${id(10)}','${id(2)}'),('
 `);
 await db.exec(readFileSync('supabase/migrations/20261030190000_buyermatch_progress.sql','utf8'));
 await db.exec(readFileSync('supabase/migrations/20261030230000_buyermatch_status_reports.sql','utf8'));
+await db.exec(readFileSync('supabase/migrations/20261031020000_buyermatch_day_one.sql','utf8'));
 const asUser=async n=>{await db.exec('reset role');await q("select set_config('request.jwt.claim.sub',$1,false)",[id(n)]);await db.exec('set role authenticated');};
 const next='2099-01-01T00:00:00Z';
 let passed=0;
@@ -59,4 +60,13 @@ for(const change of [{lead_name:'Private Person'},{posts_live:'six'},{posts_live
  await test('rejects unsafe or inconsistent status report '+JSON.stringify(change),async()=>{await asUser(1);await assert.rejects(()=>statusReport({...report,...change}),/approved public fields|nonnegative integers|status must be boolean|Report time|elapsed activity/);});
 }
 await test('cannot overwrite a published report under the same key',async()=>{await asUser(1);await statusReport();await assert.rejects(()=>statusReport({...report,posts_live:99}),/different report/);});
+const dayOne={...report,report_kind:'day_one',campaign_through:'2026-11-06',discovery_runs_approx:45};
+await test('Day 1 snapshot can omit an unconfirmed next report time and retry safely',async()=>{
+ await asUser(1);const run=()=>q("select publish_buyermatch_status_report($1,'day-one',$2::jsonb,NULL,'Owner end-of-day report') id",[id(10),JSON.stringify(dayOne)]);
+ const a=await run();assert.equal((await run())[0].id,a[0].id);
+ await asUser(2);const row=(await q('select next_update_at,report from buyermatch_progress_updates'))[0];assert.equal(row.next_update_at,null);assert.equal(row.report.discovery_runs_approx,45);
+});
+for(const change of [{campaign_through:'2025-12-01'},{discovery_runs_approx:-1},{report_kind:'success-guaranteed'},{campaign_through:null}]) {
+ await test('rejects invalid Day 1 metadata '+JSON.stringify(change),async()=>{await asUser(1);await assert.rejects(()=>statusReport({...dayOne,...change}),/Invalid day-one report|Campaign end precedes report/);});
+}
 console.log(`${passed} progress access/audit cases passed`);await db.close();

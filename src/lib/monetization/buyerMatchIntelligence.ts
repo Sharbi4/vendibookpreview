@@ -56,8 +56,9 @@ export interface BuyerMatchStatusReport {
   prospects_under_review: number; drafts_pending: number;
   new_prospects: number; new_replies: number; new_conversions: number;
   discovery_paused: boolean; follow_up_held: boolean; new_draft_prepared: boolean;
+  report_kind?: 'day_one'; campaign_through?: string; discovery_runs_approx?: number;
 }
-export interface BuyerMatchProgressUpdate { id: string; campaign_id: string; steps: Record<string, 'planned' | 'in_progress' | 'complete'>; created_at: string; next_update_at: string; report?: BuyerMatchStatusReport | null }
+export interface BuyerMatchProgressUpdate { id: string; campaign_id: string; steps: Record<string, 'planned' | 'in_progress' | 'complete'>; created_at: string; next_update_at: string | null; report?: BuyerMatchStatusReport | null }
 export interface BuyerMatchData {
   config: BuyerMatchConfig; campaigns: BuyerMatchCampaign[]; reports: BuyerMatchReport[];
   listings: BuyerMatchListing[]; events: CampaignEvent[]; links: BuyerMatchLink[];

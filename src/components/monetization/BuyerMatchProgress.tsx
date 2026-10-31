@@ -18,15 +18,16 @@ export function progressTimestamp(value: string) {
 export default function BuyerMatchProgress({ update }: { update: BuyerMatchProgressUpdate }) {
   const [now, setNow] = useState(Date.now());
   useEffect(() => { const timer=setInterval(()=>setNow(Date.now()),30000);return ()=>clearInterval(timer); },[]);
-  const overdue = Date.parse(update.next_update_at)<=now;
+  const overdue = !!update.next_update_at && Date.parse(update.next_update_at)<=now;
+  const dayOne = update.report?.report_kind === 'day_one';
   return <section aria-labelledby="bm-progress-title" className="overflow-hidden rounded-[24px] border border-[#E2DBD0] bg-white shadow-[0_12px_40px_rgba(28,27,26,0.04)]">
     <div className="bg-[#20201F] px-6 py-7 text-white sm:px-9">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#FFAD91]">Your team at work</p>
-      <h3 id="bm-progress-title" className="mt-3 font-display text-[26px] leading-tight sm:text-[32px]">The latest on your matching search.</h3>
-      <p className="mt-3 max-w-xl text-sm leading-6 text-white/70">Team-reported progress. Confirmed outreach, replies and qualified inquiries are counted separately below.</p>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#FFAD91]">{dayOne ? 'Your campaign · Day 1' : 'Your team at work'}</p>
+      <h3 id="bm-progress-title" className="mt-3 font-display text-[26px] leading-tight sm:text-[32px]">{dayOne ? 'Your promotion is underway.' : 'The latest on your matching search.'}</h3>
+      <p className="mt-3 max-w-xl text-sm leading-6 text-white/70">{dayOne ? 'Your team has launched community promotion and completed targeted prospect research. Here’s your first-day progress, with more placements awaiting approval.' : 'Team-reported progress. Confirmed outreach, replies and qualified inquiries are counted separately below.'}</p>
       <div className="mt-6 flex flex-wrap gap-x-8 gap-y-4 text-xs leading-6">
         <p><span className="block text-white/60">Last team update</span><time dateTime={update.created_at}>{progressTimestamp(update.created_at)}</time></p>
-        <p><span className="block text-white/60">Next update expected</span><time dateTime={update.next_update_at}>{progressTimestamp(update.next_update_at)}</time>{overdue && <span className="block text-[#FFC5B0]">Awaiting the next team report</span>}</p>
+        {update.next_update_at ? <p><span className="block text-white/60">Next update expected</span><time dateTime={update.next_update_at}>{progressTimestamp(update.next_update_at)}</time>{overdue && <span className="block text-[#FFC5B0]">Awaiting the next team report</span>}</p> : <p><span className="block text-white/60">Next update</span>After the next campaign review</p>}
       </div>
     </div>
     {update.report ? <StatusReport report={update.report}/> : <ul className="grid gap-x-10 px-6 py-3 sm:px-9 lg:grid-cols-2">
@@ -43,10 +44,17 @@ export default function BuyerMatchProgress({ update }: { update: BuyerMatchProgr
 }
 
 function StatusReport({ report: r }: { report: BuyerMatchStatusReport }) {
+  const dayOne = r.report_kind === 'day_one';
+  const through = r.campaign_through && new Intl.DateTimeFormat(undefined, {month:'long',day:'numeric',timeZone:'UTC'}).format(new Date(r.campaign_through+'T12:00:00Z'));
   return <div className="space-y-7 px-6 py-7 sm:px-9">
-    <div><p className={bm.eyebrow}>Latest reporting period</p><p className={bm.body+' mt-2'}><time dateTime={r.period_start}>{progressTimestamp(r.period_start)}</time> – <time dateTime={r.period_end}>{progressTimestamp(r.period_end)}</time></p>
-      <p className={bm.note+' mt-2'}>Reported by the campaign team. These totals are not independently verified BuyerMatch events.</p></div>
-    <section aria-label="Reported placements"><h4 className="text-sm font-semibold">Visibility in progress</h4>
+    {dayOne && <section aria-label="Day one highlights" className="rounded-2xl bg-[#FFF3ED] p-5 sm:p-6"><h4 className="text-lg font-semibold">Building visibility for your listing</h4>
+      <p className={bm.body+' mt-2'}>{r.posts_live+r.posts_pending+r.posts_review} community placements submitted, with {r.posts_live} already live and additional placements working through approval. Your Marketplace listing is submitted and awaiting Facebook review.</p>
+      <p className={bm.body+' mt-3'}>Approximately {r.discovery_runs_approx} targeted research rounds explored potential demand across social channels and web search.</p>
+      {through && <p className="mt-4 text-sm font-semibold text-[#A33E22]">Campaign scheduled through {through}</p>}
+    </section>}
+    <div><p className={bm.eyebrow}>{dayOne ? 'Day 1 activity report' : 'Latest reporting period'}</p><p className={bm.body+' mt-2'}><time dateTime={r.period_start}>{progressTimestamp(r.period_start)}</time> – <time dateTime={r.period_end}>{progressTimestamp(r.period_end)}</time></p>
+      <p className={bm.note+' mt-2'}>Activity reported by your campaign team. Placements, prospects and customer responses are tracked separately.</p></div>
+    <section aria-label="Reported placements"><h4 className="text-sm font-semibold">Your promotion at a glance</h4>
       <p className={bm.note+' mt-1'}>Last detailed placement breakdown: <time dateTime={r.placements_as_of}>{progressTimestamp(r.placements_as_of)}</time>. Pending placements are not live.</p>
       <dl className="mt-5 grid grid-cols-2 gap-5 sm:grid-cols-4">{([
         [r.posts_live,'Group posts reported live'],[r.posts_pending,'Awaiting group approval'],[r.posts_review,'Participation review'],[r.marketplace_pending,'Marketplace listings in review'],
@@ -54,13 +62,13 @@ function StatusReport({ report: r }: { report: BuyerMatchStatusReport }) {
     </section>
     <section className="border-t border-[#ECE6DD] pt-6" aria-label="Reported matching activity"><h4 className="text-sm font-semibold">Matching and follow-up</h4>
       <ul className={bm.body+' mt-3 space-y-2'}>
-        <li>{r.prospects_under_review} prospect{r.prospects_under_review===1?'':'s'} under review. This does not establish a qualified buyer or confirmed interest.</li>
-        <li>{r.drafts_pending} listing draft{r.drafts_pending===1?'':'s'} awaiting team approval. Drafts have not been posted.</li>
+        <li>{r.prospects_under_review} potential prospect{r.prospects_under_review===1?'':'s'} under review. Potential prospects are tracked separately from confirmed interest and qualified matches.</li>
+        <li>{r.drafts_pending} additional placement draft{r.drafts_pending===1?' is':'s are'} ready for team approval. These have not been posted yet.</li>
         {r.new_draft_prepared && <li>A fresh placement draft was prepared during this reporting period.</li>}
-        {r.discovery_paused && <li>New prospect discovery is paused while the team reviews new approaches and watches for replies.</li>}
-        {r.follow_up_held && <li>Prospect follow-up is on hold; repeat contact has not been authorized.</li>}
+        {r.discovery_paused && <li>Next focus: review pending placements and watch for responses. New prospect discovery is currently paused while the team evaluates fresh approaches.</li>}
+        {r.follow_up_held && <li>Follow-up timing is being respected. Existing contacts remain on hold to avoid repeat outreach.</li>}
       </ul>
-      <p className="mt-4 rounded-xl bg-[#F7F4EE] px-4 py-3 text-sm leading-6">This period: {r.new_prospects} new prospects · {r.new_replies} replies · {r.new_conversions} confirmed conversions reported.</p>
+      <p className="mt-4 rounded-xl bg-[#F7F4EE] px-4 py-3 text-sm leading-6">{dayOne ? 'Day 1 results' : 'This period'}: {r.new_prospects} new prospects · {r.new_replies} replies · {r.new_conversions} confirmed conversions reported.</p>
     </section>
   </div>;
 }
