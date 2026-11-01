@@ -20,6 +20,7 @@ await db.exec(readFileSync('supabase/migrations/20261030190000_buyermatch_progre
 await db.exec(readFileSync('supabase/migrations/20261030230000_buyermatch_status_reports.sql','utf8'));
 await db.exec(readFileSync('supabase/migrations/20261031020000_buyermatch_day_one.sql','utf8'));
 await db.exec(readFileSync('supabase/migrations/20261031180000_buyermatch_monitoring_reports.sql','utf8'));
+await db.exec(readFileSync('supabase/migrations/20261101170000_buyermatch_pipeline_reports.sql','utf8'));
 const asUser=async n=>{await db.exec('reset role');await q("select set_config('request.jwt.claim.sub',$1,false)",[id(n)]);await db.exec('set role authenticated');};
 const next='2099-01-01T00:00:00Z';
 let passed=0;
@@ -82,5 +83,10 @@ await test('subscriber cannot publish monitoring report',async()=>{await asUser(
 await test('monitoring key cannot overwrite a report',async()=>{await asUser(1);await monitor();await assert.rejects(()=>monitor({...monitoring,actions_logged:21}),/different report/);});
 for(const change of [{lead_name:'Private Person'},{actions_logged:-1},{qualified_matches:'2'},{placement_status:'verified'},{follow_up_dates:['Jane Smith']},{follow_up_dates:['2025-01-01']},{follow_up_dates:null},{period_end:'2099-01-01T00:00:00Z'},{cumulative_actions:1}]) {
  await test('rejects unsafe monitoring data '+JSON.stringify(change),async()=>{await asUser(1);await assert.rejects(()=>monitor({...monitoring,...change}));});
+}
+const pipeline={...monitoring,actions_logged:null,facebook_items_reviewed:null,threads_items_reviewed:null,cumulative_actions:null,interested_buyers:null,meetings_requested:null,conversations_started:null,prospects_under_review:4,follow_ups_pending:4,drafts_held:1,scored_prospects:4,score_threshold:40,listing_verified_at:'2026-01-02T14:43:00Z',draft_hold_reason:'channel_unavailable',conversations_in_progress:0};
+await test('pipeline stores unavailable totals as null without inventing qualified interest',async()=>{await asUser(1);await monitor(pipeline);await asUser(2);const row=(await q('select monitoring_report from buyermatch_progress_updates'))[0];assert.deepEqual(row.monitoring_report,pipeline);assert.equal(row.monitoring_report.qualified_matches,0);});
+for(const change of [{scored_prospects:5},{draft_hold_reason:'Private name'},{listing_verified_at:'2099-01-01T00:00:00Z'},{drafts_held:-1},{new_replies:null},{score_threshold:null}]) {
+ await test('rejects invalid pipeline fields '+JSON.stringify(change),async()=>{await asUser(1);await assert.rejects(()=>monitor({...pipeline,...change}));});
 }
 console.log(`${passed} progress access/audit cases passed`);await db.close();

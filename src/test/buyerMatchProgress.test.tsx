@@ -16,11 +16,21 @@ describe('BuyerMatch team progress', () => {
     expect(screen.getByText(/224 Facebook results and 19 Threads/)).toBeInTheDocument();
     expect(screen.getByText('Qualified buyer matches').nextElementSibling).toHaveTextContent('0');
     expect(screen.getByText(/not a count of unique people reached/)).toBeInTheDocument();
-    expect(screen.getByText(/Planned rechecks: November 1 and November 7/)).toBeInTheDocument();
+    expect(screen.getByText(/Planned rechecks: November 1, November 7/)).toBeInTheDocument();
     expect(screen.getByText('Placement status being reconciled')).toBeInTheDocument();
     expect(screen.queryByText('Group posts reported live')).not.toBeInTheDocument();
     expect(container.textContent).not.toMatch(/Chandra|Chase|Hollywood|461/);
     expect(container.querySelector('time[datetime="2026-10-31T17:00:00Z"]')).toBeInTheDocument();
+  });
+  it('keeps scored prospects and held drafts distinct from buyer interest and omits shared totals', () => {
+    const report={report_kind:'monitoring' as const,period_start:'2026-11-01T15:30:00Z',period_end:'2026-11-01T16:00:00Z',actions_logged:null,facebook_items_reviewed:null,threads_items_reviewed:null,new_prospects:0,qualified_matches:0,comments_published:0,conversations_started:null,new_replies:0,interested_buyers:null,links_shared:0,meetings_requested:null,new_conversions:0,follow_ups_pending:4,follow_up_dates:['2026-11-01','2026-11-06','2026-11-07'],cumulative_actions:null,prospects_under_review:4,placement_status:'awaiting_reconciliation' as const,drafts_held:1,scored_prospects:4,score_threshold:40,listing_verified_at:'2026-11-01T14:43:00Z',draft_hold_reason:'channel_unavailable' as const,conversations_in_progress:0};
+    const {container}=render(<BuyerMatchProgress update={{...update,report,next_update_at:null}}/>);
+    expect(screen.getByText(/4 prospects meet the team’s research score threshold of 40/)).toBeInTheDocument();
+    expect(screen.getByText(/1 outreach draft is prepared and held/)).toBeInTheDocument();
+    expect(screen.getByText('Interested buyers').nextElementSibling).toHaveTextContent('—');
+    expect(screen.getByText('Qualified buyer matches').nextElementSibling).toHaveTextContent('0');
+    expect(container.querySelector('time[datetime="2026-11-01T14:43:00Z"]')).toBeInTheDocument();
+    expect(container.textContent).not.toMatch(/343|96|Robin|Chandra|logged checks and research actions/);
   });
   it('defaults to newest report and labels earlier snapshots without stale next-update promises', () => {
     const newer={...update,id:'new',created_at:'2026-10-31T18:00:00Z',next_update_at:null,steps:{review:'planned' as const}};

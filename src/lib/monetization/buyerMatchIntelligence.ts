@@ -60,12 +60,14 @@ export interface BuyerMatchStatusReport {
 }
 export interface BuyerMatchMonitoringReport {
   report_kind: 'monitoring'; period_start: string; period_end: string;
-  actions_logged: number; facebook_items_reviewed: number; threads_items_reviewed: number;
+  actions_logged: number | null; facebook_items_reviewed: number | null; threads_items_reviewed: number | null;
   new_prospects: number; qualified_matches: number; comments_published: number;
-  conversations_started: number; new_replies: number; interested_buyers: number;
-  links_shared: number; meetings_requested: number; new_conversions: number;
-  follow_ups_pending: number; follow_up_dates: string[]; cumulative_actions: number;
+  conversations_started: number | null; new_replies: number; interested_buyers: number | null;
+  links_shared: number; meetings_requested: number | null; new_conversions: number;
+  follow_ups_pending: number; follow_up_dates: string[]; cumulative_actions: number | null;
   prospects_under_review: number; placement_status: 'awaiting_reconciliation';
+  drafts_held?: number; scored_prospects?: number; score_threshold?: number;
+  listing_verified_at?: string; draft_hold_reason?: 'channel_unavailable'; conversations_in_progress?: number;
 }
 export interface BuyerMatchProgressUpdate { id: string; campaign_id: string; steps: Record<string, 'planned' | 'in_progress' | 'complete'>; created_at: string; next_update_at: string | null; report?: BuyerMatchStatusReport | BuyerMatchMonitoringReport | null }
 export interface BuyerMatchData {
