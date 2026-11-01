@@ -39,8 +39,8 @@ export default function BuyerMatchProgress({ update, historical = false }: { upd
   return <section aria-labelledby="bm-progress-title" className="overflow-hidden rounded-[24px] border border-[#E2DBD0] bg-white shadow-[0_12px_40px_rgba(28,27,26,0.04)]">
     <div className="bg-[#20201F] px-6 py-7 text-white sm:px-9">
       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#FFAD91]">{historical ? 'Previous campaign report' : dayOne ? 'Your campaign · Day 1' : 'Your team at work'}</p>
-      <h3 id="bm-progress-title" className="mt-3 font-display text-[26px] leading-tight sm:text-[32px]">{monitoring ? 'Research, review and follow-up.' : dayOne ? 'Your promotion is underway.' : 'The latest on your matching search.'}</h3>
-      <p className="mt-3 max-w-xl text-sm leading-6 text-white/70">{dayOne ? 'Your team has launched community promotion and completed targeted prospect research. Here’s your first-day progress, with more placements awaiting approval.' : 'Team-reported progress. Confirmed outreach, replies and qualified inquiries are counted separately below.'}</p>
+      <h3 id="bm-progress-title" className="mt-3 font-display text-[26px] leading-tight sm:text-[32px]">{monitoring ? 'Your prospect pipeline.' : dayOne ? 'Your promotion is underway.' : 'The latest on your matching search.'}</h3>
+      <p className="mt-3 max-w-xl text-sm leading-6 text-white/70">{monitoring ? 'Follow the prospects your team is researching and the next steps for your listing.' : dayOne ? 'Your team has launched community promotion and completed targeted prospect research. Here’s your first-day progress, with more placements awaiting approval.' : 'Team-reported progress. Confirmed outreach, replies and qualified inquiries are counted separately below.'}</p>
       <div className="mt-6 flex flex-wrap gap-x-8 gap-y-4 text-xs leading-6">
         <p><span className="block text-white/60">{historical ? 'Report published' : 'Last team update'}</span><time dateTime={update.created_at}>{progressTimestamp(update.created_at)}</time></p>
         {!historical && (update.next_update_at ? <p><span className="block text-white/60">Next update expected</span><time dateTime={update.next_update_at}>{progressTimestamp(update.next_update_at)}</time>{overdue && <span className="block text-[#FFC5B0]">Awaiting the next team report</span>}</p> : <p><span className="block text-white/60">Next update</span>After the next campaign review</p>)}
@@ -62,6 +62,19 @@ export default function BuyerMatchProgress({ update, historical = false }: { upd
 function MonitoringReport({ report: r }: { report: BuyerMatchMonitoringReport }) {
   const date = (value: string) => new Intl.DateTimeFormat(undefined, {month:'long',day:'numeric',timeZone:'UTC'}).format(new Date(value+'T12:00:00Z'));
   return <div className="space-y-7 px-6 py-7 sm:px-9">
+    <section aria-label="Prospect pipeline" className="rounded-2xl bg-[#FFF3ED] p-5 sm:p-6">
+      <h4 className="text-lg font-semibold">Opportunities for your listing</h4>
+      <dl className="mt-5 grid grid-cols-2 gap-5 sm:grid-cols-3">
+        {([[r.prospects_under_review,'Prospects identified'],[r.drafts_held,'Outreach drafts prepared'],[r.follow_ups_pending,'Follow-up reviews planned']] as const).filter(([count])=>count != null).map(([count,label])=><div key={label}><dt className={bm.note}>{label}</dt><dd className="mt-2 text-3xl font-medium tabular-nums">{count}</dd></div>)}
+      </dl>
+      <p className={bm.body+' mt-5'}>Your team is reviewing prospect fit and planning the next steps for each opportunity.</p>
+    </section>
+    <section><h4 className="text-sm font-semibold">What happens next</h4>
+      {r.drafts_held != null && r.drafts_held > 0 && <p className={bm.body+' mt-2'}>{r.drafts_held} outreach draft{r.drafts_held===1?' is':'s are'} prepared. {r.draft_hold_reason === 'channel_unavailable' ? 'Sending is on hold until the Facebook posting channel is available.' : 'Sending is on hold for review.'}</p>}
+      <p className={bm.body+' mt-2'}>Planned prospect reviews: {r.follow_up_dates.map(date).join(', ')}.</p>
+      {r.listing_verified_at && <p className={bm.body+' mt-2'}>Listing reported live: <time dateTime={r.listing_verified_at}>{progressTimestamp(r.listing_verified_at)}</time>.</p>}
+    </section>
+    <details className="group border-t border-[#ECE6DD] pt-5"><summary className="cursor-pointer text-sm font-semibold text-[#746E66]">View reporting details</summary><div className="mt-5 space-y-7">
     <div><p className={bm.eyebrow}>30-minute campaign report</p><p className={bm.body+' mt-2'}><time dateTime={r.period_start}>{progressTimestamp(r.period_start)}</time> – <time dateTime={r.period_end}>{progressTimestamp(r.period_end)}</time></p><p className={bm.note+' mt-2'}>Reported by your campaign team. Research actions are not buyer inquiries or outreach.</p></div>
     <section className="rounded-2xl bg-[#FFF3ED] p-5 sm:p-6" aria-label="Research completed">
       <h4 className="text-lg font-semibold">Keeping your search focused</h4>
@@ -76,11 +89,8 @@ function MonitoringReport({ report: r }: { report: BuyerMatchMonitoringReport })
       <p className={bm.body+' mt-5'}>Outreach this period: {r.comments_published} comments · {r.conversations_started == null ? 'conversation starts not reported' : `${r.conversations_started} conversations started`} · {r.links_shared} listing links shared.</p>
       {r.conversations_in_progress != null && <p className={bm.body+' mt-2'}>{r.conversations_in_progress} conversations in progress.</p>}
     </section>
-    <section className="border-t border-[#ECE6DD] pt-6"><h4 className="text-sm font-semibold">Your prospect pipeline</h4><p className={bm.body+' mt-2'}>{r.prospects_under_review} existing prospects remain under review, with {r.follow_ups_pending} follow-up checks pending.</p>
-      {r.scored_prospects != null && <p className={bm.body+' mt-2'}>{r.scored_prospects} prospects meet the team’s research score threshold of {r.score_threshold}. A research score is not confirmed interest in your listing; budget, location and readiness still need verification.</p>}
-      {r.drafts_held != null && <p className={bm.body+' mt-2'}>{r.drafts_held} outreach draft{r.drafts_held===1?' is':'s are'} prepared and held. {r.draft_hold_reason === 'channel_unavailable' ? 'The Facebook posting channel for this draft is unavailable. It has not been sent.' : 'It has not been sent.'}</p>}
-      <p className={bm.body+' mt-2'}>Planned rechecks: {r.follow_up_dates.map(date).join(', ')}. These dates are review plans, not promises of contact.</p></section>
     <aside className="rounded-xl border border-[#E2DBD0] bg-[#F7F4EE] p-5"><h4 className="text-sm font-semibold">Placement status being reconciled</h4><p className={bm.body+' mt-2'}>The latest report lists group drafts awaiting approval and group posting on hold. Earlier reports listed live placements. Those placement totals are awaiting reconciliation and are not presented as current verified reach. Previous reports remain available in report history.</p></aside>
+    </div></details>
   </div>;
 }
 

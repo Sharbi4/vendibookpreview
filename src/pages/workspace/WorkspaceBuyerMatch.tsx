@@ -179,7 +179,7 @@ function CampaignDashboard({ campaign: c, live, events, links, reports, progress
       </div>
     </section>
 
-    <BuyerMatchInsights events={events} sessions={engagement.data?.unique_sessions}/>
+    {progress?.report ? <details className="border-t border-[#ECE6DD] pt-5"><summary className="cursor-pointer text-sm font-semibold text-[#746E66]">View engagement metrics</summary><div className="mt-6"><BuyerMatchInsights events={events} sessions={engagement.data?.unique_sessions}/></div></details> : <BuyerMatchInsights events={events} sessions={engagement.data?.unique_sessions}/>}
 
     <div className="grid gap-12 lg:grid-cols-2">
       <section>
@@ -188,7 +188,7 @@ function CampaignDashboard({ campaign: c, live, events, links, reports, progress
           {events.map(e => <li key={e.id} className="relative"><span aria-hidden className="absolute -left-[25px] top-1.5 h-2 w-2 rounded-full bg-[#FF5124]"/><p className={bm.note}>{progressTimestamp(e.occurred_at)}{e.verification_status !== 'verified' ? ' · not yet verified' : ''}</p><p className="mt-0.5 text-[14px] font-semibold">{EVENT_LABELS[e.event_type] ?? e.event_type}</p>{e.outcome && <p className={bm.body}>{e.outcome}</p>}{e.next_step && <p className="mt-1 text-[13px] text-[#1C1B1A]"><span className="font-semibold text-[#FF5124]">Next:</span> {e.next_step}</p>}</li>)}
           <li className="relative"><span aria-hidden className="absolute -left-[25px] top-1.5 h-2 w-2 rounded-full bg-[#1C1B1A]"/><p className={bm.note}>{shortDate(c.created_at)}</p><p className="mt-0.5 text-[14px] font-semibold">Listing sent for review</p></li>
         </ol>
-        {!events.length && <p className={bm.body + ' mt-4'}>{progress ? 'No verified outreach or replies recorded here yet. Team-reported activity is shown above.' : 'No research or outreach logged yet.'}</p>}
+        {!events.length && <p className={bm.body + ' mt-4'}>{progress ? 'Follow your team’s progress in the report above. Reviewed outreach and replies will appear here as your campaign progresses.' : 'Research and outreach updates will appear here as your campaign progresses.'}</p>}
       </section>
       <section>
         <h3 className={bm.h3}>Before buyers see it</h3>
