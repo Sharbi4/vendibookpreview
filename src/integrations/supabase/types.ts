@@ -1902,6 +1902,53 @@ export type Database = {
           },
         ]
       }
+      buyermatch_progress_updates: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          evidence_reference: string
+          id: string
+          monitoring_report: Json | null
+          next_update_at: string | null
+          recorded_by: string
+          report: Json | null
+          steps: Json
+          update_key: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          evidence_reference: string
+          id?: string
+          monitoring_report?: Json | null
+          next_update_at?: string | null
+          recorded_by: string
+          report?: Json | null
+          steps: Json
+          update_key: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          evidence_reference?: string
+          id?: string
+          monitoring_report?: Json | null
+          next_update_at?: string | null
+          recorded_by?: string
+          report?: Json | null
+          steps?: Json
+          update_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buyermatch_progress_updates_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "buyermatch_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       buyermatch_prospects: {
         Row: {
           campaign_id: string
@@ -16570,6 +16617,35 @@ export type Database = {
       }
       public_display_name: {
         Args: { _fallback?: string; _user_id: string }
+        Returns: string
+      }
+      publish_buyermatch_monitoring_report: {
+        Args: {
+          _campaign: string
+          _evidence: string
+          _key: string
+          _report: Json
+        }
+        Returns: string
+      }
+      publish_buyermatch_progress: {
+        Args: {
+          _campaign: string
+          _evidence: string
+          _key: string
+          _next_update_at: string
+          _steps: Json
+        }
+        Returns: string
+      }
+      publish_buyermatch_status_report: {
+        Args: {
+          _campaign: string
+          _evidence: string
+          _key: string
+          _next_update_at: string
+          _report: Json
+        }
         Returns: string
       }
       purge_expired_permit_soft_deletes: { Args: never; Returns: undefined }
