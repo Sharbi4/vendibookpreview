@@ -80,6 +80,60 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_conversation_audit: {
+        Row: {
+          agent_id: string
+          agent_key: string
+          call_successful: string | null
+          conversation_id: string
+          duration_secs: number | null
+          fetched_at: string
+          follow_up_reason: string | null
+          needs_follow_up: boolean
+          reviewed_at: string | null
+          reviewed_by: string | null
+          started_at: string | null
+          status: string | null
+          summary: string | null
+          termination_reason: string | null
+          title: string | null
+        }
+        Insert: {
+          agent_id: string
+          agent_key: string
+          call_successful?: string | null
+          conversation_id: string
+          duration_secs?: number | null
+          fetched_at?: string
+          follow_up_reason?: string | null
+          needs_follow_up?: boolean
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          started_at?: string | null
+          status?: string | null
+          summary?: string | null
+          termination_reason?: string | null
+          title?: string | null
+        }
+        Update: {
+          agent_id?: string
+          agent_key?: string
+          call_successful?: string | null
+          conversation_id?: string
+          duration_secs?: number | null
+          fetched_at?: string
+          follow_up_reason?: string | null
+          needs_follow_up?: boolean
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          started_at?: string | null
+          status?: string | null
+          summary?: string | null
+          termination_reason?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           city: string | null
@@ -16192,6 +16246,7 @@ export type Database = {
         Returns: undefined
       }
       dispatch_agent_contact_report: { Args: never; Returns: undefined }
+      dispatch_agent_conversation_audit: { Args: never; Returns: undefined }
       dispatch_native_push_jobs: { Args: never; Returns: undefined }
       dispatch_square_reconcile: { Args: never; Returns: undefined }
       equipment_reservation_status: {
