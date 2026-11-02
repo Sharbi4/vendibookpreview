@@ -80,7 +80,15 @@ export const GuestRequestForm = ({ listingId, hostId, kind, defaultMessage = '',
       setSent(true);
     } catch (err) {
       console.error('Guest request failed', err);
-      toast({ title: 'Something went wrong', description: 'Please try again.', variant: 'destructive' });
+      // Safety rules (e.g. phone numbers or emails in the message) explain exactly what to change.
+      const e = err as { code?: string; message?: string };
+      const reason = e?.code === 'P0001' && e.message ? e.message : null;
+      if (reason) setErrors({ message: reason });
+      toast({
+        title: reason ? 'Please edit your message' : 'Your message was not sent',
+        description: reason ?? 'Please check your connection and try again.',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
       sending.current = false;
