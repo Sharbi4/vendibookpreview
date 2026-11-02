@@ -1,25 +1,26 @@
-# Read-only audit findings (Nov 2 2026, 18:02 UTC) — no changes proposed
+# Read-only audit, Nov 2 2026, 11:50 AM Arizona time (18:51Z). No changes proposed.
 
-## ElevenLabs provider access: works (read-only GET, server-side key, never shown)
-| Agent | ID | Provider name | Conversations since 17:33:00Z |
-|---|---|---|---|
-| Atlas | agent_1501m4rhvkz9fsbs5ce89zvk2k7b | Vendibook Site Assistant Atlas | 0 |
-| Alice/Allison | agent_8301m5nh7dq6e1x9wgqk2yx7k4pd | Vendibook Site Customer Service and Tech Agent | 0 |
-| Phone line | agent_4401m5tvvw3yewrt9sp6nbmbbvmd | Vendibook Phone Line (866) 690-6227 | 0 |
+I read the provider histories directly (GET only, server-side keys, never shown). Nothing was edited, sent or called.
 
-- Alice = Allison = 8301… (the site customer-service agent). The phone agent is a different agent, even though it calls itself "Allison" on calls.
-- No new conversations, contacts or open actions. Nothing new is missing from the audit table.
-- Audit table: 17 rows (15 Atlas, latest start 16:18:07Z; 2 phone, latest 12:48:00Z). Last fetched at 17:33:53Z. The next hourly run is at 18:15Z.
-- Vapi: no Vapi key is available here, so I couldn't check Vapi history. Treat it as unknown, not zero.
-- Open follow-ups are unchanged: Michelle Stoddard (her call ended normally; the provider's "unsuccessful" flag doesn't mean the call dropped), the Bishopville Atlas chat, and the Spanish-support chat.
+## ElevenLabs: no new conversations after 17:45Z
+| Agent | ID | Provider name | New | 72h (Oct 30 07:00Z to now) |
+|---|---|---|---|---|
+| Atlas | agent_1501m4rhvkz9fsbs5ce89zvk2k7b | Vendibook Site Assistant Atlas | 0 | 19 |
+| Customer service | agent_8301m5nh7dq6e1x9wgqk2yx7k4pd | "Vendibook Site Customer Service and Tech Agent". The website code calls it Allison, not Alice | 0 | 0 |
+| Phone line | agent_4401m5tvvw3yewrt9sp6nbmbbvmd. phoneLineAgent() confirmed this live from the number assignment | Vendibook Phone Line (866) 690-6227 | 0 | 2 |
 
-## $1,375 freight invoice and the two Resend emails
-- **No automation sent them.** I sent both by hand in this chat, each time because you asked:
-  1. The invoice email, after your founder-authorized one-off request (Square invoice inv:0-ChD5u1Yf1lNDE-nnRm3L8Xe9EK0O, unpaid; Resend 01a19d5c-4410-…).
-  2. The "book now to lock in that price" reminder, after Elle's next message (Resend 01a19d5d-da2b-…).
-- The send IDs carry timestamps that are about 104 seconds apart.
-- No code, function or scheduled job created them. I found no "1375" in the code, and the freight checkout isn't connected to Square.
-- The reminder asked Kevin to confirm both addresses, and the invoice email said pickup can't be finalized until he confirms his delivery address and ZIP. Kevin hasn't replied. The delivery ZIP 34658 is still unverified.
-- The reminder's "lock in that price" urgency was what Elle asked for, not a system default.
+None of the earlier conversations have new outcomes.
 
-No changes, sends or calls. Approve only to close this audit. Nothing will be built.
+## Vapi is a separate provider, and I can read it
+- Vapi answers the old number **(725) 755-9598** ("Vendibook Main Line"). That number still takes calls, even though it was removed from the site.
+- 72h: 9 Vapi calls, 8 inbound phone calls and 1 web call. The audit table doesn't cover any of them.
+- New since 17:45Z:
+  - `01a19d6d-08ef-7002-a2dc-e33f82605298`, 18:02:11Z, 59 seconds, the caller hung up. It was a robocall selling Google listing services. No contact details, no follow-up.
+  - `01a19d99-e3fb-7667-a4e4-27f422beed44`, 18:51:10Z, **still in progress** while I checked. The caller's number ends in 7982. There's no summary yet, so recheck it after the call ends.
+
+## Michelle Stoddard ticket
+- Ticket 22eb1dec-… is still "new". It was last updated Nov 2 at 12:55Z, so nothing has changed since then.
+- Her call ended normally. ElevenLabs' "unsuccessful" flag doesn't mean the call dropped.
+
+## Gap
+The hourly audit reads ElevenLabs only. Calls to the (725) number on Vapi are not monitored. Adding Vapi to the read-only audit would be a separate approval.
