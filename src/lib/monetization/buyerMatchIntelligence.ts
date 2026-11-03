@@ -61,13 +61,20 @@ export interface BuyerMatchStatusReport {
 export interface BuyerMatchMonitoringReport {
   report_kind: 'monitoring'; period_start: string; period_end: string;
   actions_logged: number | null; facebook_items_reviewed: number | null; threads_items_reviewed: number | null;
-  new_prospects: number; qualified_matches: number; comments_published: number;
-  conversations_started: number | null; new_replies: number; interested_buyers: number | null;
-  links_shared: number; meetings_requested: number | null; new_conversions: number;
-  follow_ups_pending: number; follow_up_dates: string[]; cumulative_actions: number | null;
-  prospects_under_review: number; placement_status: 'awaiting_reconciliation';
+  new_prospects: number | null; qualified_matches: number | null; comments_published: number | null;
+  conversations_started: number | null; new_replies: number | null; interested_buyers: number | null;
+  links_shared: number | null; meetings_requested: number | null; new_conversions: number | null;
+  follow_ups_pending: number | null; follow_up_dates: string[]; cumulative_actions: number | null;
+  prospects_under_review: number; placement_status: 'awaiting_reconciliation' | 'updated_report';
   drafts_held?: number; scored_prospects?: number; score_threshold?: number;
   listing_verified_at?: string; draft_hold_reason?: 'channel_unavailable'; conversations_in_progress?: number;
+  campaign_digest?: BuyerMatchCampaignDigest;
+}
+export interface BuyerMatchCampaignDigest {
+  campaign_start: string; report_date: string; searches_24h: number; direct_outreach_total: number;
+  equipment_highlights?: ('full_kitchen' | 'cummins_under_1000_hours_with_records' | 'new_tires' | 'westinghouse_generator')[];
+  promotions: { channel: 'facebook' | 'threads' | 'instagram' | 'food_truck_group' | 'buy_sell_group'; status: 'published' | 'pending_approval'; date: string; time_utc: string | null; group_members: number | null }[];
+  prospects: { profile: 'full_kitchen' | 'direct_outreach' | 'payment_terms' | 'restaurant_transition' | 'equipped_value' | 'catering_launch' | 'financing_paperwork' | 'colorado_buyer' | 'staffing_before_purchase'; score: number | null; status: 'final_review' | 'awaiting_reply' | 'qualification' | 'monitoring'; posted_on: string | null; contacted_at: string | null }[];
 }
 export interface BuyerMatchProgressUpdate { id: string; campaign_id: string; steps: Record<string, 'planned' | 'in_progress' | 'complete'>; created_at: string; next_update_at: string | null; report?: BuyerMatchStatusReport | BuyerMatchMonitoringReport | null }
 export interface BuyerMatchData {

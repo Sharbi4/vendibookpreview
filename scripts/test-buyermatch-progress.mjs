@@ -21,6 +21,7 @@ await db.exec(readFileSync('supabase/migrations/20261030230000_buyermatch_status
 await db.exec(readFileSync('supabase/migrations/20261031020000_buyermatch_day_one.sql','utf8'));
 await db.exec(readFileSync('supabase/migrations/20261031180000_buyermatch_monitoring_reports.sql','utf8'));
 await db.exec(readFileSync('supabase/migrations/20261101170000_buyermatch_pipeline_reports.sql','utf8'));
+await db.exec(readFileSync('supabase/migrations/20261103190000_buyermatch_campaign_digest.sql','utf8'));
 const asUser=async n=>{await db.exec('reset role');await q("select set_config('request.jwt.claim.sub',$1,false)",[id(n)]);await db.exec('set role authenticated');};
 const next='2099-01-01T00:00:00Z';
 let passed=0;
@@ -89,4 +90,26 @@ await test('pipeline stores unavailable totals as null without inventing qualifi
 for(const change of [{scored_prospects:5},{draft_hold_reason:'Private name'},{listing_verified_at:'2099-01-01T00:00:00Z'},{drafts_held:-1},{new_replies:null},{score_threshold:null}]) {
  await test('rejects invalid pipeline fields '+JSON.stringify(change),async()=>{await asUser(1);await assert.rejects(()=>monitor({...pipeline,...change}));});
 }
+// Use past fixture dates so validation does not depend on the execution host's clock.
+const digestFixture=JSON.parse(readFileSync('src/test/fixtures/buyerMatchCampaignReport.json','utf8').replaceAll('2026-','2025-'));
+await test('campaign digest is owner-readable, retry-safe and keeps history and private evidence restricted',async()=>{
+ await asUser(1);await statusReport();const first=await monitor(digestFixture);assert.equal((await monitor(digestFixture))[0].id,first[0].id);
+ await asUser(2);const rows=await q('select monitoring_report from buyermatch_progress_updates');assert.equal(rows.length,2);assert.deepEqual(rows.find(r=>r.monitoring_report).monitoring_report,digestFixture);
+ await asUser(3);assert.equal((await q('select monitoring_report from buyermatch_progress_updates')).length,0);
+});
+const invalidDigests=[
+ d=>{d.campaign_digest.equipment_highlights=['Contact Jane'];},
+ d=>{d.campaign_digest.prospects[0].name='Private Name';},
+ d=>{d.campaign_digest.prospects[0].profile='private@example.com';},
+ d=>{d.campaign_digest.prospects[0].score=101;},
+ d=>{d.campaign_digest.prospects[1].contacted_at=null;},
+ d=>{d.campaign_digest.direct_outreach_total=0;},
+ d=>{d.campaign_digest.prospects.pop();},
+ d=>{d.campaign_digest.promotions[0].group_name='Private Group';},
+ d=>{d.campaign_digest.promotions[0].time_utc='2099-01-01T00:00:00Z';},
+ d=>{d.campaign_digest.promotions[0].status='approved';},
+ d=>{d.campaign_digest.promotions[0].date='2020-01-01';},
+ d=>{d.campaign_digest.searches_24h=-1;},
+];
+for(const [index,change] of invalidDigests.entries()) await test('rejects private or inconsistent digest '+index,async()=>{await asUser(1);const changed=structuredClone(digestFixture);change(changed);await assert.rejects(()=>monitor(changed));});
 console.log(`${passed} progress access/audit cases passed`);await db.close();

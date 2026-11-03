@@ -1,0 +1,146 @@
+{
+  "report_kind": "monitoring",
+  "period_start": "2026-10-30T16:35:00Z",
+  "period_end": "2026-11-03T17:31:00Z",
+  "actions_logged": null,
+  "facebook_items_reviewed": null,
+  "threads_items_reviewed": null,
+  "new_prospects": null,
+  "qualified_matches": null,
+  "comments_published": null,
+  "conversations_started": null,
+  "new_replies": null,
+  "interested_buyers": null,
+  "links_shared": null,
+  "meetings_requested": null,
+  "new_conversions": 0,
+  "follow_ups_pending": null,
+  "follow_up_dates": [],
+  "cumulative_actions": null,
+  "prospects_under_review": 9,
+  "placement_status": "updated_report",
+  "listing_verified_at": "2026-11-03T15:00:00Z",
+  "campaign_digest": {
+    "campaign_start": "2026-10-30",
+    "report_date": "2026-11-03",
+    "searches_24h": 134,
+    "direct_outreach_total": 1,
+    "equipment_highlights": ["full_kitchen", "cummins_under_1000_hours_with_records", "new_tires", "westinghouse_generator"],
+    "promotions": [
+      {
+        "channel": "facebook",
+        "status": "published",
+        "date": "2026-11-02",
+        "time_utc": "2026-11-02T16:11:00Z",
+        "group_members": null
+      },
+      {
+        "channel": "threads",
+        "status": "published",
+        "date": "2026-11-02",
+        "time_utc": "2026-11-02T16:16:00Z",
+        "group_members": null
+      },
+      {
+        "channel": "instagram",
+        "status": "published",
+        "date": "2026-11-02",
+        "time_utc": "2026-11-02T16:20:00Z",
+        "group_members": null
+      },
+      {
+        "channel": "food_truck_group",
+        "status": "published",
+        "date": "2026-11-02",
+        "time_utc": null,
+        "group_members": 5300
+      },
+      {
+        "channel": "buy_sell_group",
+        "status": "pending_approval",
+        "date": "2026-11-02",
+        "time_utc": null,
+        "group_members": 66700
+      },
+      {
+        "channel": "buy_sell_group",
+        "status": "pending_approval",
+        "date": "2026-11-02",
+        "time_utc": null,
+        "group_members": 78600
+      },
+      {
+        "channel": "facebook",
+        "status": "published",
+        "date": "2026-11-03",
+        "time_utc": "2026-11-03T17:31:00Z",
+        "group_members": null
+      }
+    ],
+    "prospects": [
+      {
+        "profile": "full_kitchen",
+        "score": 80,
+        "status": "final_review",
+        "posted_on": "2026-10-25",
+        "contacted_at": null
+      },
+      {
+        "profile": "direct_outreach",
+        "score": 62,
+        "status": "awaiting_reply",
+        "posted_on": null,
+        "contacted_at": "2026-11-02T16:06:00Z"
+      },
+      {
+        "profile": "payment_terms",
+        "score": 61,
+        "status": "qualification",
+        "posted_on": "2026-11-02",
+        "contacted_at": null
+      },
+      {
+        "profile": "restaurant_transition",
+        "score": 52,
+        "status": "qualification",
+        "posted_on": null,
+        "contacted_at": null
+      },
+      {
+        "profile": "equipped_value",
+        "score": 47,
+        "status": "qualification",
+        "posted_on": "2026-10-15",
+        "contacted_at": null
+      },
+      {
+        "profile": "catering_launch",
+        "score": 45,
+        "status": "qualification",
+        "posted_on": "2026-10-31",
+        "contacted_at": null
+      },
+      {
+        "profile": "financing_paperwork",
+        "score": 44,
+        "status": "qualification",
+        "posted_on": "2026-11-02",
+        "contacted_at": null
+      },
+      {
+        "profile": "colorado_buyer",
+        "score": null,
+        "status": "monitoring",
+        "posted_on": null,
+        "contacted_at": null
+      },
+      {
+        "profile": "staffing_before_purchase",
+        "score": null,
+        "status": "monitoring",
+        "posted_on": null,
+        "contacted_at": null
+      }
+    ]
+  }
+}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Clock3, Check, ArrowUpRight } from 'lucide-react';
 import type { BuyerMatchProgressUpdate, BuyerMatchStatusReport, BuyerMatchMonitoringReport } from '@/lib/monetization/buyerMatchIntelligence';
 import { bm } from './buyerMatchUi';
+import BuyerMatchCampaignDigest from './BuyerMatchCampaignDigest';
 
 const STEPS: Record<string, [string, string]> = {
   priority: ['Priority placement in our work queue', 'Your listing is prioritized for the next matching and follow-up reviews.'],
@@ -60,6 +61,7 @@ export default function BuyerMatchProgress({ update, historical = false }: { upd
 }
 
 function MonitoringReport({ report: r }: { report: BuyerMatchMonitoringReport }) {
+  if (r.campaign_digest) return <BuyerMatchCampaignDigest digest={r.campaign_digest} listingVerifiedAt={r.listing_verified_at}/>;
   const date = (value: string) => new Intl.DateTimeFormat(undefined, {month:'long',day:'numeric',timeZone:'UTC'}).format(new Date(value+'T12:00:00Z'));
   return <div className="space-y-7 px-6 py-7 sm:px-9">
     <section aria-label="Prospect pipeline" className="rounded-2xl bg-[#FFF3ED] p-5 sm:p-6">
