@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { usePublicFeatureFlag } from "@/hooks/usePublicFeatureFlag";
 
@@ -18,10 +17,6 @@ export default function FinancingApprove() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-12">
-      <Helmet>
-        <title>Equipment financing options | Vendibook</title>
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
       <h1 className="text-3xl font-semibold text-foreground">Equipment financing options</h1>
 
       {!enabled ? (
