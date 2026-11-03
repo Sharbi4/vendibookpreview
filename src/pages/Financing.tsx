@@ -28,6 +28,8 @@ import { GuideBreadcrumb } from '@/components/education/GuideBreadcrumb';
 import { EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import { FinancingAvailableBadge } from '@/components/financing/FinancingAvailableBadge';
 import { useFinancingHandoff } from '@/hooks/useFinancingHandoff';
+import { usePublicFeatureFlag } from '@/hooks/usePublicFeatureFlag';
+import { APPROVE_FLAG_KEY } from '@/lib/financing/approveFrame';
 import { FinancingCalculator } from '@/components/financing/FinancingCalculator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useBuyerSeoTracking } from '@/hooks/useBuyerSeoTracking';
@@ -234,6 +236,7 @@ const ApplyCta = ({
 
 const Financing = () => {
   const { startFinancingApply: handoff, financingLeadDialog } = useFinancingHandoff();
+  const approveEnabled = usePublicFeatureFlag(APPROVE_FLAG_KEY);
   const onTrackedClick = useBuyerSeoTracking('/financing');
   const startFinancingApply = (source: FinancingSource, listingId?: string) => {
     trackBuyerSeoFinancing('apply_clicked', { cta_location: source, listing_id: listingId ?? null });
@@ -345,6 +348,14 @@ const Financing = () => {
                   Estimate your monthly payment
                   <ArrowDown className="h-3.5 w-3.5" aria-hidden />
                 </a>
+                {approveEnabled && (
+                  <Link
+                    to="/financing/approve"
+                    className="mt-3 block text-xs text-white/70 underline underline-offset-4 hover:text-white"
+                  >
+                    Also see financing options from APPROVE
+                  </Link>
+                )}
                 <p className="mt-8 border-t border-white/15 pt-4 text-xs leading-relaxed text-white/65">
                   {FINANCING_FOOTNOTE}
                 </p>
