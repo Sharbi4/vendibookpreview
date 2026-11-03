@@ -273,6 +273,7 @@ const AdminCampaignFeatureYourListing = lazy(() => import("./pages/AdminCampaign
 const AdminSpotlights = lazy(() => import("./pages/AdminSpotlights"));
 const CommunitySpotlight = lazy(() => import("./pages/CommunitySpotlight"));
 const FinancingEnable = lazy(() => import("./pages/FinancingEnable"));
+const FinancingApprove = lazy(() => import("./pages/FinancingApprove"));
 const Subscribe = lazy(() => import("./pages/Subscribe"));
 const UpdateConfirmation = lazy(() => import("./pages/UpdateConfirmation"));
 const MarketplaceUpdatesTerms = lazy(() => import("./pages/legal/MarketplaceUpdatesTerms"));
@@ -559,6 +560,7 @@ const AnimatedRoutes = () => {
           <Route path="/press" element={<PageTransition><Press /></PageTransition>} />
           <Route path="/financing" element={<PageTransition><Financing /></PageTransition>} />
           <Route path="/financing/enable" element={<PageTransition><FinancingEnable /></PageTransition>} />
+          <Route path="/financing/approve" element={<PageTransition><FinancingApprove /></PageTransition>} />
 
           <Route path="/admin/email/dashboard" element={<PageTransition><AdminEmailDashboard /></PageTransition>} />
           <Route path="/admin/campaigns/new-exit-plan" element={<PageTransition><AdminCampaignNewExitPlan /></PageTransition>} />
