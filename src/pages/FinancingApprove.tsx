@@ -41,15 +41,15 @@ export default function FinancingApprove() {
       ) : !open ? (
         <div className="mt-6 rounded-lg border border-border bg-card p-6 space-y-3">
           <p className="text-muted-foreground">
-            APPROVE is an independent financing company. When you continue, their application opens here, and
+            APPROVE is an independent equipment-financing platform, not a lender. Continuing loads its financing tool here, and
             anything you enter goes straight to APPROVE under their own{" "}
-            <a href="https://www.approvepayments.com/privacy" target="_blank" rel="noopener noreferrer" className="underline">privacy policy</a>{" "}
+            <a href="https://www.approvepayments.com/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline">privacy policy</a>{" "}
             and{" "}
-            <a href="https://www.approvepayments.com/terms" target="_blank" rel="noopener noreferrer" className="underline">terms</a>.
+            <a href="https://www.approvepayments.com/terms-and-conditions" target="_blank" rel="noopener noreferrer" className="underline">terms</a>.
           </p>
           <p className="text-muted-foreground">
             Vendibook doesn't share your account or listing details with APPROVE, and we don't fill anything in for you.
-            Approval, rates and terms are decided by APPROVE and its lenders and are not guaranteed.
+            Lenders decide approvals, rates and terms; none are guaranteed. Vendibook is not a lender.
           </p>
           <Button onClick={() => setOpen(true)}>Continue to APPROVE</Button>
         </div>
