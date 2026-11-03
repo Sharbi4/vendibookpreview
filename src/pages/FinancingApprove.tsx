@@ -1,45 +1,72 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { usePublicFeatureFlag } from "@/hooks/usePublicFeatureFlag";
-
-export const APPROVE_FLAG_KEY = "approve_financing_enabled";
+import { APPROVE_FLAG_KEY, APPROVE_SANDBOX, buildApproveSrcDoc } from "@/lib/financing/approveFrame";
 
 /**
- * Opt-in APPROVE financing page. The third-party loader runs only inside a
- * sandboxed iframe WITHOUT allow-same-origin / allow-top-navigation, so it
- * gets an opaque origin and cannot read the Vendibook session or redirect
- * the site. No customer data is passed to the frame.
+ * Opt-in APPROVE financing page. Nothing from APPROVE loads until the visitor
+ * clicks Continue, every time. The vendor script runs only inside a sandboxed
+ * srcDoc iframe (opaque origin) and the frame is removed on close/route exit.
  */
 export default function FinancingApprove() {
-  const enabled = usePublicFeatureFlag(APPROVE_FLAG_KEY);
-  const [consented, setConsented] = useState(false);
+  const flagOn = usePublicFeatureFlag(APPROVE_FLAG_KEY);
+  // Dev-preview override only; stripped from production builds.
+  const devPreview =
+    import.meta.env.DEV && typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("approve_preview") === "1";
+  const enabled = flagOn || devPreview;
+  const [open, setOpen] = useState(false);
+  const srcDoc = useMemo(() => buildApproveSrcDoc(), []);
+
+  useEffect(() => {
+    const prev = document.title;
+    document.title = "Equipment financing with APPROVE | Vendibook";
+    const meta = document.createElement("meta");
+    meta.name = "robots";
+    meta.content = "noindex, nofollow";
+    document.head.appendChild(meta);
+    return () => { document.title = prev; meta.remove(); };
+  }, []);
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-12">
-      <h1 className="text-3xl font-semibold text-foreground">Equipment financing options</h1>
+      <h1 className="text-3xl font-semibold text-foreground">Equipment financing with APPROVE</h1>
 
       {!enabled ? (
         <p className="mt-4 text-muted-foreground">
           This financing option isn't available yet. You can still{" "}
-          <Link to="/financing" className="underline">explore financing</Link>.
+          <Link to="/financing" className="underline">explore our other financing options</Link>.
         </p>
-      ) : !consented ? (
-        <div className="mt-6 rounded-lg border border-border bg-card p-6">
+      ) : !open ? (
+        <div className="mt-6 rounded-lg border border-border bg-card p-6 space-y-3">
           <p className="text-muted-foreground">
-            This opens a financing tool from our partner APPROVE. Anything you enter goes to APPROVE, not
-            Vendibook, and we don't share your account details with them.
+            APPROVE is an independent financing company. When you continue, their application opens here, and
+            anything you enter goes straight to APPROVE under their own{" "}
+            <a href="https://www.approvepayments.com/privacy" target="_blank" rel="noopener noreferrer" className="underline">privacy policy</a>{" "}
+            and{" "}
+            <a href="https://www.approvepayments.com/terms" target="_blank" rel="noopener noreferrer" className="underline">terms</a>.
           </p>
-          <Button className="mt-4" onClick={() => setConsented(true)}>Continue to APPROVE</Button>
+          <p className="text-muted-foreground">
+            Vendibook doesn't share your account or listing details with APPROVE, and we don't fill anything in for you.
+            Approval, rates and terms are decided by APPROVE and its lenders and are not guaranteed.
+          </p>
+          <Button onClick={() => setOpen(true)}>Continue to APPROVE</Button>
         </div>
       ) : (
-        <iframe
-          title="APPROVE financing"
-          src="/financing/approve-frame.html"
-          sandbox="allow-scripts allow-forms allow-popups"
-          referrerPolicy="no-referrer"
-          className="mt-6 h-[900px] w-full rounded-lg border border-border bg-card"
-        />
+        <div className="mt-6 space-y-3">
+          <div className="flex justify-end">
+            <Button variant="outline" onClick={() => setOpen(false)}>Close APPROVE</Button>
+          </div>
+          <iframe
+            data-testid="approve-frame"
+            title="APPROVE financing application"
+            srcDoc={srcDoc}
+            sandbox={APPROVE_SANDBOX}
+            referrerPolicy="no-referrer"
+            className="h-[900px] w-full rounded-lg border border-border bg-card"
+          />
+        </div>
       )}
     </main>
   );
