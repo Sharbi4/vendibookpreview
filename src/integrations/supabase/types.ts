@@ -10516,6 +10516,57 @@ export type Database = {
         }
         Relationships: []
       }
+      reddit_scheduled_posts: {
+        Row: {
+          body: string | null
+          created_at: string
+          created_by: string
+          error: string | null
+          id: string
+          kind: string
+          posted_at: string | null
+          reddit_post_id: string | null
+          reddit_url: string | null
+          scheduled_for: string
+          status: string
+          subreddit: string
+          title: string
+          url: string | null
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          created_by: string
+          error?: string | null
+          id?: string
+          kind?: string
+          posted_at?: string | null
+          reddit_post_id?: string | null
+          reddit_url?: string | null
+          scheduled_for: string
+          status?: string
+          subreddit?: string
+          title: string
+          url?: string | null
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          created_by?: string
+          error?: string | null
+          id?: string
+          kind?: string
+          posted_at?: string | null
+          reddit_post_id?: string | null
+          reddit_url?: string | null
+          scheduled_for?: string
+          status?: string
+          subreddit?: string
+          title?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
       referral_clicks: {
         Row: {
           code: string
@@ -16248,6 +16299,7 @@ export type Database = {
       dispatch_agent_contact_report: { Args: never; Returns: undefined }
       dispatch_agent_conversation_audit: { Args: never; Returns: undefined }
       dispatch_native_push_jobs: { Args: never; Returns: undefined }
+      dispatch_reddit_scheduled_posts: { Args: never; Returns: undefined }
       dispatch_square_reconcile: { Args: never; Returns: undefined }
       equipment_reservation_status: {
         Args: { _listings: string[] }
