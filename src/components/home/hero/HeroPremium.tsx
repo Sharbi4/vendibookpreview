@@ -6,6 +6,7 @@ import HeroListingRotator from './HeroListingRotator';
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import heroPhoto from '@/assets/home-hero-food-truck-night.jpg.asset.json';
+import heroVideo from '@/assets/videos/home-hero-food-truck.mp4.asset.json';
 import './hero-premium.css';
 
 /**
@@ -61,6 +62,19 @@ const HeroPremium = ({ showGoogleSignIn = true, showRotator = true, guaranteeHre
         fetchpriority="high"
         loading="eager"
       />
+      {!reduced && (
+        <video
+          className="hp-hero-photo"
+          src={heroVideo.url}
+          poster={heroPhoto.url}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          aria-hidden="true"
+        />
+      )}
       <div className="hp-hero-shade" aria-hidden="true" />
 
       <div className="hp-hero-inner">
