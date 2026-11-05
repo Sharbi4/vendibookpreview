@@ -457,7 +457,9 @@ export const QuickStartWizard: React.FC<QuickStartWizardProps> = ({
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    // Bottom space on phones lets the Start Listing button scroll clear of the
+    // floating Atlas launcher, which otherwise intercepts the tap.
+    <div className="max-w-2xl mx-auto pb-28 md:pb-0">
       {/* Entry header + compact progress */}
       <div className="mb-6 sm:mb-8">
         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
