@@ -67,14 +67,7 @@
 @font-face {
   font-family: 'Avenir Next LT Pro';
   src: url('https://vendibook.com/__l5e/assets-v1/d1c97d9f-bef8-4224-b76d-9a1e797b77ab/AvenirNextLTPro-Bold.otf') format('opentype');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Avenir Next LT Pro';
-  src: url('https://vendibook.com/__l5e/assets-v1/efcf4e6e-5bb1-4227-b936-42c9e2ac35c6/AvenirNextLTPro-Heavy.otf') format('opentype');
-  font-weight: 800 900;
+  font-weight: 700 900;
   font-style: normal;
   font-display: swap;
 }
