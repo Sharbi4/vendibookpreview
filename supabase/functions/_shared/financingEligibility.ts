@@ -8,9 +8,9 @@
 
 import { jsonError } from './jsonError.ts';
 
-export const EQUINOX_DISCLOSURE_VERSION = 'equinox-financing-v2';
-export const EQUINOX_FLAG_KEY = 'equinox_financing_enabled';
-export const EQUINOX_APPLY_URL = 'https://equinox-funding.com/efapplication/';
+export const EQUINOX_DISCLOSURE_VERSION = 'approve-financing-v1';
+export const EQUINOX_FLAG_KEY = 'approve_financing_enabled';
+export const EQUINOX_APPLY_URL = 'https://financing.approvepayments.com/vendibook';
 
 export const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

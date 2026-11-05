@@ -7,7 +7,7 @@ import {
 
 
 /**
- * Public gate for every Equinox surface (badge, apply link, purchase sheet).
+ * Public gate for every APPROVE surface (badge, apply link, purchase sheet).
  * Buyer financing is a marketplace-level benefit: it requires only the global
  * launch flag and a published for-sale listing. There is no seller opt-in.
  */

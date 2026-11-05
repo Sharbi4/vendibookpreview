@@ -15,7 +15,7 @@ const corsHeaders = {
 // success call, and notifies the team. Template structure and copy are fixed
 // here — the client only supplies the lead's own details.
 
-const EQUINOX_APPLY_URL = 'https://equinox-funding.com/efapplication/'
+const EQUINOX_APPLY_URL = 'https://financing.approvepayments.com/vendibook'
 
 function json(data: Record<string, unknown>, status = 200): Response {
   return new Response(JSON.stringify(data), {

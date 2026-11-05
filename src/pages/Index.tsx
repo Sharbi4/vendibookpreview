@@ -1,3 +1,4 @@
+import FinancingTopBanner from '@/components/home/FinancingTopBanner';
 import { PostPurchasePreview } from '@/components/home/PostPurchasePreview';
 import HomeBuyingBanner from '@/components/home/HomeBuyingBanner';
 import { buildHomepageSpotlight } from '@/lib/listings/homepageSpotlight';
@@ -31,7 +32,7 @@ import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/compon
 import JsonLd from '@/components/JsonLd';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
+import { ApproveFinancingLogo } from '@/components/brand/ProviderLogos';
 import { EQUINOX_FLAG_KEY } from '@/lib/financing/disclosure';
 import { FINANCING_FOOTNOTE, FINANCING_HEADLINE } from '@/lib/financing/copy';
 import { trackFinancingCtaClick } from '@/lib/analytics';
@@ -158,6 +159,7 @@ const Index = () => {
         <HomePartnerStrip guaranteeHref={`#${GUARANTEE_ID}`} financingLive={financingLive} />
 
         <HomeFeaturedCards />
+        <FinancingTopBanner />
 
         {!user && <HomeRegisterBand />}
 
@@ -249,10 +251,10 @@ const Index = () => {
             <div className="hb-finance">
               <div className="hb-finance-copy">
                 <span className="hb-finance-partner">
-                  Financing partner <EquinoxFundingLogo className="hb-finance-logo" />
+                  Financing partner <ApproveFinancingLogo className="hb-finance-logo" />
                 </span>
                 <h2 id="home-financing-title">{FINANCING_HEADLINE}</h2>
-                <p>Apply online with Equinox Funding and know your budget before you make an offer. Startups are considered.</p>
+                <p>Apply online with APPROVE and know your budget before you make an offer. Startups are considered.</p>
                 <div className="hb-finance-actions">
                   {financingLive ? (
                     <>

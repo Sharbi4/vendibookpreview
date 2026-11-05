@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Landmark, ArrowRight } from 'lucide-react';
 
 /**
- * Post-publish education for sellers: buyer financing (Equinox Funding) is a
+ * Post-publish education for sellers: buyer financing (APPROVE) is a
  * marketplace-level benefit on every published for-sale listing. Nothing for
  * the seller to enable.
  */
@@ -23,9 +23,9 @@ export const PostPublishFinancingCallout: React.FC<{ listingId?: string; classNa
           Buyers can finance this listing
         </p>
         <p className="mt-1 text-xs leading-relaxed text-neutral-600">
-          Qualified buyers can apply for equipment financing through Equinox Funding right from your
+          Qualified buyers can apply for equipment financing through APPROVE right from your
           listing — nothing to set up. Your asking price doesn&apos;t change, and you&apos;re paid the
-          full sale price when the purchase closes. Financing is provided by Equinox Funding, not
+          full sale price when the purchase closes. Financing is provided by APPROVE, not
           Vendibook.
         </p>
         <Link

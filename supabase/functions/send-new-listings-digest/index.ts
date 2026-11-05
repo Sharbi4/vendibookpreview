@@ -24,7 +24,7 @@ const corsHeaders = {
 
 const CAMPAIGN = "new_listings_digest_sep2026";
 const EQUINOX_LOGO =
-  "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/equinox-funding-logo.png";
+  "https://assets.approvepayments.com/images/approve_logo_primary.svg";
 
 const SUBJECT = "New on Vendibook: fresh trucks, trailers & rentals";
 const PREHEADER = "Just listed for sale, new rentals to book, and financing options for qualified buyers.";
@@ -153,11 +153,11 @@ export function buildDigestHtml(opts: {
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid ${MK.border};border-radius:14px;background:${MK.surfaceMuted};">
       <tr><td style="padding:22px 20px;text-align:center;">
         <div style="font-family:${FONT};font-size:11px;color:${MK.orangeOnWhite};text-transform:uppercase;font-weight:700;letter-spacing:1.5px;margin-bottom:12px;">Financing</div>
-        <img src="${EQUINOX_LOGO}" alt="Equinox Funding" width="170" style="display:inline-block;width:170px;max-width:170px;height:auto;border:0;margin:0 0 14px;" />
-        <div style="font-family:${FONT};font-size:19px;font-weight:700;color:${MK.text};line-height:1.35;margin-bottom:8px;">Finance your truck or trailer with Equinox Funding</div>
-        <p style="font-family:${FONT};font-size:14px;line-height:1.65;color:${MK.textSecondary};margin:0 auto 16px;max-width:420px;">Equipment financing is available to eligible buyers through our partner Equinox Funding. Quick online application, and many decisions come back within 24–48 hours.</p>
+        <img src="${EQUINOX_LOGO}" alt="APPROVE" width="170" style="display:inline-block;width:170px;max-width:170px;height:auto;border:0;margin:0 0 14px;" />
+        <div style="font-family:${FONT};font-size:19px;font-weight:700;color:${MK.text};line-height:1.35;margin-bottom:8px;">Finance your truck or trailer with APPROVE</div>
+        <p style="font-family:${FONT};font-size:14px;line-height:1.65;color:${MK.textSecondary};margin:0 auto 16px;max-width:420px;">Equipment financing is available to eligible buyers through our partner APPROVE. Apply through APPROVE’s lender network; eligibility, terms and timing vary.</p>
         ${mkButton("Explore financing options", utm("/financing", "financing"), { align: "center" })}
-        <p style="font-family:${FONT};font-size:11px;line-height:1.6;color:${MK.textMuted};margin:14px auto 0;max-width:440px;">Financing is provided by Equinox Funding, not Vendibook. Applications are subject to underwriting and approval; terms, rates, and availability vary. Approval is not guaranteed.</p>
+        <p style="font-family:${FONT};font-size:11px;line-height:1.6;color:${MK.textMuted};margin:14px auto 0;max-width:440px;">Financing is provided by APPROVE, not Vendibook. Applications are subject to underwriting and approval; terms, rates, and availability vary. Approval is not guaranteed.</p>
       </td></tr>
     </table>
   </td></tr>`;

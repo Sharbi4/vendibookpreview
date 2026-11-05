@@ -107,7 +107,7 @@ import {
   type AttestationKey,
 } from './stages/PublishAttestations';
 
-import { PayPalMonogram, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
+import { PayPalMonogram, ApproveFinancingLogo } from '@/components/brand/ProviderLogos';
 import SellerBusinessAccountHelp from '@/components/payments/SellerBusinessAccountHelp';
 import {
   EQUINOX_DISCLOSURE_TEXT,
@@ -3664,12 +3664,12 @@ export const PublishWizard: React.FC = () => {
                       {isFinanceableSaleListing({ ...listing, status: 'published' }) && (
                         <div className="pt-6 border-t">
                           <div className="flex items-center gap-2 mb-3">
-                            <EquinoxFundingLogo className="h-6 w-auto" />
+                            <ApproveFinancingLogo className="h-6 w-auto" />
                             <h3 className="text-lg font-semibold">Buyer financing included</h3>
                           </div>
                           <div className="rounded-xl border border-border bg-card p-4 space-y-3">
                             <p className="text-sm text-muted-foreground">
-                              Buyers can apply for equipment financing through Equinox Funding on
+                              Buyers can apply for equipment financing through APPROVE on
                               every published for-sale listing. Nothing to turn on, and it never
                               changes how you get paid.
                             </p>

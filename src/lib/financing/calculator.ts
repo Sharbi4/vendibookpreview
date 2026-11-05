@@ -42,9 +42,8 @@ export function financingInventoryUrl(price?: number, category?: 'food_truck' | 
 
 /**
  * Illustrative assumptions behind every "Est. $X/mo" shown next to a sale
- * price. Not an offer, quote or average rate: Equinox Funding sets actual
- * terms after underwriting. 10% down sits inside Equinox's published 0–10%
- * typical range (startups usually 10–15%).
+ * price. Not an offer, quote or average rate: APPROVE sets actual
+ * terms after underwriting. The assumptions below are illustrative only, not published provider terms.
  */
 export const ILLUSTRATIVE_FINANCING = { downPct: 10, annualRate: 10, months: 60 } as const;
 
@@ -67,7 +66,7 @@ export function illustrativeMonthlyPayment(rawPrice: number | string | null | un
 export const illustrativeFinancingNote =
   `*Estimated payment based on ${ILLUSTRATIVE_FINANCING.downPct}% down, ${ILLUSTRATIVE_FINANCING.months} months and ` +
   `${ILLUSTRATIVE_FINANCING.annualRate}% APR. Not an offer of credit. Actual rate, term and payment are set by ` +
-  `Equinox Funding after approval.`;
+  `the financing lender after approval.`;
 
 /** Calculator link pre-filled with a listing price. */
 export function financingCalculatorUrl(price: number, listingId?: string) {

@@ -192,7 +192,7 @@ export const SalePurchaseCard = ({
 
 
   // Every financing entry point on this card runs through the shared handoff:
-  // placement tracking → Vendibook lead capture → Equinox.
+  // placement tracking → Vendibook lead capture → APPROVE.
   const handleApplyFinancing = (source: FinancingSource) => {
     startFinancingApply(source, listing.id);
   };
@@ -276,7 +276,7 @@ export const SalePurchaseCard = ({
               </div>
               <div className="mt-2.5 flex flex-wrap gap-2">
                 <Button size="sm" variant="outline" onClick={() => handleApplyFinancing('listing_price_line')}>
-                  Apply with Equinox
+                  Apply with APPROVE
                   <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
                 </Button>
                 <Button size="sm" variant="ghost" asChild>
@@ -290,7 +290,7 @@ export const SalePurchaseCard = ({
               </div>
               <p className="mt-2.5 text-[11px] leading-snug text-muted-foreground">
                 {illustrativeMonthlyPayment(priceSale) !== null && <>{illustrativeFinancingNote} </>}
-                Through Equinox Funding. Vendibook is not a lender.
+                Through APPROVE. Vendibook is not a lender.
               </p>
             </div>
           )}

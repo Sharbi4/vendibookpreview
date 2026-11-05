@@ -81,7 +81,7 @@ type Listing = Tables<'listings'>;
 
 interface HostListingCardProps {
   listing: Listing;
-  /** Batch-loaded Equinox opt-in state for this listing (sale listings only). */
+  /** Batch-loaded APPROVE opt-in state for this listing (sale listings only). */
   onPause?: (id: string) => void;
   onPublish?: (id: string) => void;
   onUnpause?: (id: string) => void;

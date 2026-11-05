@@ -290,6 +290,11 @@
     },
     {
       "category": "Walkthrough, shipping, pickup & signoff",
+      "question": "Is there a deposit when I buy equipment?",
+      "answer": "No deposit. You pay the full price through Vendibook checkout and Vendibook holds the payment; the seller is not paid yet. At handoff you inspect, test and test-drive the equipment while a walkthrough video is recorded. If it matches the listing, you confirm and both sides sign, and only then are the funds released to the seller. If you find an undisclosed problem or decide not to go ahead at the walkthrough, you do not confirm and the purchase is canceled, handled under the Vendibook Guarantee. Agreeing to buy is a good-faith commitment. Rentals are different and carry a refundable security deposit."
+    },
+    {
+      "category": "Walkthrough, shipping, pickup & signoff",
       "question": "Can I request a video walkthrough?",
       "answer": "Ask the seller for an available live video walkthrough to view the equipment and discuss condition or missing details. Video does not replace an in-person inspection."
     },
@@ -426,22 +431,22 @@
     {
       "category": "Other services & support",
       "question": "Does Vendibook offer financing?",
-      "answer": "Yes. Eligible food trucks, trailers, carts and some custom builds may qualify for financing through third-party financing partners. Start at https://vendibook.com/financing. Equinox Funding handles the application and underwriting directly; approval and terms are not guaranteed."
+      "answer": "Yes. Eligible food trucks, trailers, carts and some custom builds may qualify for financing through third-party financing partners. Start at https://vendibook.com/financing. APPROVE connects applications with its lender network; approval and terms are not guaranteed."
     },
     {
       "category": "Other services & support",
       "question": "How do I apply for equipment financing?",
-      "answer": "Open a for-sale listing or https://vendibook.com/financing, select the Equinox Funding application link and apply directly with the financing provider. If approved, review their offer before accepting any financing obligation."
+      "answer": "Open a for-sale listing or https://vendibook.com/financing, select the APPROVE application link and apply directly with the financing provider. If approved, review their offer before accepting any financing obligation."
     },
     {
       "category": "Other services & support",
       "question": "Who decides whether I qualify, and how long does it take?",
-      "answer": "Equinox Funding reviews applications, supporting information and credit under its own standards. The financing page says many decisions arrive in 24-48 hours, but actual eligibility and timing vary, and Vendibook cannot guarantee either."
+      "answer": "Lenders in APPROVE’s network review applications and supporting information. Eligibility and decision times vary; Vendibook cannot guarantee either."
     },
     {
       "category": "Other services & support",
       "question": "Can I finance as a startup or finance freight/custom builds?",
-      "answer": "First-time operators, custom builds and freight costs may qualify in some programs, subject to the financing provider's approval, documentation and specific transaction. Discuss the exact equipment and expenses with Equinox."
+      "answer": "First-time operators, custom builds and freight costs may qualify in some programs, subject to the financing provider's approval, documentation and specific transaction. Discuss the exact equipment and expenses with APPROVE."
     },
     {
       "category": "Other services & support",

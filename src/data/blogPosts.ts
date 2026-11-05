@@ -53,12 +53,12 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   {
     slug: 'vendibook-equinox-food-truck-financing-partnership',
-    metaTitle: 'Vendibook & Equinox Expand Food Truck Financing',
-    title: 'Vendibook Partners With Equinox Funding to Expand Food Truck Financing Access',
-    description: 'Vendibook partners with Equinox Funding to help qualified buyers explore financing for food trucks, food trailers, carts, custom builds, and fleets.',
-    excerpt: 'Vendibook has partnered with Equinox Funding to give qualified marketplace buyers a clearer path to explore financing for food trucks, trailers, carts, custom builds, and business expansion.',
-    image: '/images/blog/vendibook-equinox-partnership.png',
-    imageAlt: 'Vendibook and Equinox Funding partnership for food truck and food trailer financing',
+    metaTitle: 'Equipment Financing with APPROVE | Vendibook',
+    title: 'Explore Food Truck Financing with APPROVE',
+    description: 'Explore equipment financing through APPROVE’s lender network.',
+    excerpt: 'APPROVE is Vendibook’s equipment financing option.',
+    image: '/images/email/walkthrough-phone-2026-10.png',
+    imageAlt: 'Vendibook and APPROVE partnership for food truck and food trailer financing',
     author: 'Vendibook Team',
     authorRole: 'Vendibook',
     datePublished: '2026-08-07',
@@ -66,175 +66,8 @@ export const BLOG_POSTS: BlogPost[] = [
     campaign: 'vendibook_equinox_partnership',
     featured: true,
     readingTime: 11,
-    tags: ['Equinox Funding', 'Food Truck Financing', 'Food Trailer Financing', 'Equipment Financing', 'Mobile Food Business', 'Vendibook'],
-    content: `
-<p class="text-lg text-muted-foreground mb-6"><em>Published by Vendibook · August 7, 2026</em></p>
-
-<p class="text-lg mb-6">The new partnership connects qualified Vendibook buyers with specialized financing options for food trucks, food trailers, carts, custom builds, and business expansion.</p>
-
-<p class="mb-6">Vendibook has partnered with <strong>Equinox Funding</strong>, a nationwide equipment-financing and business-funding company, to expand financing access for qualified buyers shopping the Vendibook marketplace.</p>
-
-<p class="mb-6">Buying a food truck, food trailer, cart, or custom mobile kitchen is often the largest investment a mobile-food entrepreneur makes. Paying the full purchase price in cash may get the unit into the buyer's hands, but it can also leave too little working capital for permits, inspections, insurance, a vehicle wrap, inventory, commissary fees, staffing, marketing, and the first few months of operation.</p>
-
-<p class="mb-6">That is why financing is not simply an extra payment option. In a specialized marketplace like Vendibook, it can be the bridge between finding the right equipment and building a business that has enough runway to launch well.</p>
-
-<p class="mb-6">Through this partnership, Vendibook is making that path clearer: buyers can discover equipment, gather finance-ready listing information, and explore available funding through a company that understands mobile-food assets. Sellers, manufacturers, and dealers gain access to a broader pool of serious buyers without having to extend credit themselves.</p>
-
-<h2 id="why-financing-belongs">Why food truck and food trailer financing belongs in the marketplace</h2>
-
-<p class="mb-6">The mobile-food economy includes passionate first-time founders, experienced owner-operators, restaurant groups, caterers, event companies, manufacturers, dealers, and private sellers. Their needs are different, but one obstacle appears across nearly every part of the market: equipment is expensive, and traditional lending does not always fit the way a mobile-food business starts or grows.</p>
-
-<p class="mb-6">A buyer may have a strong concept, relevant experience, a practical operating plan, and enough capital to launch—but not enough cash to purchase a fully equipped unit outright while still protecting the business's operating reserve. An established operator may be ready to add a second truck, upgrade an aging trailer, or build a fleet, but may not want to tie up capital that could be used for people, inventory, locations, or expansion.</p>
-
-<p class="mb-6">Financing can help qualified buyers spread the cost of an eligible asset over time while preserving cash for the expenses that actually put that asset to work. Approval is never automatic, but access to an experienced equipment-finance partner gives buyers a more realistic option than assuming every purchase must be all cash.</p>
-
-<p class="mb-6">It also improves marketplace liquidity. When more qualified buyers can participate, sellers can reach beyond the relatively small group of people prepared to write one large check. The seller receives payment through the approved transaction structure; the seller does not have to become the buyer's lender.</p>
-
-<h2 id="why-equinox">Why Vendibook chose Equinox Funding</h2>
-
-<p class="mb-6">Vendibook wanted a financing partner that understood the asset—not merely the application.</p>
-
-<p class="mb-6">Equinox Funding is based in the Denver Tech Center in Greenwood Village, Colorado, and serves business owners and vendor partners nationwide. Its team brings more than 15 years of collective commercial-equipment finance experience, with a stated specialization in restaurant and food-trailer financing.</p>
-
-<p class="mb-6">That specialization matters. A custom food trailer is not the same as a generic vehicle loan. A lender or funding specialist may need to understand the builder, build schedule, installed commercial equipment, title or VIN information, intended use, asset value, and the realities of a startup or seasonal mobile-food operation.</p>
-
-<p class="mb-6">Equinox publicly describes programs for new and used food trailers, custom builds, restaurant equipment, and broader business-funding needs. Its food-trailer materials also address startups, first-time operators, established businesses, used equipment, and purchases from qualifying private sellers. For larger businesses, Equinox's broader equipment-finance platform is designed to consider needs ranging from individual assets to complete buildouts.</p>
-
-<p class="mb-6">Equinox also emphasizes a personalized, client-first process. Instead of treating every applicant as if the same structure should work, its team considers factors such as the borrower profile, asset, intended use, cash flow, time in business, supporting documentation, and overall deal structure. According to Equinox, many complete applications receive an initial decision within 24 to 48 hours, although complex files can take longer and no timeline is guaranteed.</p>
-
-<p class="mb-6">For Vendibook, that combination—industry familiarity, flexible structures, nationwide reach, and human guidance—made Equinox the right partner for the marketplace and the vendors it serves.</p>
-
-<h2 id="built-for-growth">Built for a first unit, the next unit, and fleet growth</h2>
-
-<p class="mb-6">The partnership is designed to support buyers at different stages of the mobile-food journey.</p>
-
-<h3 id="startups">Startups and first-time owners</h3>
-
-<p class="mb-6">A startup does not need years of business history simply to explore whether a program may be available. Equinox states that startup applications may be evaluated using the full picture, including the applicant's personal and business credit profile, income or cash flow, relevant experience, down-payment capacity, equipment choice, and the strength of the business plan.</p>
-
-<p class="mb-6">Passion matters, but a finance-ready startup also needs an executable plan. Buyers should be prepared to explain the concept, target customer, menu or service model, operating location strategy, startup budget, expected revenue, and how the requested equipment will help generate income.</p>
-
-<h3 id="established-operators">Established operators and growing brands</h3>
-
-<p class="mb-6">Existing food-truck, food-trailer, catering, and restaurant businesses may be looking to replace equipment, add capacity, enter a new market, or purchase multiple units. Financing can allow an established operator to evaluate growth without automatically removing a large amount of cash from day-to-day operations.</p>
-
-<p class="mb-6">Multi-unit and fleet opportunities are reviewed individually and remain subject to program availability, underwriting, asset eligibility, and the strength of the business.</p>
-
-<h3 id="manufacturers">Manufacturers and custom builders</h3>
-
-<p class="mb-6">Financing can help manufacturers and custom builders convert more qualified inquiries into completed projects. A buyer who cannot pay the full build price upfront may still be able to move forward through an approved equipment-finance structure. Clear specifications, pricing, build milestones, and VIN or serial information can also make the review process more efficient.</p>
-
-<h3 id="dealers-private-sellers">Dealers and private sellers</h3>
-
-<p class="mb-6">Dealers can place finance-ready inventory in front of a national audience, while private sellers can reach qualified buyers beyond their immediate local market. Used-equipment and private-party transactions may be considered, but the asset's age, condition, documentation, title status, seller information, and program requirements all matter.</p>
-
-<h2 id="how-it-works">How financing works through Vendibook</h2>
-
-<p class="mb-6">Vendibook is building financing into the marketplace journey without pretending that every listing or applicant will qualify.</p>
-
-<ol class="mb-6">
-  <li><strong>Browse an eligible sale listing.</strong> Buyers can search food trucks, food trailers, carts, custom units, and related mobile-food equipment listed for sale.</li>
-  <li><strong>Review the asset and seller information.</strong> A complete listing should include the asking price, year, condition, equipment details, title status, photos, location, and VIN or serial number when applicable.</li>
-  <li><strong>Generate the financing purchase summary.</strong> For eligible listings, Vendibook can create a finance-ready summary with the price and available asset details. This gives the buyer a useful starting document for the funding review.</li>
-  <li><strong>Apply through Equinox Funding.</strong> The buyer submits the requested application and supporting information directly for review.</li>
-  <li><strong>Discuss the available structure.</strong> Equinox and, when applicable, its third-party funding providers handle prequalification, underwriting, credit decisions, terms, documentation, and funding.</li>
-  <li><strong>Coordinate the purchase.</strong> If approved and the buyer accepts the terms, the parties complete the required documents and coordinate payment and transfer with the seller, dealer, or manufacturer.</li>
-</ol>
-
-<p class="mb-6">Vendibook does not make credit decisions, set financing terms, or guarantee approval. Its role is to make equipment easier to discover, make listing information more useful, and connect buyers with a specialized financing path.</p>
-
-<div class="not-prose my-10 rounded-2xl border border-primary/20 bg-primary/5 p-6 md:p-8">
-  <h3 class="text-xl font-bold text-foreground mb-2">Start exploring</h3>
-  <p class="text-sm text-muted-foreground mb-5">See how financing works on Vendibook, or browse what is currently for sale.</p>
-  <div class="flex flex-wrap gap-3">
-    <a href="/financing?utm_source=blog&amp;utm_medium=article&amp;utm_campaign=vendibook_equinox_partnership&amp;utm_content=learn_financing" data-cta="equinox_learn_financing_mid" class="inline-flex items-center rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground no-underline hover:bg-primary/90">Explore financing on Vendibook</a>
-    <a href="/search?mode=sale&amp;utm_source=blog&amp;utm_medium=article&amp;utm_campaign=vendibook_equinox_partnership&amp;utm_content=browse_sale" data-cta="equinox_browse_sale_mid" class="inline-flex items-center rounded-lg border border-border bg-background px-5 py-3 text-sm font-semibold text-foreground no-underline hover:border-primary">Browse equipment for sale</a>
-  </div>
-</div>
-
-<h2 id="finance-ready">What makes a listing finance-ready?</h2>
-
-<p class="mb-6">Better information helps everyone. A financing review may move more efficiently when the listing and purchase summary include:</p>
-
-<ul class="mb-6">
-  <li>The full legal name of the seller, dealer, or manufacturer</li>
-  <li>A clear equipment description and itemized purchase price</li>
-  <li>Year, make, model, dimensions, and condition</li>
-  <li>VIN, title, or serial number when applicable</li>
-  <li>Photos of the exterior, interior, equipment, data plates, and identifying numbers</li>
-  <li>An installed-equipment list, including cooking, refrigeration, electrical, plumbing, propane, generator, and fire-suppression systems</li>
-  <li>Build specifications and payment milestones for a custom unit</li>
-  <li>Delivery charges, taxes, deposits, or other costs shown separately</li>
-  <li>Ownership and lien information for a used or private-party sale</li>
-</ul>
-
-<p class="mb-6">Vendibook's financing purchase summary is meant to organize the information a funding specialist commonly needs first. Additional documents may still be requested.</p>
-
-<h2 id="not-approved">If an application is not approved as submitted</h2>
-
-<p class="mb-6">One reason Vendibook values Equinox's approach is that the conversation does not always have to end with a simple “no.” When possible, Equinox can help an applicant understand which parts of the file may need to change before another review—such as the requested amount, equipment selection, documentation, credit profile, down payment, income verification, cash flow, or overall business plan.</p>
-
-<p class="mb-6">Some applications may be eligible for a different term, a lower amount, more documentation, a modified structure, or a later reapplication. Other applicants may not qualify. Guidance about possible next steps is not a promise of future approval, but it can give an entrepreneur something far more useful than guesswork: a clearer understanding of what lenders evaluate and where the business may need to become stronger.</p>
-
-<h2 id="stronger-marketplace">A stronger marketplace for buyers and sellers</h2>
-
-<p class="mb-6">Vendibook's goal is to become the one-stop marketplace for the mobile-food economy: a transparent place where entrepreneurs can discover equipment and opportunities, compare options, connect with manufacturers, dealers, and private sellers, and use practical tools to move from an idea to an operating business.</p>
-
-<p class="mb-6">Financing is an important part of that system because a marketplace cannot fully serve vendors if it only helps them find an asset but offers no clear path to acquire it.</p>
-
-<p class="mb-6">The Equinox Funding partnership moves Vendibook closer to a marketplace that supports the entire journey—from a founder pursuing a first food cart or trailer, to an established operator adding another unit, to a growing company planning a fleet. The vision is not approval at any cost. It is responsible access, better information, more flexibility, and a marketplace powered by the people who actually build and operate mobile-food businesses.</p>
-
-<div class="not-prose my-10 rounded-2xl border border-border bg-card p-6 md:p-8">
-  <h3 class="text-xl font-bold text-foreground mb-2">Start exploring food truck and food trailer financing</h3>
-  <p class="text-sm text-muted-foreground mb-5">Ready to see what is possible? Learn how financing works through Vendibook or browse food trucks, food trailers, carts, and mobile-food equipment currently listed for sale.</p>
-  <div class="flex flex-wrap gap-3">
-    <a href="/financing?utm_source=blog&amp;utm_medium=article&amp;utm_campaign=vendibook_equinox_partnership&amp;utm_content=learn_financing" data-cta="equinox_learn_financing_cta" class="inline-flex items-center rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground no-underline hover:bg-primary/90">Explore financing on Vendibook</a>
-    <a href="/search?mode=sale&amp;utm_source=blog&amp;utm_medium=article&amp;utm_campaign=vendibook_equinox_partnership&amp;utm_content=browse_sale" data-cta="equinox_browse_sale_cta" class="inline-flex items-center rounded-lg border border-border bg-background px-5 py-3 text-sm font-semibold text-foreground no-underline hover:border-primary">Browse equipment for sale</a>
-  </div>
-</div>
-
-<h2 id="faq">Frequently asked questions</h2>
-
-<h3 id="faq-startup">Can a startup apply for food truck or food trailer financing?</h3>
-
-<p class="mb-6">Yes. Startup and first-time operators may apply. Approval depends on the complete applicant and transaction profile, which may include personal and business credit, income, cash flow, relevant experience, down-payment capacity, business plan, equipment, and requested amount.</p>
-
-<h3 id="faq-types">What types of mobile-food equipment may be considered?</h3>
-
-<p class="mb-6">Depending on the program and transaction, eligible equipment may include new or used food trucks, food trailers, concession trailers, coffee trailers, mobile kitchens, custom builds, carts, installed restaurant equipment, and related business equipment. Minimum financing amounts and asset-eligibility requirements may apply.</p>
-
-<h3 id="faq-private-seller">Can equipment from a private seller be financed?</h3>
-
-<p class="mb-6">Some quality used-equipment and private-party purchases may be considered. The seller, title, VIN or serial number, asset age, condition, valuation, documentation, and lien status may be reviewed before a transaction can proceed.</p>
-
-<h3 id="faq-decision">How fast can Equinox Funding make a decision?</h3>
-
-<p class="mb-6">Equinox states that many complete applications receive an initial decision within 24 to 48 hours. Straightforward applications may move faster, while complex, custom-build, multi-unit, or documentation-heavy transactions can take longer. A decision timeline is not guaranteed.</p>
-
-<h3 id="faq-approve">Does Vendibook approve or provide the financing?</h3>
-
-<p class="mb-6">No. Vendibook is a marketplace and technology platform, not a lender. Equinox Funding and, where applicable, its third-party funding providers handle prequalification, underwriting, credit decisions, offers, documents, and funding.</p>
-
-<h3 id="faq-not-approved">What happens if an applicant is not approved?</h3>
-
-<p class="mb-6">An applicant may be able to discuss the reasons the current structure did not work and what could strengthen a future request. Depending on the file, that might include a different asset or amount, additional documentation, a down payment, improved credit, stronger income or cash flow, or more operating history. No future approval is guaranteed.</p>
-
-<h3 id="faq-nationwide">Is financing available nationwide?</h3>
-
-<p class="mb-6">Equinox Funding markets its services nationwide, and Vendibook serves buyers and sellers across the 48 contiguous United States. Actual product availability and terms may vary by applicant, transaction, funding provider, and jurisdiction.</p>
-
-<h2 id="disclosure">Important financing disclosure</h2>
-
-<div class="not-prose my-10 rounded-2xl border border-border bg-muted/40 p-6">
-  <p class="text-sm text-muted-foreground">Vendibook is a marketplace and technology platform. It does not extend credit, make credit decisions, determine eligibility, set financing terms, or guarantee approval. Financing is offered by Equinox Funding LLC and/or arranged through its network of unaffiliated third-party funding providers, as applicable. All applications are subject to prequalification, underwriting, credit approval, asset eligibility, documentation, program availability, and applicable law. Rates, payments, terms, down payments, fees, funding amounts, and timing vary. Submitting an application does not guarantee approval or funding. Review all final terms before accepting an offer.</p>
-</div>
-
-<div class="not-prose my-10 flex flex-wrap gap-3">
-  <a href="/financing?utm_source=blog&amp;utm_medium=article&amp;utm_campaign=vendibook_equinox_partnership&amp;utm_content=learn_financing" data-cta="equinox_learn_financing_footer" class="inline-flex items-center rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground no-underline hover:bg-primary/90">Explore financing on Vendibook</a>
-  <a href="/search?mode=sale&amp;utm_source=blog&amp;utm_medium=article&amp;utm_campaign=vendibook_equinox_partnership&amp;utm_content=browse_sale" data-cta="equinox_browse_sale_footer" class="inline-flex items-center rounded-lg border border-border bg-background px-5 py-3 text-sm font-semibold text-foreground no-underline hover:border-primary">Browse equipment for sale</a>
-  <a href="https://equinox-funding.com/efapplication/?utm_source=vendibook&amp;utm_medium=partner_blog&amp;utm_campaign=vendibook_equinox_partnership&amp;utm_content=apply_now" data-cta="equinox_apply_now_footer" target="_blank" rel="noopener noreferrer nofollow sponsored" class="inline-flex items-center rounded-lg border border-primary/40 bg-primary/10 px-5 py-3 text-sm font-semibold text-foreground no-underline hover:bg-primary/20">Apply with Equinox Funding</a>
-</div>
-`,
+    tags: ['APPROVE', 'Food Truck Financing', 'Food Trailer Financing', 'Equipment Financing', 'Mobile Food Business', 'Vendibook'],
+    content: `<p>Updated November 5, 2026: Explore equipment financing with APPROVE, Vendibook’s financing option. APPROVE connects applications with its lender network; lenders decide eligibility, approval, rates and terms. Vendibook is not a lender.</p><p><a href="/financing">Explore APPROVE financing</a></p>`,
   },
   {
     slug: 'texas-mobile-food-vendor-law-2026',
@@ -1948,7 +1781,7 @@ export const BLOG_POSTS: BlogPost[] = [
 
 <ul class="list-disc pl-6 mb-6 space-y-2">
   <li>Online checkout through PayPal, with the transaction recorded on the platform</li>
-  <li>Buyer financing options through Vendibook's partner, <a href="/financing" class="text-primary underline">Equinox Funding</a>, subject to their approval and terms</li>
+  <li>Buyer financing options through Vendibook's partner, <a href="/financing" class="text-primary underline">APPROVE</a>, subject to their approval and terms</li>
   <li>Structured specs, documents, and messaging in one place</li>
   <li>Payouts to the seller tied to delivery or handoff confirmation rather than a handshake</li>
 </ul>
@@ -2093,7 +1926,7 @@ export const BLOG_POSTS: BlogPost[] = [
     slug: 'food-truck-financing-options',
     title: 'Food Truck Financing: How Buyers Fund a Truck or Trailer',
     description: 'How financing a food truck or trailer works on Vendibook, the common funding paths buyers use, and what to prepare before you apply.',
-    excerpt: 'A plain guide to the ways mobile food buyers fund a purchase — and how Vendibook buyer financing through Equinox Funding fits in.',
+    excerpt: 'A plain guide to the ways mobile food buyers fund a purchase — and how Vendibook buyer financing through APPROVE fits in.',
     image: '/images/blog/food-truck-financing-options.png',
     content: `
 <p class="text-lg text-muted-foreground mb-6"><em>By the Vendibook Team · Updated August 2026</em></p>
@@ -2102,7 +1935,7 @@ export const BLOG_POSTS: BlogPost[] = [
 
 <div class="rounded-2xl border border-primary/30 bg-primary/5 p-6 mb-10">
   <h3 class="text-xl font-bold mb-2">Financing on Vendibook</h3>
-  <p class="mb-4">Buyer financing is available across the marketplace through our partner <strong>Equinox Funding</strong>. You apply with Equinox; approval, rates, terms, and timelines are theirs to set. <strong>Vendibook is not a lender and cannot promise approval or terms.</strong> Vendibook's standard marketplace fee still applies to a financed purchase.</p>
+  <p class="mb-4">Buyer financing is available across the marketplace through our partner <strong>APPROVE</strong>. You apply with APPROVE; approval, rates, terms, and timelines are theirs to set. <strong>Vendibook is not a lender and cannot promise approval or terms.</strong> Vendibook's standard marketplace fee still applies to a financed purchase.</p>
   <a href="/financing" data-cta="financing_article_primary" class="text-primary underline font-semibold">See how Vendibook financing works →</a>
 </div>
 
@@ -2136,7 +1969,7 @@ export const BLOG_POSTS: BlogPost[] = [
 <h2 class="text-2xl font-bold mt-10 mb-4">Next steps</h2>
 <p class="mb-8"><a href="/search?type=for-sale" class="text-primary underline font-medium">Browse trucks and trailers for sale</a>, run the numbers with the <a href="/tools/food-truck-startup-costs-2026" class="text-primary underline font-medium">startup cost tool</a>, and read <a href="/help/buyer-financing" class="text-primary underline font-medium">Buyer financing</a> in the Help Center.</p>
 
-<p class="text-sm text-muted-foreground">Informational only, not financial advice. Vendibook is not a lender. Financing is subject to Equinox Funding's approval, terms, and conditions.</p>
+<p class="text-sm text-muted-foreground">Informational only, not financial advice. Vendibook is not a lender. Financing is subject to APPROVE's approval, terms, and conditions.</p>
 `,
     author: 'Vendibook Team',
     authorRole: 'Founders & Finance',

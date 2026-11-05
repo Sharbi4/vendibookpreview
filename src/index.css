@@ -1630,7 +1630,7 @@ body .paypal-card-brands > span {
 }
 
 /* ------------------------------------------------------------------
-   Equinox financing — deep steel/gold "capital" CTA treatment.
+   APPROVE financing — deep steel/gold "capital" CTA treatment.
    Distinct from the orange marketplace CTA and the green verified CTA
    so financing reads as an institutional, lender-grade action.
 ------------------------------------------------------------------ */
@@ -2921,7 +2921,7 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
   .v2-home-paypal-mark { width: 450px; max-width: 100%; }
 }
 
-/* Homepage financing band (buyer-facing, Equinox Funding). Timing claim is
+/* Homepage financing band (buyer-facing, APPROVE). Timing claim is
    always paired with the visible footnote (.v2-home-financing-note). */
 .v2-home-financing {
   display: grid; gap: 18px 40px;

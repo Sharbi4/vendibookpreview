@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Landmark, FileText, BadgeCheck } from 'lucide-react';
-import { EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
+import { ApproveFinancingLogo } from '@/components/brand/ProviderLogos';
 
 /**
- * Equinox Funding financing callout used on the how-it-works pages.
+ * APPROVE financing callout used on the how-it-works pages.
  * Copy mirrors /financing. Vendibook is never described as a lender.
  */
 const EquinoxFinancingCallout = ({
@@ -27,7 +27,7 @@ const EquinoxFinancingCallout = ({
           <div className="grid md:grid-cols-[1.4fr_1fr] gap-8 items-center">
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <EquinoxFundingLogo className="h-7" />
+                <ApproveFinancingLogo className="h-7" />
                 <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                   Equipment financing partner
                 </span>
@@ -37,17 +37,17 @@ const EquinoxFinancingCallout = ({
                 className="text-2xl md:text-3xl font-bold text-foreground mb-3"
               >
                 {isSeller
-                  ? 'Add Equinox Funding to your listing'
-                  : 'Finance your purchase with Equinox Funding'}
+                  ? 'Add APPROVE to your listing'
+                  : 'Finance your purchase with APPROVE'}
               </h2>
               <p className="text-sm md:text-base text-muted-foreground leading-relaxed mb-4">
                 {isSeller ? (
                   <>
                     On eligible for-sale trucks, trailers, and carts you can switch on the optional
-                    Equinox Funding add-on. Buyers see a financing option on your listing, can apply
+                    APPROVE add-on. Buyers see a financing option on your listing, can apply
                     directly, and can download a pro forma purchase sheet — which widens your buyer
                     pool beyond cash-in-hand shoppers. An 8.7% platform fee applies to an
-                    Equinox-financed Vendibook sale.{' '}
+                    APPROVE-financed Vendibook sale.{' '}
                     <Link to="/financing" className="font-medium text-foreground underline underline-offset-4 hover:text-primary">
                       Learn about financing
                     </Link>
@@ -55,9 +55,9 @@ const EquinoxFinancingCallout = ({
                   </>
                 ) : (
                   <>
-                    On eligible for-sale listings you can apply with Equinox Funding and download a
+                    On eligible for-sale listings you can apply with APPROVE and download a
                     pro forma purchase sheet to move faster on the truck or trailer you want.
-                    Financing is offered by Equinox, not Vendibook, and is subject to credit
+                    Financing is offered by APPROVE, not Vendibook, and is subject to credit
                     approval.{' '}
                     <Link to="/financing" className="font-medium text-foreground underline underline-offset-4 hover:text-primary">
                       Learn about financing
@@ -67,7 +67,7 @@ const EquinoxFinancingCallout = ({
                 )}
               </p>
               <p className="text-xs text-muted-foreground leading-relaxed mb-6">
-                Vendibook is not a lender. Approval, rates, and terms are determined by Equinox
+                Vendibook is not a lender. Approval, rates, and terms are determined by APPROVE
                 Funding LLC and/or its funding providers.
               </p>
               <Link
@@ -92,8 +92,8 @@ const EquinoxFinancingCallout = ({
                 },
                 {
                   icon: Landmark,
-                  title: 'Applications handled by Equinox',
-                  body: 'Credit review and terms happen with Equinox, not Vendibook.',
+                  title: 'Applications handled by APPROVE',
+                  body: 'Credit review and terms happen with APPROVE, not Vendibook.',
                 },
               ].map((f) => (
                 <li

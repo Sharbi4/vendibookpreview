@@ -1,5 +1,5 @@
 import { Banknote, Lock } from 'lucide-react';
-import { PayPalMonogram, PayPalWordmark, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
+import { PayPalMonogram, PayPalWordmark, ApproveFinancingLogo } from '@/components/brand/ProviderLogos';
 import { useEquinoxFinancingEnabled } from '@/hooks/useListingFinancing';
 import { cn } from '@/lib/utils';
 
@@ -11,7 +11,7 @@ interface ListingPaymentMethodsProps {
 /**
  * Buyer-facing payment surface for a listing detail page.
  * Shows how the seller gets paid (PayPal) and, for opted-in sale listings,
- * that Equinox Funding financing is available.
+ * that APPROVE financing is available.
  */
 export const ListingPaymentMethods = ({ listing, className }: ListingPaymentMethodsProps) => {
   const financing = useEquinoxFinancingEnabled(listing);
@@ -65,7 +65,7 @@ export const ListingPaymentMethods = ({ listing, className }: ListingPaymentMeth
       {financing && (
         <div className="mt-3 pt-3 border-t border-border/50 flex items-center gap-2 flex-wrap">
           <span className="text-xs text-muted-foreground">Financing available through</span>
-          <EquinoxFundingLogo className="h-5" />
+          <ApproveFinancingLogo className="h-5" />
         </div>
       )}
     </div>

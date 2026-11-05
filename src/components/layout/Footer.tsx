@@ -4,7 +4,7 @@ import { ArrowUpRight, ChevronDown, Facebook, Instagram, Twitter, Linkedin, Mess
 import FacebookLink, { VENDIBOOK_FACEBOOK_URL } from '@/components/social/FacebookLink';
 import vendibookWordmark from '@/assets/vendibook-wordmark-light.png';
 import { inFollowUpHours } from '../../../supabase/functions/_shared/followUpWindow';
-import { PayPalWordmark, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
+import { PayPalWordmark, ApproveFinancingLogo } from '@/components/brand/ProviderLogos';
 import { cn } from '@/lib/utils';
 import { trackFooterCitiesClicked } from '@/lib/analytics';
 import './footer.css';
@@ -197,7 +197,7 @@ const Footer = () => {
         </ul>
         <div className="vf-partners">
           <span className="vf-partner"><span>Payments by</span><PayPalWordmark className="h-3.5" /></span>
-          <span className="vf-partner"><span>Financing by</span><EquinoxFundingLogo className="h-5 vf-mono" /></span>
+          <span className="vf-partner"><span>Financing by</span><ApproveFinancingLogo className="h-5 vf-mono" /></span>
         </div>
       </div>
 

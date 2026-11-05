@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import {
   PayPalWordmark,
   PlaidLogo,
-  EquinoxFundingLogo,
+  ApproveFinancingLogo,
 } from '@/components/brand/ProviderLogos';
 
 /**
@@ -30,7 +30,7 @@ import {
  *    as instant, automated, split-settled, or held by a third party.
  *  - Pay-in-person sales carry no Vendibook seller platform fee.
  *  - Plaid identity verification is an optional $19.99 one-time upgrade.
- *  - Equinox Funding is an optional per-listing add-on; Vendibook is not a lender.
+ *  - APPROVE is an optional per-listing add-on; Vendibook is not a lender.
  */
 
 export interface SellerPaymentsExplainerProps {
@@ -61,8 +61,8 @@ const STEPS = (asset: string) => [
   },
   {
     icon: Landmark,
-    title: 'Optionally add Equinox Funding',
-    body: 'On an eligible for-sale truck, trailer, or cart you can turn on the Equinox Funding add-on so buyers can apply for financing and download the purchase sheet.',
+    title: 'Optionally add APPROVE',
+    body: 'On an eligible for-sale truck, trailer, or cart you can turn on the APPROVE add-on so buyers can apply for financing and download the purchase sheet.',
   },
   {
     icon: Truck,
@@ -181,18 +181,18 @@ const SellerPaymentsExplainer = ({
 
           <div className="rounded-2xl border-2 border-border bg-background/70 backdrop-blur-sm p-5 space-y-3">
             <div className="h-6 flex items-center">
-              <EquinoxFundingLogo className="h-6" />
+              <ApproveFinancingLogo className="h-6" />
             </div>
             <h3 className="text-base font-semibold text-foreground">
               Optional buyer financing
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Equinox Funding is an optional per-listing add-on for eligible for-sale trucks,
+              APPROVE is an optional per-listing add-on for eligible for-sale trucks,
               trailers, and carts. When enabled, buyers can apply and download the financing
-              purchase sheet. An 8.7% platform fee applies to an Equinox-financed Vendibook sale.
+              purchase sheet. An 8.7% platform fee applies to an APPROVE-financed Vendibook sale.
             </p>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Vendibook is not a lender. Approval and terms are determined by Equinox and/or its
+              Vendibook is not a lender. Approval and terms are determined by APPROVE and/or its
               funding providers.
             </p>
             <Link

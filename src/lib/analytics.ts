@@ -831,7 +831,7 @@ export {
 export { trackEvent };
 export type { AnalyticsEvent };
 
-// ========== Equipment financing (Equinox) ==========
+// ========== Equipment financing (APPROVE) ==========
 export type FinancingSource =
   | 'buyer_city'
   | 'home_banner'
@@ -906,7 +906,7 @@ export const trackFinancingApplyClick = (
 };
 
 /**
- * Vendibook captured the buyer's contact details before the Equinox handoff.
+ * Vendibook captured the buyer's contact details before the APPROVE handoff.
  * `identified` distinguishes a signed-in silent capture from a form submit.
  */
 export const trackFinancingLeadCaptured = (

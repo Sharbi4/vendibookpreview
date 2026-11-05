@@ -114,8 +114,8 @@ const BUYER_OPTIONS = [
   },
   {
     icon: CalendarClock,
-    title: 'Pay Later, when eligible',
-    body: 'PayPal may offer installment options for qualifying buyers and purchases.',
+    title: 'Equipment financing with APPROVE',
+    body: 'Explore equipment financing through APPROVE’s lender network.',
   },
 ];
 
@@ -137,16 +137,16 @@ const FAQS = [
     a: 'It means the seller completed the PayPal connection and payment-readiness steps required for Vendibook checkout. It does not mean Vendibook inspected the equipment, verified title, or guarantees the seller’s claims.',
   },
   {
-    q: 'What is PayPal Pay Later?',
-    a: 'Eligible buyers may see Pay in 4 or Pay Monthly inside PayPal checkout. PayPal determines availability, approval, rates, and terms.',
+    q: 'Where can I explore equipment financing?',
+    a: 'Visit /financing to explore APPROVE. Financing is subject to lender approval and terms.',
   },
   {
     q: 'Does PayPal Purchase Protection cover a food truck or trailer?',
     a: 'PayPal Purchase Protection applies only to eligible transactions, and PayPal’s current U.S. terms exclude vehicles. Review PayPal’s current terms before purchasing a food truck or trailer.',
   },
   {
-    q: 'Who decides whether I qualify for Pay Later?',
-    a: 'PayPal determines eligibility and the options shown at checkout. Vendibook is not the lender and does not decide approval, rates, or terms.',
+    q: 'Who decides whether I qualify for financing?',
+    a: 'APPROVE connects applications with its lender network. Lenders decide eligibility, approval, rates and terms. Vendibook is not a lender.',
   },
 ];
 
@@ -270,39 +270,7 @@ const Payments = () => {
           </div>
         </section>
 
-        <section className="py-16 md:py-24">
-          <div className="container mx-auto max-w-6xl px-4">
-            <motion.div {...fadeUp} className="max-w-3xl">
-              <h2 className="text-3xl font-bold text-foreground sm:text-4xl">
-                 Need more flexibility? PayPal may offer Pay Later.<span className="text-primary">*</span>
-              </h2>
-              <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-                 Eligible buyers may see Pay in 4 or Pay Monthly directly in PayPal checkout.
-              </p>
-            </motion.div>
-            <div className="mt-10 grid gap-8 border-y border-border py-10 lg:grid-cols-2 lg:gap-16">
-              <motion.div {...fadeUp}>
-                <p className="text-sm font-semibold uppercase text-muted-foreground">Smaller eligible purchases</p>
-                <h3 className="mt-3 text-2xl font-bold text-foreground">Pay in 4</h3>
-                <ul className="mt-5 space-y-3 text-sm leading-relaxed text-muted-foreground">
-                   <li className="flex gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />Four payments on eligible purchases.</li>
-                   <li className="flex gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />PayPal determines eligibility and shows the applicable terms at checkout.</li>
-                </ul>
-                 <p className="mt-6"><ExtLink href={PAYPAL_LINKS.payIn4}>View Pay in 4 details</ExtLink></p>
-              </motion.div>
-              <motion.div {...fadeUp} transition={{ ...fadeUp.transition, delay: reduce ? 0 : 0.06 }}>
-                <p className="text-sm font-semibold uppercase text-primary">Larger qualifying purchases</p>
-                <h3 className="mt-3 text-2xl font-bold text-foreground">Pay Monthly</h3>
-                <ul className="mt-5 space-y-3 text-sm leading-relaxed text-muted-foreground">
-                   <li className="flex gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />Monthly payment options may be available on qualifying purchases.</li>
-                   <li className="flex gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />Available term, rate, and approval are determined by PayPal.</li>
-                </ul>
-                 <p className="mt-6"><ExtLink href={PAYPAL_LINKS.payMonthly}>View Pay Monthly details</ExtLink></p>
-              </motion.div>
-            </div>
-          </div>
-        </section>
-
+        <section className="container mx-auto max-w-6xl px-4 py-16"><h2 className="text-3xl font-bold">Explore financing with APPROVE</h2><p className="mt-4 text-muted-foreground">Equipment financing is available through APPROVE’s lender network. Lenders decide eligibility, approval, rates and terms.</p><a href="/financing/approve" className="mt-6 inline-block rounded-full bg-orange-600 px-6 py-3 font-semibold text-white">Explore APPROVE financing</a></section>
         <section className="bg-muted/40 py-16 md:py-24">
           <div className="container mx-auto max-w-6xl px-4">
             <motion.div {...fadeUp} className="max-w-3xl">
@@ -315,7 +283,7 @@ const Payments = () => {
                 <ul className="mt-6 space-y-4 text-sm leading-relaxed text-muted-foreground">
                    <li>Processes the online payment.</li>
                    <li>Shows the eligible funding options available at checkout.</li>
-                   <li>Handles Pay Later eligibility, terms, and repayment.</li>
+
                    <li>Processes card details within PayPal checkout.</li>
                 </ul>
               </motion.div>
@@ -384,7 +352,7 @@ const Payments = () => {
                    Eligible orders can include pickup, seller delivery, or freight options. Keep delivery details and order updates connected to the transaction.
                 </p>
                 <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-                   If a separate freight charge is paid through PayPal, any Pay Later eligibility is determined separately by PayPal.
+                   Ask the financing provider whether eligible freight costs can be included in your equipment financing.
                 </p>
                 <Button variant="cta-outline" className="mt-7 rounded-full" asChild>
                   <Link to="/vendibook-freight">Explore Vendibook Freight</Link>
@@ -436,20 +404,12 @@ const Payments = () => {
         <section className="py-12">
           <div className="container mx-auto max-w-4xl px-4">
             <p className="text-xs leading-relaxed text-muted-foreground">
-               *PayPal Pay Later offers are subject to consumer credit approval, buyer and purchase eligibility,
-               merchant and state availability, and PayPal/WebBank terms. Pay Monthly is an interest-bearing
-               consumer installment loan issued by WebBank. Vendibook LC is not the lender and does not determine
-               approval, rates, available terms, or APR. Twelve months is a possible Pay Monthly term, not a separate
-               Pay in 12 product. Separate PayPal transactions, including separately charged Vendibook Freight, may
-               require separate Pay Later applications. PayPal Purchase Protection applies only to eligible
-               transactions. PayPal&rsquo;s current U.S. terms exclude vehicles. Review PayPal&rsquo;s current terms before
-               purchasing a food truck or trailer.
+Financing is available through APPROVE’s lender network and is subject to lender approval and terms. Vendibook is not a lender.
             </p>
             <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-xs">
               <Link to="/legal/payments-terms" className="font-semibold text-primary hover:underline">Payments Terms</Link>
               <Link to="/legal/financing-disclosure" className="font-semibold text-primary hover:underline">Financing Disclosure</Link>
               <Link to="/legal/video-walkthrough-terms" className="font-semibold text-primary hover:underline">Video Walkthrough Terms</Link>
-              <ExtLink href={PAYPAL_LINKS.payLater}>PayPal Pay Later overview</ExtLink>
               <ExtLink href={PAYPAL_LINKS.protection}>PayPal Purchase Protection terms</ExtLink>
             </div>
           </div>

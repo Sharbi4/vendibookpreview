@@ -3,7 +3,7 @@ import paypalWordmarkWhite from '@/assets/brand/paypal-wordmark-white.png.asset.
 import paypalMonogram from '@/assets/brand/paypal-monogram-color.png.asset.json';
 import plaidLogoWhite from '@/assets/brand/plaid-logo-white.png.asset.json';
 import plaidLogoDark from '@/assets/brand/plaid-logo-dark.png.asset.json';
-import equinoxLogo from '@/assets/brand/equinox-funding-logo.png.asset.json';
+
 import { cn } from '@/lib/utils';
 
 /**
@@ -84,17 +84,17 @@ export function PlaidLogo({
   );
 }
 
-export function EquinoxFundingLogo({ className }: { className?: string }) {
+export function ApproveFinancingLogo({ className }: { className?: string }) {
   const [failed, setFailed] = useState(false);
   if (failed) {
     return (
-      <span className={cn('text-sm font-semibold tracking-tight', className)}>Equinox Funding</span>
+      <span className={cn('text-sm font-semibold tracking-tight', className)}>APPROVE</span>
     );
   }
   return (
     <img
-      src={equinoxLogo.url}
-      alt="Equinox Funding"
+      src="https://assets.approvepayments.com/images/approve_logo_primary.svg"
+      alt="APPROVE"
       loading="eager"
       decoding="async"
       onError={() => setFailed(true)}

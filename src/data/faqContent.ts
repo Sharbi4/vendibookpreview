@@ -289,7 +289,7 @@ export const faqCategories: FaqCategory[] = [
         id: "financing",
         question: "Can I finance a food truck or trailer?",
         answer:
-          "Eligible equipment listings may offer third-party financing referrals — currently led by Equinox Funding. Vendibook is not the lender and does not decide approval, rates, payments or funding dates. You can download a pro forma purchase summary from an eligible listing to submit with your application; it is not a payable invoice.",
+          "Eligible equipment listings may offer third-party financing referrals — currently led by APPROVE. Vendibook is not the lender and does not decide approval, rates, payments or funding dates. You can download a pro forma purchase summary from an eligible listing to submit with your application; it is not a payable invoice.",
         keywords: ["financing", "monthly", "loan", "equinox", "equipment financing"],
         actions: [A.financing],
       },

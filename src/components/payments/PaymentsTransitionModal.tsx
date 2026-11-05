@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { usePaymentsTransition } from '@/hooks/usePaymentsTransition';
 import { PayPalWordmark } from '@/components/brand/ProviderLogos';
-import { EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
+import { ApproveFinancingLogo } from '@/components/brand/ProviderLogos';
 import { GetVerifiedButton } from '@/components/verification/GetVerifiedButton';
 import { useSellerVerification } from '@/hooks/useSellerVerification';
 
@@ -86,7 +86,7 @@ export function PaymentsTransitionModal() {
           </DialogTitle>
           <DialogDescription className="text-center text-sm leading-relaxed">
             Your listings stay live exactly as they are. All checkout runs through PayPal.
-            Financing is provided by Equinox Funding LLC.
+            Financing is provided by APPROVE’s lender network.
           </DialogDescription>
         </DialogHeader>
 
@@ -160,7 +160,7 @@ export function PaymentsTransitionModal() {
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <EquinoxFundingLogo className="h-5" />
+                  <ApproveFinancingLogo className="h-5" />
                   <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                     Funding partner
                   </span>
@@ -169,7 +169,7 @@ export function PaymentsTransitionModal() {
                   Offer financing on your equipment listings
                 </p>
                 <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                  Equinox Funding LLC provides business loans & equipment financing from $2.5K – $25M. Add a financing option to eligible sale listings.
+                  APPROVE connects equipment financing applications with its lender network. Add a financing option to eligible sale listings.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Button size="sm" variant="glass-cta" asChild className="rounded-md">

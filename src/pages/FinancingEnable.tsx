@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/layout/Header';
 import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
-import { EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
+import { ApproveFinancingLogo } from '@/components/brand/ProviderLogos';
 
 const PANEL =
   'rounded-2xl border-2 border-white/12 bg-[linear-gradient(140deg,#101014_0%,#08080a_60%,#15151b_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] p-5 sm:p-6';
@@ -61,11 +61,11 @@ export default function FinancingEnable() {
 
   return (
     <div className="min-h-screen bg-background">
-      <SEO title="Turn on financing options | Vendibook" description="Enable Equinox Funding financing options on your for-sale listings." noindex />
+      <SEO title="Turn on financing options | Vendibook" description="Enable APPROVE financing options on your for-sale listings." noindex />
       <Header />
       <main className="max-w-3xl mx-auto px-4 py-10 space-y-5">
         <div className="flex items-center gap-3 flex-wrap">
-          <EquinoxFundingLogo className="h-5" />
+          <ApproveFinancingLogo className="h-5" />
           <h1 className="text-2xl font-semibold">Turn on financing options</h1>
         </div>
 
@@ -73,7 +73,7 @@ export default function FinancingEnable() {
           <section className={PANEL}>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Financing options apply to for-sale listings. Once you have equipment listed for
-              sale, you can offer buyers the option to apply with Equinox Funding.
+              sale, you can offer buyers the option to apply with APPROVE.
             </p>
             <div className="mt-5 flex gap-2 flex-wrap">
               <Button asChild>

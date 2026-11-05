@@ -202,9 +202,11 @@ function loadSdk(requestedIntent: 'authorize' | null, options: PayPalSdkOptions 
       // Never sent in live.
       if (config.environment === 'sandbox') params.set('buyer-country', 'US');
       if (config.enable_funding?.length) {
-        params.set('enable-funding', config.enable_funding.join(','));
+        const funding = config.enable_funding.filter(source => !['paylater', 'credit'].includes(source.toLowerCase()));
+        if (funding.length) params.set('enable-funding', funding.join(','));
       }
 
+      params.set('disable-funding', 'paylater,credit');
       const src = `https://www.paypal.com/sdk/js?${params.toString()}`;
       // Reuse an identical script tag rather than downloading it twice.
       const prior = document.head.querySelector<HTMLScriptElement>(

@@ -410,7 +410,6 @@ const PayPalPaymentPanel = ({
         const sources = [
           { key: 'paypal', source: paypal.FUNDING.PAYPAL, container: paypalButtonRef.current, name: 'PayPal', color: 'silver' },
           { key: 'venmo', source: paypal.FUNDING.VENMO, container: venmoButtonRef.current, name: 'Venmo', color: undefined },
-          { key: 'paylater', source: paypal.FUNDING.PAYLATER, container: payLaterButtonRef.current, name: 'Pay Later', color: 'silver' },
         ];
 
         const renders = sources.map(({ key, source, container, name, color }) => {

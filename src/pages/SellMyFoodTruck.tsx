@@ -68,7 +68,7 @@ const faqs = [
   {
     question: 'How does secure PayPal checkout work for a sale?',
     answer:
-      'If you turn on optional Vendibook online checkout, the buyer pays through PayPal’s secure hosted checkout rather than handing you cash or a wire. Card details are handled by PayPal, not by Vendibook, and eligible buyers may see PayPal Pay Later options at checkout. Payouts on completed online sales are reviewed and issued by Vendibook. You can read the full breakdown on the Vendibook payments page.',
+      'If you turn on optional Vendibook online checkout, the buyer pays through PayPal’s secure hosted checkout rather than handing you cash or a wire. Card details are handled by PayPal, not by Vendibook. Payouts on completed online sales are reviewed and issued by Vendibook. You can read the full breakdown on the Vendibook payments page.',
   },
   {
     question: 'When do I get paid after an online sale?',
@@ -180,7 +180,7 @@ const wholeSale = [
   {
     icon: CreditCard,
     title: 'Two ways to get paid — including secure PayPal checkout',
-    body: 'Settle in person with no Vendibook platform transaction fee, or turn on optional Vendibook online checkout powered by PayPal, where the buyer pays through PayPal’s secure hosted checkout and eligible buyers may see PayPal Pay Later. You choose per sale.',
+    body: 'Settle in person with no Vendibook platform transaction fee, or turn on optional Vendibook online checkout powered by PayPal, where the buyer pays through PayPal’s secure hosted checkout. You choose per sale.',
     href: '/payments',
     cta: 'How PayPal checkout works',
     image: heroTruck,

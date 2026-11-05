@@ -12,7 +12,7 @@ const COPY: Record<Audience, { eyebrow: string; title: string; steps: { icon: ty
     steps: [
       { icon: ClipboardCheck, title: 'Walk through it first', text: 'Ask questions and schedule an in-person or video walkthrough before you commit.' },
       { icon: FileSignature, title: 'Agree on terms', text: 'Price, delivery or pickup, and handoff details are recorded with your order.' },
-      { icon: CreditCard, title: 'Pay with PayPal', text: 'Card, PayPal balance, or Pay Later where eligible. No PayPal account needed to pay by card.' },
+      { icon: CreditCard, title: 'Pay with PayPal', text: 'Card or PayPal balance where eligible. No PayPal account needed to pay by card.' },
       { icon: ShieldCheck, title: 'Documented handoff', text: 'Both sides confirm the handoff in Vendibook, creating a clear transaction record.' },
     ],
   },
@@ -32,7 +32,7 @@ const COPY: Record<Audience, { eyebrow: string; title: string; steps: { icon: ty
     steps: [
       { icon: ClipboardCheck, title: 'List for free', text: 'Photos, specs, and price in minutes. Buyers reach you through Vendibook messaging.' },
       { icon: FileSignature, title: 'Agree on terms', text: 'Offers, delivery, and handoff details are recorded with the sale.' },
-      { icon: CreditCard, title: 'Buyer pays with PayPal', text: 'Card, PayPal balance, or Pay Later where eligible. Complete your purchase online through Vendibook.' },
+      { icon: CreditCard, title: 'Buyer pays with PayPal', text: 'Card or PayPal balance where eligible. Complete your purchase online through Vendibook.' },
       { icon: ShieldCheck, title: 'Handoff, then payout', text: 'Payout follows buyer confirmation, both signatures and a saved walkthrough video.' },
     ],
   },
@@ -81,7 +81,7 @@ export default function TransactionConfidenceSection({ audience, source }: { aud
           <Link to="/how-it-works" className="inline-flex items-center gap-1 text-foreground underline underline-offset-4">How handoffs work <ArrowRight className="h-4 w-4" /></Link>
         </div>
         <p className="mt-6 border-t border-border pt-4 text-xs leading-5 text-muted-foreground">
-          {!rental && 'Pay Later offers are subject to PayPal eligibility and terms. '}Vendibook does not inspect, title-check, or guarantee listings; review each item before you pay.
+          Vendibook does not inspect, title-check, or guarantee listings; review each item before you pay.
         </p>
       </section>
       {rental && <FlipInsuranceSection source={source} owner={audience === 'host'} />}

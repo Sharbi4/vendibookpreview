@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, FileCheck2, ShieldCheck, Truck, BadgePercent } from 'lucide-react';
-import { PayPalWordmark, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
+import { PayPalWordmark, ApproveFinancingLogo } from '@/components/brand/ProviderLogos';
 import vendibookWordmark from '@/assets/vendibook-wordmark.png';
 import { FLIP_INSURANCE } from '@/lib/flipInsurance';
 import './home-explainer.css';
@@ -41,7 +41,7 @@ const PATHS: Record<Audience, { steps: { title: string; body: string }[]; cta: {
 export function HomeTrustStrip() {
   const items = [
     { key: 'paypal', logo: <span className="hx-logo-paypal"><PayPalWordmark surface="light" className="hx-logo" /><b>PayPal</b></span>, label: 'Secure checkout', href: '/payments' },
-    { key: 'equinox', logo: <span className="hx-logo-plate"><EquinoxFundingLogo className="hx-logo" /></span>, label: 'Equipment financing', href: '/financing' },
+    { key: 'equinox', logo: <span className="hx-logo-plate"><ApproveFinancingLogo className="hx-logo" /></span>, label: 'Equipment financing', href: '/financing' },
     ...(FLIP_INSURANCE.enabled ? [{ key: 'flip', logo: <img src={FLIP_INSURANCE.logoUrl} alt="FLIP" className="hx-logo" loading="lazy" />, label: 'Food business insurance', href: '/insurance' }] : []),
     { key: 'freight', logo: <img src={vendibookWordmark} alt="Vendibook Freight" className="hx-logo" loading="lazy" />, label: 'Freight delivery', href: '/vendibook-freight' },
   ];

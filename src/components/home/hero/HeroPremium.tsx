@@ -77,7 +77,7 @@ const HeroPremium = ({ showGoogleSignIn = true, showRotator = true, guaranteeHre
               data-cta-location="home_hero_financing"
               onClick={() => trackLeadEvent('hero_financing_clicked', { source: 'home_hero', destination: '/financing' })}
             >
-              Equinox Funding
+              APPROVE
             </Link>
             .
           </motion.p>

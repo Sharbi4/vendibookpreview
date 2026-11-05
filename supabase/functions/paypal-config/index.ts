@@ -32,7 +32,7 @@ serve((req) => {
     // Express wallets layered on the same PayPal order lifecycle. The client
     // adds these ONLY for a CAPTURE checkout, where WalletPayButtons renders.
     wallet_components: ["applepay", "googlepay"],
-    enable_funding: ["venmo", "paylater"],
+    enable_funding: ["venmo"],
 
   });
 });

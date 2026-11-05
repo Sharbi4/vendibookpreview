@@ -42,6 +42,6 @@ describe('listing context is preserved', () => {
   });
 
   it('keeps the Equinox application URL stable', () => {
-    expect(EQUINOX_APPLY_URL).toContain('equinox-funding.com');
+    expect(EQUINOX_APPLY_URL).toContain('financing.approvepayments.com/vendibook');
   });
 });

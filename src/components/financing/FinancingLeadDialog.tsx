@@ -56,7 +56,7 @@ export const FinancingLeadDialog = ({
           <DialogTitle>Before we hand you off</DialogTitle>
           <DialogDescription>
             So we can follow up and help with your purchase. Your application itself is completed
-            with Equinox Funding.
+            with APPROVE.
           </DialogDescription>
         </DialogHeader>
 
@@ -92,7 +92,7 @@ export const FinancingLeadDialog = ({
           <div className="flex flex-col gap-2 pt-1">
             <Button type="submit" className="w-full" disabled={submitting}>
               {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Continue to Equinox Funding
+              Continue to APPROVE
             </Button>
             <Button
               type="button"
@@ -107,7 +107,7 @@ export const FinancingLeadDialog = ({
         </form>
 
         <p className="text-[11px] leading-relaxed text-muted-foreground/80">
-          Vendibook is not a lender. Financing is subject to Equinox Funding and/or its funding
+          Vendibook is not a lender. Financing is subject to APPROVE and/or its funding
           providers&rsquo; approval and terms.
         </p>
       </DialogContent>

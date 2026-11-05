@@ -144,7 +144,7 @@ export type LeadEventName =
   | 'video_progress_75'
   | 'video_complete'
   | 'video_replay'
-  // Equipment financing (Equinox)
+  // Equipment financing (APPROVE)
   | 'financing_page_view'
   | 'financing_apply_click'
   | 'lead_captured'
@@ -292,7 +292,7 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   video_progress_75: 'homepage',
   video_complete: 'homepage',
   video_replay: 'homepage',
-  // Equipment financing (Equinox)
+  // Equipment financing (APPROVE)
   financing_page_view: 'financing',
   financing_apply_click: 'financing',
   lead_captured: 'financing',

@@ -20,7 +20,7 @@ export interface PurchaseSheetListing {
 }
 
 const DISCLAIMER =
-  'Generated from seller-provided Vendibook listing information. This document is a pro forma purchase summary—not proof of purchase, ownership, condition, value, financing approval, or a binding invoice. Equinox Funding or another financing provider may request a final seller-issued invoice, purchase agreement, or additional documentation.';
+  'Generated from seller-provided Vendibook listing information. This document is a pro forma purchase summary—not proof of purchase, ownership, condition, value, financing approval, or a binding invoice. APPROVE or another financing provider may request a final seller-issued invoice, purchase agreement, or additional documentation.';
 
 const money = (v?: number | null) =>
   typeof v === 'number' && !Number.isNaN(v)

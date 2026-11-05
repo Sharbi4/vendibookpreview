@@ -14,7 +14,7 @@ import {
   PayPalMonogram,
   PayPalWordmark,
   PlaidLogo,
-  EquinoxFundingLogo,
+  ApproveFinancingLogo,
 } from '@/components/brand/ProviderLogos';
 
 /**
@@ -98,21 +98,21 @@ const inPersonRail = (audience: RailsAudience): RailDef => ({
 
 const equinoxRail = (audience: RailsAudience): RailDef => ({
   key: 'equinox',
-  logo: <EquinoxFundingLogo className="h-6" />,
-  title: 'Equipment financing with Equinox Funding',
+  logo: <ApproveFinancingLogo className="h-6" />,
+  title: 'Equipment financing with APPROVE',
   summary:
     audience === 'buyer'
       ? 'On eligible for-sale listings you can apply for equipment financing and download a pro forma purchase sheet.'
-      : 'Add the optional Equinox Funding add-on to your for-sale listing so buyers can apply for equipment financing.',
-  detailTitle: 'How Equinox financing works',
+      : 'Buyers can explore APPROVE financing from eligible for-sale listings.',
+  detailTitle: 'How APPROVE financing works',
   detailSteps: [
-    'The seller turns on the Equinox add-on and accepts the financing disclosure.',
-    'Buyers see “Apply Now with Equinox” and can download the purchase sheet PDF.',
-    'Equinox Funding reviews the application and issues terms directly to the buyer.',
-    'If funded, Equinox settles the purchase and Vendibook records the sale.',
+    'Eligible published sale listings show the APPROVE financing option.',
+    'Buyers see “Apply Now with APPROVE” and can download the purchase sheet PDF.',
+    'Lenders in APPROVE’s network review the application and determine terms.',
+    'If approved, coordinate funding and the purchase with the lender and Vendibook.',
   ],
   detailNote:
-    'Financing is offered by Equinox Funding LLC, not Vendibook, and is subject to credit approval. An 8.7% platform fee applies to financed sales. PayPal does not process an Equinox-funded purchase.',
+    'Financing is offered by APPROVE’s lender network, not Vendibook, and is subject to credit approval. An 8.7% platform fee applies to financed sales. PayPal does not process an APPROVE-funded purchase.',
   link: { label: 'See financing details', href: '/financing' },
   flowLink:
     audience === 'buyer'
@@ -264,14 +264,14 @@ export const PaymentRailsSection = ({ audience }: { audience: RailsAudience }) =
 };
 
 /** Small strip of provider marks — used under heroes for instant trust. */
-export const ProviderTrustStrip = ({ showEquinox = true }: { showEquinox?: boolean }) => (
+export const ProviderTrustStrip = ({ showAPPROVE = true }: { showAPPROVE?: boolean }) => (
   <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-xs text-muted-foreground">
     <span className="inline-flex items-center gap-2">
       <PayPalMonogram className="h-4" /> Checkout by PayPal
     </span>
-    {showEquinox && (
+    {showAPPROVE && (
       <span className="inline-flex items-center gap-2">
-        <EquinoxFundingLogo className="h-5" /> Financing by Equinox Funding
+        <ApproveFinancingLogo className="h-5" /> Financing by APPROVE
       </span>
     )}
     <span className="inline-flex items-center gap-2">
@@ -294,7 +294,7 @@ export const KeepExploring = ({ current }: { current: 'overview' | 'seller' | 'h
       id: 'seller',
       icon: Banknote,
       title: 'Selling on Vendibook',
-      body: 'List free, take PayPal or in-person payment, and offer Equinox financing.',
+      body: 'List free, take PayPal or in-person payment, and offer APPROVE financing.',
       href: '/how-it-works-seller',
     },
     {
@@ -308,7 +308,7 @@ export const KeepExploring = ({ current }: { current: 'overview' | 'seller' | 'h
 
   const extras = [
     { id: 'payments', icon: Receipt, title: 'Payments overview', body: 'How PayPal checkout, fees, and payouts work.', href: '/payments' },
-    { id: 'financing', icon: Banknote, title: 'Equipment financing', body: 'Apply with Equinox Funding on eligible sale listings.', href: '/financing' },
+    { id: 'financing', icon: Banknote, title: 'Equipment financing', body: 'Apply with APPROVE on eligible sale listings.', href: '/financing' },
     { id: 'identity', icon: BadgeCheck, title: 'Identity verification', body: 'The optional Plaid-powered trust add-on.', href: '/identity-verification' },
   ];
 

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { Banknote, ExternalLink, FileDown, Loader2, Lock } from 'lucide-react';
-import { PayPalMonogram, PayPalWordmark, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
+import { PayPalMonogram, PayPalWordmark, ApproveFinancingLogo } from '@/components/brand/ProviderLogos';
 import { Button } from '@/components/ui/button';
 import { SaleCard } from '@/components/listing-detail/sale/SaleCard';
 import { generateFinancingPurchaseSheet } from '@/lib/financing/purchaseSheet';
@@ -54,7 +54,7 @@ export const FinancingActionPanel = ({
       : null;
 
   // Handoff runs through the shared flow: placement tracking, Vendibook lead
-  // capture, then the server-issued Equinox apply URL.
+  // capture, then the server-issued APPROVE apply URL.
   const handleApply = () => startFinancingApply('listing_panel', listing.id);
 
   const handleDownload = async () => {
@@ -90,12 +90,12 @@ export const FinancingActionPanel = ({
         <div className="min-w-0">
           <div className="mb-2 flex items-center gap-3 flex-wrap">
             <FinancingAvailableBadge listingId={listing.id} />
-            <EquinoxFundingLogo className="h-5" />
+            <ApproveFinancingLogo className="h-5" />
           </div>
           <h3 className="text-base font-semibold">Financing options for this equipment</h3>
           <p className="text-xs text-muted-foreground leading-relaxed mt-1">
-            This seller offers financing options through Equinox Funding. Apply directly with
-            Equinox, or download a pro forma purchase summary to share with a financing provider.
+            This seller offers financing options through APPROVE. Apply directly with
+            APPROVE, or download a pro forma purchase summary to share with a financing provider.
           </p>
         </div>
       </div>
@@ -109,7 +109,7 @@ export const FinancingActionPanel = ({
             <span className="text-muted-foreground">/mo*</span>
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Equinox Funding: 0–10% typical down · decisions usually in 24–48 hours · startups considered.
+            APPROVE: 0–10% typical down · decisions usually in 24–48 hours · startups considered.
           </p>
           <Link
             to={financingCalculatorUrl(salePrice, listing.id)}
@@ -127,7 +127,7 @@ export const FinancingActionPanel = ({
           className="finance-cta justify-center font-semibold"
           onClick={handleApply}
         >
-          Apply Now with Equinox
+          Apply Now with APPROVE
           <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
         </Button>
 
@@ -166,7 +166,7 @@ export const FinancingActionPanel = ({
 
       <p className="text-[11px] text-muted-foreground/80 mt-3 leading-relaxed">
         The purchase summary is a pro forma document, not proof of sale, ownership, or financing
-        approval. Financing is subject to Equinox Funding and/or its funding providers&rsquo;
+        approval. Financing is subject to APPROVE and/or its funding providers&rsquo;
         approval and terms. Vendibook is not a lender.
         {estimate !== null && <> {illustrativeFinancingNote}</>}
       </p>

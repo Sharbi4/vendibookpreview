@@ -4,7 +4,7 @@ import { ArrowLeft, ExternalLink, Loader2, ShieldCheck } from 'lucide-react';
 import {
   PayPalMonogram,
   PayPalWordmark,
-  EquinoxFundingLogo,
+  ApproveFinancingLogo,
 } from '@/components/brand/ProviderLogos';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -83,7 +83,7 @@ export default function ListingPaymentsFinancing() {
     <div className="min-h-screen bg-background">
       <SEO
         title="Payments & financing | Vendibook"
-        description="Manage how buyers pay for this listing. Buyer financing through Equinox Funding is included on every published for-sale listing."
+        description="Manage how buyers pay for this listing. Buyer financing through APPROVE is included on every published for-sale listing."
         noindex
       />
       <Header />
@@ -132,11 +132,11 @@ export default function ListingPaymentsFinancing() {
         {eligible ? (
           <section className={PANEL}>
             <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <EquinoxFundingLogo className="h-5" />
+              <ApproveFinancingLogo className="h-5" />
               <h2 className="text-base font-semibold">Buyer financing is included</h2>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Every published for-sale listing on Vendibook shows financing options through Equinox
+              Every published for-sale listing on Vendibook shows financing options through APPROVE
               Funding — there is nothing to switch on. Buyers see a financing badge, an{' '}
               <a
                 href={EQUINOX_APPLY_URL}
@@ -144,7 +144,7 @@ export default function ListingPaymentsFinancing() {
                 rel="noopener noreferrer"
                 className="underline underline-offset-2"
               >
-                Apply with Equinox
+                Apply with APPROVE
                 <ExternalLink className="inline h-3 w-3 ml-0.5" />
               </a>{' '}
               link, and a downloadable pro forma purchase summary. Financing never changes how or

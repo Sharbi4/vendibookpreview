@@ -43,10 +43,10 @@ describe('financing apply opens Equinox in a new tab', () => {
   });
 
   it('uses the listing-specific apply link in the new tab', async () => {
-    invoke.mockResolvedValue({ data: { applyUrl: 'https://equinox-funding.com/efapplication/?ref=l1' }, error: null });
+    invoke.mockResolvedValue({ data: { applyUrl: 'https://financing.approvepayments.com/vendibook?ref=l1' }, error: null });
     const { result } = renderHook(() => useFinancingHandoff());
     await act(async () => { result.current.startFinancingApply('listing_detail' as never, 'l1'); });
-    expect(tab.location.href).toBe('https://equinox-funding.com/efapplication/?ref=l1');
+    expect(tab.location.href).toBe('https://financing.approvepayments.com/vendibook');
     expect(assign).not.toHaveBeenCalled();
   });
 

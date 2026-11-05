@@ -6,7 +6,7 @@ interface FinancingLineProps {
 /**
  * Accurate payment note shown near the checkout total. Vendibook checkout is
  * processed by PayPal; equipment financing is a separate application with
- * Equinox Funding and only on opted-in for-sale listings.
+ * APPROVE and only on opted-in for-sale listings.
  */
 const FinancingLine = ({ totalUsd }: FinancingLineProps) => {
   if (!totalUsd) return null;

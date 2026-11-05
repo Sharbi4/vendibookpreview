@@ -132,7 +132,7 @@ function renderFinancing(): RenderResult {
     crumbs([{ name: 'Home', href: '/' }, { name: 'How Vendibook Works', href: '/how-it-works' }, { name: 'Financing', href: path }]),
   ];
   const body = `<h1>Food Truck &amp; Food Trailer Financing</h1><p>${esc(FINANCING_INTRO)}</p>
-<p>You apply with Equinox Funding, our third-party financing partner. Vendibook is not a lender. Approval, rates, and terms are subject to underwriting and are not guaranteed.</p>
+<p>You apply with APPROVE, our third-party financing partner. Vendibook is not a lender. Approval, rates, and terms are subject to underwriting and are not guaranteed.</p>
 <section><h2>How food truck financing works</h2><ol>${FINANCING_STEPS.map(step => `<li><h3>${esc(step.title)}</h3><p>${esc(step.body)}</p></li>`).join('')}</ol></section>
 <section id="calculator"><h2>Food truck financing calculator</h2><p>Estimate a fixed-rate monthly equipment payment using the purchase price, down payment, illustrative annual interest rate, and term in months. The default 10% rate is an editable illustration, not an average rate, offer, or quote. Taxes, fees, insurance, and transportation are not included.</p><p>The order estimate compares gross sales with the equipment payment only. It does not include operating costs or predict profit. Actual financing terms, eligibility, costs, revenue, and profitability vary.</p><a href="${SITE}/financing#calculator">Open the interactive calculator</a></section>
 ${FINANCING_SECTIONS.map(section => `<section><h2>${esc(section.heading)}</h2><p>${esc(section.text)}</p></section>`).join('')}

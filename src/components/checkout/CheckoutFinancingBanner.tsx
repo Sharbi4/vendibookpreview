@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { EQUINOX_APPLY_URL } from '@/lib/financing/disclosure';
 import { ExternalLink, FileDown, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
+import { ApproveFinancingLogo } from '@/components/brand/ProviderLogos';
 import { useEquinoxFinancingEnabled } from '@/hooks/useListingFinancing';
 import { useFinancingHandoff } from '@/hooks/useFinancingHandoff';
 import { generateFinancingPurchaseSheet } from '@/lib/financing/purchaseSheet';
@@ -53,14 +53,14 @@ const CheckoutFinancingBanner = ({
   if (variant === 'compact') {
     return (
       <div className={cn('checkout-financing-compact', className)}>
-        <EquinoxFundingLogo className="h-4" />
+        <ApproveFinancingLogo className="h-4" />
         <p>Equipment financing available</p>
         <Link
           to={`/financing?listing_id=${listing.id}`}
           onClick={() => trackFinancingLearnMoreClick('listing_panel', listing.id)}
         >
           Explore →
-        </Link>
+        </a>
         {financingLeadDialog}
       </div>
     );
@@ -69,12 +69,12 @@ const CheckoutFinancingBanner = ({
   return (
     <aside className={cn('checkout-financing-banner', className)}>
       <div className="checkout-financing-mark">
-        <EquinoxFundingLogo className="h-6" />
+        <ApproveFinancingLogo className="h-6" />
       </div>
       <div className="checkout-financing-copy">
         <span>Financing available</span>
         <strong>Need financing for this equipment?</strong>
-        <p>Explore equipment financing through Equinox Funding before completing your purchase.</p>
+        <p>Explore equipment financing through APPROVE before completing your purchase.</p>
       </div>
       <div className="checkout-financing-actions">
         <button
@@ -90,7 +90,7 @@ const CheckoutFinancingBanner = ({
         </button>
       </div>
       <p className="checkout-financing-note">
-        Third-party financing. Approval and terms are determined by Equinox Funding and/or its funding providers.
+        Third-party financing. Approval and terms are determined by APPROVE and/or its funding providers.
         Vendibook is not a lender.
       </p>
       {financingLeadDialog}

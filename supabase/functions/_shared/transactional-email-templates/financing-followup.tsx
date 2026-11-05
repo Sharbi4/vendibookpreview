@@ -26,7 +26,7 @@ const FinancingFollowupEmail = ({
   listingTitle,
   bookingUrl = 'https://vendibook.com/contact#meeting',
   callbackUrl = 'https://vendibook.com/contact#callback',
-  applyUrl = 'https://equinox-funding.com/efapplication/',
+  applyUrl = 'https://financing.approvepayments.com/vendibook',
 }: FinancingFollowupProps) => (
   <VendibookEmailLayout preview={`Financing next steps and personal help from ${BRAND_NAME}`}>
     <Eyebrow>Equipment financing</Eyebrow>
@@ -35,7 +35,7 @@ const FinancingFollowupEmail = ({
     <Text style={t.text}>
       Thanks for exploring financing{listingTitle ? ` for the ${listingTitle}` : ''} through
       {' '}{BRAND_NAME}. If you’d like to start or continue an application with our financing
-      partner, Equinox Funding, visit: {applyUrl}. We can’t confirm whether you’ve completed their application.
+      partner, APPROVE, visit: {applyUrl}. We can’t confirm whether you’ve completed their application.
     </Text>
 
     <Text style={t.text}>
@@ -78,6 +78,6 @@ export const template = {
     firstName: 'Jennifer',
     listingTitle: 'Food Trailer for sale in Frostproof, FL',
     bookingUrl: 'https://vendibook.com/contact#meeting',
-    applyUrl: 'https://equinox-funding.com/efapplication/',
+    applyUrl: 'https://financing.approvepayments.com/vendibook',
   },
 } satisfies TemplateEntry

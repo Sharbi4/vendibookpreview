@@ -1,74 +1,12 @@
-import { useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
-import { motion, useReducedMotion } from 'framer-motion';
-import { EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
-import { trackFinancingApplyClick, trackFinancingBannerImpression } from '@/lib/analytics';
-import vendibookWordmark from '@/assets/vendibook-wordmark-light.png';
+import { trackFinancingApplyClick } from '@/lib/analytics';
+import { EQUINOX_APPLY_URL } from '@/lib/financing/disclosure';
 
-/**
- * Financing partnership surface at the top of the homepage.
- *
- * Premium charcoal card with a hairline border and a single emerald accent
- * used only as a financing/status signal — not as a second brand color.
- * Vendibook × Equinox Funding lockup is large enough to read on both marks.
- */
-const FinancingTopBanner = () => {
-  const seen = useRef(false);
-  const reduced = useReducedMotion();
-
-  useEffect(() => {
-    if (seen.current) return;
-    seen.current = true;
-    trackFinancingBannerImpression();
-  }, []);
-
-  return (
-    <section aria-label="Equipment financing" className="w-full px-3 pt-6 sm:px-4">
-      <div className="container mx-auto max-w-6xl">
-        <motion.div
-          initial={reduced ? { opacity: 0 } : { opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-60px' }}
-          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <Link
-            to="/financing"
-            onClick={() => trackFinancingApplyClick('home_banner')}
-            className="group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-4 transition-colors duration-300 hover:border-emerald-300/25 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-6"
-          >
-            <div className="min-w-0">
-              <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-2">
-                <img
-                  src={vendibookWordmark}
-                  alt="Vendibook"
-                  width={1000}
-                  height={293}
-                  className="h-6 w-auto sm:h-7"
-                />
-                <span aria-hidden className="text-lg font-light text-white/20">
-                  ×
-                </span>
-                <EquinoxFundingLogo className="h-6 w-auto sm:h-7" />
-              </div>
-              <p className="text-[13px] font-medium leading-snug text-foreground sm:text-sm">
-                Financing for food trucks, trailers, and equipment.
-              </p>
-              <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-                Offered through third-party partners — Vendibook is not the lender.
-              </p>
-            </div>
-
-            <span className="inline-flex shrink-0 items-center gap-2 self-start rounded-xl border border-emerald-300/25 bg-emerald-400/10 px-4 py-2 text-[13px] font-semibold text-emerald-200 transition-colors duration-300 group-hover:bg-emerald-400/15 sm:self-auto">
-              Explore financing
-              <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
-            </span>
-          </Link>
-        </motion.div>
-      </div>
-    </section>
-  );
-};
-
-
-export default FinancingTopBanner;
+export default function FinancingTopBanner() {
+  return <section aria-label="APPROVE equipment financing" className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
+    <a href={EQUINOX_APPLY_URL} target="_blank" rel="noopener noreferrer" onClick={()=>trackFinancingApplyClick('home_banner')} className="block overflow-hidden rounded-2xl outline-offset-4 transition-shadow hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-500">
+      <img src="/images/partners/approve-financing-banner.png" alt="Fast, flexible financing with APPROVE. Apply online, match with lenders, and compare offers. Learn more." width={1475} height={400} loading="lazy" className="hidden h-auto w-full sm:block" />
+      <div className="bg-[#181C58] p-6 text-white sm:hidden"><img src="https://assets.approvepayments.com/images/approve_logo_primary.svg" alt="APPROVE" className="h-7 w-auto rounded bg-white p-1"/><h2 className="mt-5 text-2xl font-semibold">Fast, flexible financing available</h2><p className="mt-3 text-sm leading-6 text-white/80">Apply online. Match with lenders. Compare your options.</p><span className="mt-5 inline-block rounded-full bg-[#3072F5] px-6 py-3 font-semibold">Learn more</span></div>
+    </a>
+    <p className="mt-3 text-xs leading-5 text-muted-foreground">Subject to lender approval and terms. Vendibook is not a lender.</p>
+  </section>;
+}

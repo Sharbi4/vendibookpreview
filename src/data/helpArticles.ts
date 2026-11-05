@@ -3508,7 +3508,7 @@ If the asset significantly differs from the listing or is unsafe:
       {
         id: 'what-it-is',
         title: 'What Buyer Financing Is',
-        content: `Buyer financing is an option on eligible published **for-sale** equipment listings. Instead of paying the full amount at once, the buyer applies with the third-party financing partner Vendibook surfaces — currently Equinox Funding — and pays the partner back under the agreement they sign.
+        content: `Buyer financing is an option on eligible published **for-sale** equipment listings. Instead of paying the full amount at once, the buyer applies with the third-party financing partner Vendibook surfaces — currently APPROVE — and pays the partner back under the agreement they sign.
 
 **Important**
 - Financing is a buyer option, not a seller-paid subscription or seller opt-in.

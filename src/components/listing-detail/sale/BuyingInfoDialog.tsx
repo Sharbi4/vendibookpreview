@@ -94,7 +94,7 @@ export const BuyingInfoDialog = ({
           </Row>
           {financingEnabled && (
             <Row icon={Banknote} title="Equipment financing">
-              Financing is offered through Equinox Funding.{' '}
+              Financing is offered through APPROVE.{' '}
               <Link
                 to={listingId ? `/financing?listing_id=${listingId}` : '/financing'}
                 className="underline underline-offset-2"

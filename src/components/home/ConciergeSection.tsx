@@ -13,7 +13,7 @@ import { IdentityAddOnNote } from '@/components/verification/IdentityAddOnNote';
 
 /**
  * Single consolidated trust section for the homepage.
- * PayPal, Plaid and Equinox are each explained exactly once here — provider
+ * PayPal, Plaid and APPROVE are each explained exactly once here — provider
  * detail lives on their dedicated pages.
  */
 
@@ -42,12 +42,12 @@ const PROVIDERS = [
     logo: (
       <img
         src={equinoxLogo.url}
-        alt="Equinox Funding"
+        alt="APPROVE"
         loading="lazy"
         className="h-6 w-auto object-contain"
       />
     ),
-    name: 'Equinox Funding',
+    name: 'APPROVE',
   },
 ];
 

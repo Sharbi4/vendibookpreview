@@ -14,7 +14,7 @@ import {
 } from '@/components/financing/FinancingLeadDialog';
 
 /**
- * Open the Equinox tab synchronously inside the click so popup blockers allow
+ * Open the APPROVE tab synchronously inside the click so popup blockers allow
  * it. `noopener` in the features string makes window.open return null, which
  * left an empty tab and navigated this page away; cut the opener link by hand
  * instead so the new tab still cannot reach Vendibook.
@@ -41,7 +41,7 @@ interface Pending {
  *
  * Order of operations: track the placement click, capture the lead for
  * Vendibook (silently when signed in, via a skippable form when not), then
- * hand off to Equinox. Lead capture is best-effort and never blocks handoff.
+ * hand off to APPROVE. Lead capture is best-effort and never blocks handoff.
  */
 export function useFinancingHandoff() {
   const { user } = useAuth();
@@ -82,7 +82,7 @@ export function useFinancingHandoff() {
           body: { listingId: ctx.listingId },
         });
         if (error || !data?.applyUrl) throw new Error('apply_unavailable');
-        url = data.applyUrl;
+        url = EQUINOX_APPLY_URL; // Current approved destination wins over cached provider responses.
       } catch {
         win?.close();
         toast.error('Could not open the financing application. Please try again.');
