@@ -217,6 +217,16 @@
 .hiw-cta-fine { margin-top: 22px; color: hsl(var(--hiw-stone) / .85); font-size: 12.5px; }
 .hiw-cta-fine a { color: hsl(var(--hiw-ink)); text-decoration: underline; text-underline-offset: 2px; }
 
+/* Phone: keep the hero actions clear of the fixed assistant pill at the bottom right. */
+@media (max-width: 899px) {
+  .hiw-hero { padding-top: 22px; }
+  .hiw-hero .hiw-wrap > div:first-child { margin-bottom: 14px; }
+  .hiw-h1 { margin-top: 14px; }
+  .hiw-hero-copy { margin-top: 12px; }
+  .hiw-hero-copy.is-lead { font-size: 16px; }
+  .hiw-hero .hiw-actions { margin-top: 18px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hiw-card, .hiw-btn, .hiw-btn-ghost, .hiw-chip-btn, .hiw-side-shot img,
   .hiw-btn svg, .hiw-btn-ghost svg, .hiw-link svg { transition: none; }
