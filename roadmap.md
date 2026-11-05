@@ -65,4 +65,4 @@
 
 - [~] (PricePilot success path blocked: no non-customer Pro test account) Safe end-to-end backend checks of deployed PricePilot appraisal and PermitPath research/save (no Dennis login, no customer data); fix gaps
 
-- [~] Avenir font loads same-origin on preview/live so hero + body text never fall back (2026-11-05)
+- [x] Avenir font loads same-origin on preview/live so hero + body text never fall back (2026-11-05)
