@@ -374,7 +374,7 @@ const STATE_CONTENT_OVERRIDES: Record<string, {
           'Qualified Texas buyers can explore equipment financing on eligible listings instead of paying the full asking price up front. Financing availability, terms, and approval are determined by the financing partner — check any listing for the financing option or start with our financing overview.',
         ],
         links: [
-          { href: '/financing', label: 'Explore food truck financing' },
+          { href: 'https://financing.approvepayments.com/vendibook', label: 'Explore food truck financing' },
           { href: '/ship-your-food-truck', label: 'Freight delivery for purchases' },
           { href: '/food-truck-prices', label: 'What food trucks actually sell for' },
         ],
@@ -388,7 +388,7 @@ const STATE_CONTENT_OVERRIDES: Record<string, {
     ],
     extraRelated: [
       { href: '/blog/texas-mobile-food-vendor-law-2026', label: 'Texas 2026 mobile food vendor law explained' },
-      { href: '/financing', label: 'Financing options' },
+      { href: 'https://financing.approvepayments.com/vendibook', label: 'Financing options' },
     ],
   },
   'texas:food_trailer': {
@@ -397,7 +397,7 @@ const STATE_CONTENT_OVERRIDES: Record<string, {
     introExtra: 'Compare available concession and mobile kitchen trailers across Texas, using Houston, Dallas–Fort Worth, Austin, and San Antonio as starting points for your search. For a trailer outside your area, include the inspection trip and towing or freight cost in your budget. Confirm the loaded trailer weight and tow-vehicle requirements before arranging pickup.',
     extraRelated: [
       { href: '/food-trailers-for-sale/houston-tx', label: 'Food trailers for sale in Houston' },
-      { href: '/financing', label: 'Financing options' },
+      { href: 'https://financing.approvepayments.com/vendibook', label: 'Financing options' },
     ],
   },
   'arizona:food_truck': {
@@ -405,7 +405,7 @@ const STATE_CONTENT_OVERRIDES: Record<string, {
     description: 'Food trucks for sale in Arizona: owner-listed trucks in Phoenix, Tucson & beyond with real photos, specs, and asking prices. Message sellers directly — financing available.',
     introExtra: 'Compare available food trucks in Phoenix, Tucson, and other Arizona locations shown in the listings. Ask for a demonstration of refrigeration and workspace cooling under the conditions in which you plan to operate. Include generator capacity, shade, ventilation, and the inspection trip when comparing equipment and asking prices.',
     extraRelated: [
-      { href: '/financing', label: 'Financing options' },
+      { href: 'https://financing.approvepayments.com/vendibook', label: 'Financing options' },
     ],
   },
   'arizona:food_trailer': {
@@ -413,7 +413,7 @@ const STATE_CONTENT_OVERRIDES: Record<string, {
     description: 'Food trailers for sale in Arizona: owner-listed concession and mobile kitchen trailers in Phoenix, Tucson, and statewide. Compare prices and specs — financing available.',
     introExtra: 'Browse available Arizona trailers and compare the seller’s location with your planned pickup route. Ask how refrigeration, ventilation, and power will work at your intended site, and verify loaded weight, hitch requirements, tires, and brakes against your tow vehicle. Confirm the equipment included in the asking price before booking an inspection.',
     extraRelated: [
-      { href: '/financing', label: 'Financing options' },
+      { href: 'https://financing.approvepayments.com/vendibook', label: 'Financing options' },
     ],
   },
   'georgia:food_truck': {
@@ -423,7 +423,7 @@ const STATE_CONTENT_OVERRIDES: Record<string, {
     extraRelated: [
       { href: '/food-trailers-for-sale/georgia', label: 'Food trailers across Georgia' },
       { href: '/buy/food-trailers/atlanta-ga', label: 'Atlanta-area food trailers for sale' },
-      { href: '/financing', label: 'Financing options' },
+      { href: 'https://financing.approvepayments.com/vendibook', label: 'Financing options' },
     ],
   },
   'georgia:food_trailer': {
@@ -431,7 +431,7 @@ const STATE_CONTENT_OVERRIDES: Record<string, {
     description: 'Food trailers for sale in Georgia: owner-listed concession and mobile kitchen trailers in Atlanta and statewide. Compare prices, sizes, and specs — financing available.',
     introExtra: 'Compare available food trailers throughout Georgia, with seller locations and asking prices shown in the inventory. For a statewide search, budget for inspection, pickup, and any delivery alongside the trailer itself. If you need equipment near Atlanta, use the local page to narrow your search and confirm the actual pickup location with the seller.',
     extraRelated: [
-      { href: '/financing', label: 'Financing options' },
+      { href: 'https://financing.approvepayments.com/vendibook', label: 'Financing options' },
     ],
   },
   'michigan:food_truck': {
@@ -439,7 +439,7 @@ const STATE_CONTENT_OVERRIDES: Record<string, {
     description: 'Food trucks for sale in Michigan: owner-listed trucks in Detroit, Grand Rapids, Ann Arbor & beyond. Compare photos, specs, and prices — message sellers directly.',
     introExtra: 'Michigan\'s season runs roughly May through October, built around festivals, fairs, and lakefront events — which means used trucks often list in late fall and early spring as operators reset for the season. Buyers shopping off-season frequently find better pricing than at the spring peak.',
     extraRelated: [
-      { href: '/financing', label: 'Financing options' },
+      { href: 'https://financing.approvepayments.com/vendibook', label: 'Financing options' },
     ],
   },
   'michigan:food_trailer': {
@@ -447,7 +447,7 @@ const STATE_CONTENT_OVERRIDES: Record<string, {
     description: 'Food trailers for sale in Michigan: owner-listed concession and mobile kitchen trailers across Detroit, Grand Rapids, and statewide. Compare prices and specs — financing available.',
     introExtra: 'Trailers are a natural fit for Michigan\'s fair and festival circuit — lower upfront cost than a truck, easy to tow between summer events, and simple to store over the winter off-season. Inventory concentrates around Detroit and Grand Rapids, with statewide and nationwide options shown below when local listings are limited.',
     extraRelated: [
-      { href: '/financing', label: 'Financing options' },
+      { href: 'https://financing.approvepayments.com/vendibook', label: 'Financing options' },
     ],
   },
   'ohio:food_truck': {
@@ -455,7 +455,7 @@ const STATE_CONTENT_OVERRIDES: Record<string, {
     description: 'Food trucks for sale in Ohio: owner-listed trucks in Columbus, Cleveland, Cincinnati & beyond. Compare photos, specs, and prices — message sellers directly.',
     introExtra: 'Ohio buyers benefit from three major metros within a few hours of each other — Columbus, Cleveland, and Cincinnati — plus one of the strongest county-fair circuits in the Midwest. That density means more used inventory within driving distance and more events to book once you own the truck.',
     extraRelated: [
-      { href: '/financing', label: 'Financing options' },
+      { href: 'https://financing.approvepayments.com/vendibook', label: 'Financing options' },
     ],
   },
   'ohio:food_trailer': {
@@ -463,7 +463,7 @@ const STATE_CONTENT_OVERRIDES: Record<string, {
     description: 'Food trailers for sale in Ohio: owner-listed concession and mobile kitchen trailers in Columbus, Cleveland, Cincinnati, and statewide. Compare prices and specs — financing available.',
     introExtra: 'Ohio\'s county-fair and festival circuit makes concession trailers a workhorse asset — lower cost than a self-propelled truck and easy to move between Columbus, Cleveland, and Cincinnati events. When Ohio inventory is limited, this page also surfaces nationwide trailers so you can compare more options.',
     extraRelated: [
-      { href: '/financing', label: 'Financing options' },
+      { href: 'https://financing.approvepayments.com/vendibook', label: 'Financing options' },
     ],
   },
   'florida:food_truck': {
@@ -471,7 +471,7 @@ const STATE_CONTENT_OVERRIDES: Record<string, {
     description: 'Food trucks for sale in Florida: owner-listed trucks in Miami, Tampa, Orlando & beyond with real photos, specs, and asking prices. Message sellers directly — financing available.',
     introExtra: 'Compare available food trucks across Florida, including Miami, Tampa, Orlando, and Jacksonville when listings are available. Ask sellers about refrigeration performance, ventilation, roof and window seals, and any corrosion or storm damage. Review maintenance records and include pickup or freight in the total purchase budget.',
     extraRelated: [
-      { href: '/financing', label: 'Financing options' },
+      { href: 'https://financing.approvepayments.com/vendibook', label: 'Financing options' },
     ],
   },
   'florida:food_trailer': {
@@ -479,7 +479,7 @@ const STATE_CONTENT_OVERRIDES: Record<string, {
     description: 'Food trailers for sale in Florida: owner-listed concession and mobile kitchen trailers in Miami, Tampa, Orlando, and statewide. Compare prices and specs — financing available.',
     introExtra: 'Compare available Florida concession trailers by equipment, asking price, and seller location. Inspect the roof, seals, frame, and electrical connections, and ask about storage and storm-damage history. Check loaded weight and towing requirements before choosing between pickup and freight delivery.',
     extraRelated: [
-      { href: '/financing', label: 'Financing options' },
+      { href: 'https://financing.approvepayments.com/vendibook', label: 'Financing options' },
     ],
   },
 };
@@ -664,7 +664,7 @@ CITY_CATEGORY_CONFIGS.push(
         ],
         links: [
           { href: `/food-trucks-for-sale/${slugify(s.stateName)}`, label: `Food trucks for sale in ${s.stateName}` },
-          { href: '/financing', label: 'Explore financing options' },
+          { href: 'https://financing.approvepayments.com/vendibook', label: 'Explore financing options' },
         ],
       },
     ],
@@ -769,7 +769,7 @@ CITY_CATEGORY_CONFIGS.push(
           ],
           links: [
             { href: '/food-trailers-for-sale', label: 'Food trailers for sale' },
-            { href: '/financing', label: 'Equipment financing options' },
+            { href: 'https://financing.approvepayments.com/vendibook', label: 'Equipment financing options' },
           ],
         },
       ],

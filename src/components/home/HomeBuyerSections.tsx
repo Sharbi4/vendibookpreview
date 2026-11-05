@@ -64,7 +64,7 @@ export function HomePartnerStrip({ guaranteeHref, financingLive }: { guaranteeHr
     { key: 'paypal', href: '/payments', role: 'Checkout', mark: <PayPalWordmark surface="dark" className="hb-logo hb-logo-paypal" /> },
     { key: 'square', href: '/payments', role: 'Card payments', mark: <SquareWordmark /> },
     ...(financingLive
-      ? [{ key: 'equinox', href: '/financing', role: 'Financing', mark: <ApproveFinancingLogo className="hb-logo hb-logo-equinox" /> }]
+      ? [{ key: 'equinox', href: 'https://financing.approvepayments.com/vendibook', role: 'Financing', mark: <ApproveFinancingLogo className="hb-logo hb-logo-equinox" /> }]
       : []),
     { key: 'plaid', href: '/identity-verification', role: 'ID verification', mark: <PlaidLogo surface="light" className="hb-logo hb-logo-plaid" /> },
     {
@@ -175,7 +175,7 @@ const FEATURED_CARDS = [
   { key: 'sale', img: cardSaleImg, title: 'For sale', sub: 'Food trucks and trailers from owners across the country', cta: 'Shop for sale', href: SALE_SEARCH_HREF },
   { key: 'rent', img: cardRentImg, title: 'For rent', sub: 'Trucks and trailers by the day, week or month', cta: 'Browse rentals', href: RENT_SEARCH_HREF },
   { key: 'kitchens', img: cardKitchenImg, title: 'Commissary kitchens', sub: 'Licensed prep space near where you vend', cta: 'Find a kitchen', href: '/shared-kitchens-for-rent' },
-  { key: 'financing', img: cardFinancingImg, title: 'Financing', sub: 'Apply with APPROVE before you make an offer', cta: 'See financing', href: '/financing' },
+  { key: 'financing', img: cardFinancingImg, title: 'Financing', sub: 'Apply with APPROVE before you make an offer', cta: 'See financing', href: 'https://financing.approvepayments.com/vendibook' },
 ] as const;
 
 /* ── Touch: phones have no hover, so the card in view lights up instead ── */

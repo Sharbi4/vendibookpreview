@@ -137,7 +137,7 @@ const PricingCalculator = () => {
                         </p>
                       </div>
                       <Button variant="outline" size="sm" asChild className="shrink-0 gap-1">
-                        <Link to="/financing">
+                        <Link to="https://financing.approvepayments.com/vendibook">
                           Learn more
                           <ArrowRight className="h-3 w-3" />
                         </Link>

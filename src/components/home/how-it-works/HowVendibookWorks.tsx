@@ -38,7 +38,7 @@ const MOCK_LISTINGS = [
 
 const TOOL_LINKS: { icon: LucideIcon; label: string; to: string }[] = [
   { icon: BadgeDollarSign, label: 'Price your equipment', to: '/tools/pricepilot' },
-  { icon: BadgeDollarSign, label: 'Explore financing', to: '/financing' },
+  { icon: BadgeDollarSign, label: 'Explore financing', to: 'https://financing.approvepayments.com/vendibook' },
   { icon: Truck, label: 'Shipping across the U.S.', to: '/vendibook-freight' },
   { icon: Tag, label: 'Selling? Start here', to: '/how-it-works-seller' },
 ];

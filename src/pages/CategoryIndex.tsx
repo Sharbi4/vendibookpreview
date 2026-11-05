@@ -603,7 +603,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
                 </Link>
               </Button>
               <Button asChild variant="cta-outline" size="cta" className="w-full sm:w-auto">
-                <Link to={market ? "/financing" : sellerCta.ctaHref} data-cta-id={market ? "hero_financing" : "hero_sell"}>{market ? "Explore financing" : sellerCta.ctaLabel}</Link>
+                <Link to={market ? "https://financing.approvepayments.com/vendibook" : sellerCta.ctaHref} data-cta-id={market ? "hero_financing" : "hero_sell"}>{market ? "Explore financing" : sellerCta.ctaLabel}</Link>
               </Button>
             </div>
             {config.answerBlock && (

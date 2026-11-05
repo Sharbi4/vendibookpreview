@@ -43,7 +43,7 @@ export function FinancingAvailableBadge({
 
   return (
     <Link
-      to={listingId ? `/financing?listing_id=${listingId}` : '/financing'}
+      to={'https://financing.approvepayments.com/vendibook'}
       onClick={(e) => e.stopPropagation()}
       aria-label="Financing options available — learn more"
       className="inline-flex"

@@ -650,7 +650,7 @@ export function createAtlasTools(deps: AtlasToolDeps) {
       const routes: Record<string, string> = {
         home: '/',
         search: '/search',
-        financing: '/financing',
+        financing: 'https://financing.approvepayments.com/vendibook',
         how_it_works: '/how-it-works',
         freight: '/vendibook-freight',
         payments: '/payments',

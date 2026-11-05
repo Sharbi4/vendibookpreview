@@ -254,7 +254,7 @@ export const ExpandSearchModule = ({
         <li className="flex items-start gap-2.5 text-sm text-muted-foreground">
           <Wallet className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
           <span>
-            <Link to="/financing" className="underline underline-offset-4 decoration-border hover:text-primary">
+            <Link to="https://financing.approvepayments.com/vendibook" className="underline underline-offset-4 decoration-border hover:text-primary">
               Financing
             </Link>{' '}
             can include freight

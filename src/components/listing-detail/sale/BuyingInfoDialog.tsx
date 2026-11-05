@@ -96,7 +96,7 @@ export const BuyingInfoDialog = ({
             <Row icon={Banknote} title="Equipment financing">
               Financing is offered through APPROVE.{' '}
               <Link
-                to={listingId ? `/financing?listing_id=${listingId}` : '/financing'}
+                to={'https://financing.approvepayments.com/vendibook'}
                 className="underline underline-offset-2"
               >
                 Learn about financing

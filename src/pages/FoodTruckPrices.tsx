@@ -329,7 +329,7 @@ const FoodTruckPrices = () => {
             <Link to="/how-to-buy-a-food-truck" className="text-cta-primary hover:underline">How to buy a food truck</Link>
             <Link to="/food-trucks-for-sale" className="text-cta-primary hover:underline">Food trucks for sale</Link>
             <Link to="/used-food-trucks-for-sale" className="text-cta-primary hover:underline">Used food trucks</Link>
-            <Link to="/financing" className="text-cta-primary hover:underline">Financing</Link>
+            <Link to="https://financing.approvepayments.com/vendibook" className="text-cta-primary hover:underline">Financing</Link>
           </div>
         </div>
       </section>
@@ -607,7 +607,7 @@ const FoodTruckPrices = () => {
               </div>
               <Button
                 asChild variant="cta" className="shrink-0"
-                onClick={() => trackEvent({ category: 'SEO', action: 'price_report_financing_click', label: '/financing' })}
+                onClick={() => trackEvent({ category: 'SEO', action: 'price_report_financing_click', label: 'https://financing.approvepayments.com/vendibook' })}
               >
                 <Link to="/financing#calculator">Estimate your monthly payment <ArrowRight className="h-4 w-4" /></Link>
               </Button>
@@ -694,7 +694,7 @@ const FoodTruckPrices = () => {
                 { href: '/food-trucks-for-sale', label: 'Food trucks for sale', icon: Truck },
                 { href: '/food-trailers-for-sale', label: 'Food trailers for sale', icon: Container },
                 { href: '/food-trucks-for-rent', label: 'Rent a food truck instead', icon: RefreshCw },
-                { href: '/financing', label: 'Food truck financing', icon: Banknote },
+                { href: 'https://financing.approvepayments.com/vendibook', label: 'Food truck financing', icon: Banknote },
                 { href: '/tools/food-truck-startup-costs-2026', label: `${YEAR} startup cost guide`, icon: TrendingUp },
                 { href: '/sell-my-food-truck', label: 'Sell my food truck', icon: Tag },
                 { href: '/coffee-trucks-trailers-for-sale', label: 'Coffee trucks & trailers', icon: MapPin },
@@ -749,7 +749,7 @@ function renderFaqAnswer(question: string, answer: string): React.ReactNode {
       <>
         Yes — many Vendibook buyers finance equipment through third-party lenders. Terms depend on the
         lender, your credit, and the equipment; Vendibook does not guarantee rates or approval.{' '}
-        <Link to="/financing" className="font-semibold text-cta-primary hover:underline">
+        <Link to="https://financing.approvepayments.com/vendibook" className="font-semibold text-cta-primary hover:underline">
           Explore food truck financing
         </Link>.
       </>

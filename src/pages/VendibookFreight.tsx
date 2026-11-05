@@ -566,7 +566,7 @@ const VendibookFreight = () => {
                 </p>
               </div>
               <Button variant="cta-outline" size="lg" className="rounded-full shrink-0" asChild>
-                <Link to="/financing">
+                <Link to="https://financing.approvepayments.com/vendibook">
                   Explore financing <ArrowRight className="w-4 h-4 ml-1" />
                 </Link>
               </Button>

@@ -97,7 +97,7 @@ const HEADER_MENU_LINKS = [
   { to: '/search?mode=sale', label: 'For sale' },
   { to: '/search?mode=rent', label: 'For rent' },
   { to: '/how-it-works', label: 'How it works' },
-  { to: '/financing', label: 'Financing' },
+  { to: 'https://financing.approvepayments.com/vendibook', label: 'Financing' },
   { to: '/list', label: 'Sell your equipment', wide: true },
 ] as const;
 

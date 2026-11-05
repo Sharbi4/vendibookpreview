@@ -88,7 +88,7 @@ const Press = () => {
             { icon: Truck, label: 'Food trucks for sale', href: '/food-trucks-for-sale', desc: 'New and used food trucks listed by verified sellers nationwide.' },
             { icon: Container, label: 'Food trailers for sale', href: '/food-trailers-for-sale', desc: 'Concession trailers, specialty builds, and towable kitchens.' },
             { icon: RefreshCw, label: 'Food truck & trailer rentals', href: '/food-trucks-for-rent', desc: 'Daily and weekly rentals for events, pop-ups, and market testing.' },
-            { icon: Banknote, label: 'Equipment financing', href: '/financing', desc: 'Third-party financing pathways for qualified buyers.' },
+            { icon: Banknote, label: 'Equipment financing', href: 'https://financing.approvepayments.com/vendibook', desc: 'Third-party financing pathways for qualified buyers.' },
             { icon: Calculator, label: 'PricePilot valuation tool', href: '/tools/pricepilot', desc: 'Data-driven price estimates from real marketplace comparables.' },
             { icon: Building2, label: 'Commissary & kitchen space', href: '/shared-kitchens', desc: 'Licensed commercial kitchen space listed by hosts.' },
           ].map(({ icon: Icon, label, href, desc }) => (

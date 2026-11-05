@@ -45,8 +45,8 @@ export function BuyerCitySupport({ city, path, category }: { city: string; path:
       {financing && <article className="flex flex-col items-start rounded-3xl border border-border bg-white p-6 shadow-sm sm:p-8">
         <BrandIcon icon={CreditCard} size={52} /><p className="mt-6 text-xs font-semibold uppercase tracking-widest text-primary">APPROVE</p><h3 className="mt-2 text-xl font-semibold">A purchase plan that fits.</h3>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">Apply online for equipment financing. Personal and business credit are considered alongside your business details.</p>
-        <Button className="mt-6 w-full" variant="cta" onClick={() => { track('city_financing_apply', '/financing'); startFinancingApply('buyer_city'); }}>Apply for financing <ArrowUpRight className="ml-2 h-4 w-4" /></Button>
-        <Link to="/financing" className="mt-3 text-sm font-medium underline underline-offset-4">How financing works</Link>
+        <Button className="mt-6 w-full" variant="cta" onClick={() => { track('city_financing_apply', 'https://financing.approvepayments.com/vendibook'); startFinancingApply('buyer_city'); }}>Apply for financing <ArrowUpRight className="ml-2 h-4 w-4" /></Button>
+        <Link to="https://financing.approvepayments.com/vendibook" className="mt-3 text-sm font-medium underline underline-offset-4">How financing works</Link>
         <p className="mt-5 text-xs leading-5 text-muted-foreground">Approval is not guaranteed. Rates, eligibility and terms are determined by APPROVE and/or its funding providers. Vendibook is not a lender.</p>
       </article>}
       <article className="flex flex-col items-start rounded-3xl border border-[#33414e] bg-[#202c36] p-6 text-white sm:p-8">

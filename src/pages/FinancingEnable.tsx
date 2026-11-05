@@ -82,7 +82,7 @@ export default function FinancingEnable() {
                 </Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link to="/financing">Learn how financing works</Link>
+                <Link to="https://financing.approvepayments.com/vendibook">Learn how financing works</Link>
               </Button>
             </div>
           </section>

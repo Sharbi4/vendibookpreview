@@ -36,7 +36,7 @@ const PROVIDERS = [
   },
   {
     id: 'equinox',
-    to: '/financing',
+    to: 'https://financing.approvepayments.com/vendibook',
     title: 'Equipment financing.',
     body: 'Explore financing for eligible food trucks, trailers, and related equipment. Separate application, underwriting, and provider terms apply. Vendibook is not a lender.',
     logo: (

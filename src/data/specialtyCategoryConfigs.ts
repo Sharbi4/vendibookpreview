@@ -75,7 +75,7 @@ const coffee: CategoryIndexConfig = {
       paragraphs: [
         'Coffee trucks and trailers are business assets, and many buyers spread the cost with equipment financing. Vendibook\'s financing page connects you with financing options for qualified buyers — applications, approval, rates, and terms are handled by the financing provider, not by Vendibook.',
       ],
-      links: [{ href: '/financing', label: 'Explore financing options' }],
+      links: [{ href: 'https://financing.approvepayments.com/vendibook', label: 'Explore financing options' }],
     },
   ],
   faqs: [
@@ -110,7 +110,7 @@ const coffee: CategoryIndexConfig = {
     { href: '/food-trucks-for-sale', label: 'All food trucks for sale' },
     { href: '/food-trailers-for-sale', label: 'All food trailers for sale' },
     ...siblingLinks('coffee'),
-    { href: '/financing', label: 'Equipment financing' },
+    { href: 'https://financing.approvepayments.com/vendibook', label: 'Equipment financing' },
     { href: '/sell-my-food-truck', label: 'Sell my food truck or trailer' },
   ],
   sellerCta: {
@@ -167,7 +167,7 @@ const iceCream: CategoryIndexConfig = {
       paragraphs: [
         'Ice cream trucks and trailers are business assets, and many buyers spread the cost with equipment financing. Vendibook\'s financing page connects qualified buyers with financing options — applications, approval, rates, and terms are handled by the financing provider, not by Vendibook.',
       ],
-      links: [{ href: '/financing', label: 'Explore financing options' }],
+      links: [{ href: 'https://financing.approvepayments.com/vendibook', label: 'Explore financing options' }],
     },
   ],
   faqs: [
@@ -200,7 +200,7 @@ const iceCream: CategoryIndexConfig = {
     { href: '/food-trucks-for-sale', label: 'All food trucks for sale' },
     { href: '/food-trailers-for-sale', label: 'All food trailers for sale' },
     ...siblingLinks('ice_cream'),
-    { href: '/financing', label: 'Equipment financing' },
+    { href: 'https://financing.approvepayments.com/vendibook', label: 'Equipment financing' },
     { href: '/sell-my-food-truck', label: 'Sell my food truck or trailer' },
   ],
   sellerCta: {
@@ -259,7 +259,7 @@ const pizza: CategoryIndexConfig = {
       paragraphs: [
         'Pizza trucks and trailers are business assets, and many buyers spread the cost with equipment financing. Vendibook\'s financing page connects qualified buyers with financing options — applications, approval, rates, and terms are handled by the financing provider, not by Vendibook.',
       ],
-      links: [{ href: '/financing', label: 'Explore financing options' }],
+      links: [{ href: 'https://financing.approvepayments.com/vendibook', label: 'Explore financing options' }],
     },
   ],
   faqs: [
@@ -293,7 +293,7 @@ const pizza: CategoryIndexConfig = {
     { href: '/food-trailers-for-sale', label: 'All food trailers for sale' },
     ...siblingLinks('pizza'),
     { href: `/search?q=${encodeURIComponent('pizza')}&category=food_trailer&mode=rent`, label: 'Pizza trailers for rent' },
-    { href: '/financing', label: 'Equipment financing' },
+    { href: 'https://financing.approvepayments.com/vendibook', label: 'Equipment financing' },
     { href: '/sell-my-food-truck', label: 'Sell my food truck or trailer' },
   ],
   sellerCta: {
@@ -346,7 +346,7 @@ const bbq: CategoryIndexConfig = {
       paragraphs: [
         'BBQ trailers and trucks are business assets, and many buyers spread the cost with equipment financing. Vendibook\'s financing page connects qualified buyers with financing options — applications, approval, rates, and terms are handled by the financing provider, not by Vendibook.',
       ],
-      links: [{ href: '/financing', label: 'Explore financing options' }],
+      links: [{ href: 'https://financing.approvepayments.com/vendibook', label: 'Explore financing options' }],
     },
   ],
   faqs: [
@@ -379,7 +379,7 @@ const bbq: CategoryIndexConfig = {
     { href: '/food-trailers-for-sale', label: 'All food trailers for sale' },
     { href: '/food-trucks-for-sale', label: 'All food trucks for sale' },
     ...siblingLinks('bbq'),
-    { href: '/financing', label: 'Equipment financing' },
+    { href: 'https://financing.approvepayments.com/vendibook', label: 'Equipment financing' },
     { href: '/sell-my-food-truck', label: 'Sell my food truck or trailer' },
   ],
   sellerCta: {
@@ -431,7 +431,7 @@ const snowCone: CategoryIndexConfig = {
       paragraphs: [
         'Snow cone and shaved ice trailers are business assets, and many buyers spread the cost with equipment financing. Vendibook\'s financing page connects qualified buyers with financing options — applications, approval, rates, and terms are handled by the financing provider, not by Vendibook.',
       ],
-      links: [{ href: '/financing', label: 'Explore financing options' }],
+      links: [{ href: 'https://financing.approvepayments.com/vendibook', label: 'Explore financing options' }],
     },
   ],
   faqs: [
@@ -460,7 +460,7 @@ const snowCone: CategoryIndexConfig = {
     { href: '/food-trailers-for-sale', label: 'All food trailers for sale' },
     { href: '/food-trucks-for-sale', label: 'All food trucks for sale' },
     ...siblingLinks('snow_cone'),
-    { href: '/financing', label: 'Equipment financing' },
+    { href: 'https://financing.approvepayments.com/vendibook', label: 'Equipment financing' },
     { href: '/sell-my-food-truck', label: 'Sell my food truck or trailer' },
   ],
   sellerCta: {
@@ -513,7 +513,7 @@ const beverage: CategoryIndexConfig = {
       paragraphs: [
         'Beverage and mobile bar trailers are business assets, and many buyers spread the cost with equipment financing. Vendibook\'s financing page connects qualified buyers with financing options — applications, approval, rates, and terms are handled by the financing provider, not by Vendibook.',
       ],
-      links: [{ href: '/financing', label: 'Explore financing options' }],
+      links: [{ href: 'https://financing.approvepayments.com/vendibook', label: 'Explore financing options' }],
     },
   ],
   faqs: [
@@ -542,7 +542,7 @@ const beverage: CategoryIndexConfig = {
     { href: '/food-trailers-for-sale', label: 'All food trailers for sale' },
     { href: '/food-trucks-for-sale', label: 'All food trucks for sale' },
     ...siblingLinks('beverage'),
-    { href: '/financing', label: 'Equipment financing' },
+    { href: 'https://financing.approvepayments.com/vendibook', label: 'Equipment financing' },
     { href: '/sell-my-food-truck', label: 'Sell my food truck or trailer' },
   ],
   sellerCta: {
@@ -594,7 +594,7 @@ const mobileKitchen: CategoryIndexConfig = {
       paragraphs: [
         'Mobile kitchen trailers are business assets, and many buyers spread the cost with equipment financing. Vendibook\'s financing page connects qualified buyers with financing options — applications, approval, rates, and terms are handled by the financing provider, not by Vendibook.',
       ],
-      links: [{ href: '/financing', label: 'Explore financing options' }],
+      links: [{ href: 'https://financing.approvepayments.com/vendibook', label: 'Explore financing options' }],
     },
   ],
   faqs: [
@@ -628,7 +628,7 @@ const mobileKitchen: CategoryIndexConfig = {
     { href: '/food-trucks-for-sale', label: 'All food trucks for sale' },
     ...siblingLinks('mobile_kitchen'),
     { href: '/search?category=ghost_kitchen&mode=rent', label: 'Shared kitchens for rent' },
-    { href: '/financing', label: 'Equipment financing' },
+    { href: 'https://financing.approvepayments.com/vendibook', label: 'Equipment financing' },
     { href: '/sell-my-food-truck', label: 'Sell my food truck or trailer' },
   ],
   sellerCta: {
@@ -685,7 +685,7 @@ const coffeeTruck: CategoryIndexConfig = {
       paragraphs: [
         'Coffee trucks are business assets, and many buyers spread the cost with equipment financing. Vendibook\'s financing page connects qualified buyers with financing options — applications, approval, rates, and terms are handled by the financing provider, not by Vendibook.',
       ],
-      links: [{ href: '/financing', label: 'Explore financing options' }],
+      links: [{ href: 'https://financing.approvepayments.com/vendibook', label: 'Explore financing options' }],
     },
   ],
   faqs: [
@@ -719,7 +719,7 @@ const coffeeTruck: CategoryIndexConfig = {
     { href: SPECIALTY_DEFS.coffee.trailerPath!, label: 'Coffee trailers for sale' },
     { href: '/food-trucks-for-sale', label: 'All food trucks for sale' },
     ...siblingLinks('coffee').slice(0, 3),
-    { href: '/financing', label: 'Equipment financing' },
+    { href: 'https://financing.approvepayments.com/vendibook', label: 'Equipment financing' },
     { href: '/sell-my-food-truck', label: 'Sell my coffee truck' },
   ],
   sellerCta: {
@@ -770,7 +770,7 @@ const coffeeTrailer: CategoryIndexConfig = {
       paragraphs: [
         'Coffee trailers are business assets, and many buyers spread the cost with equipment financing. Vendibook\'s financing page connects qualified buyers with financing options — applications, approval, rates, and terms are handled by the financing provider, not by Vendibook.',
       ],
-      links: [{ href: '/financing', label: 'Explore financing options' }],
+      links: [{ href: 'https://financing.approvepayments.com/vendibook', label: 'Explore financing options' }],
     },
   ],
   faqs: [
@@ -804,7 +804,7 @@ const coffeeTrailer: CategoryIndexConfig = {
     { href: SPECIALTY_DEFS.coffee.truckPath!, label: 'Coffee trucks for sale' },
     { href: '/food-trailers-for-sale', label: 'All food trailers for sale' },
     ...siblingLinks('coffee').slice(0, 3),
-    { href: '/financing', label: 'Equipment financing' },
+    { href: 'https://financing.approvepayments.com/vendibook', label: 'Equipment financing' },
     { href: '/sell-my-food-truck', label: 'Sell my coffee trailer' },
   ],
   sellerCta: {
@@ -855,7 +855,7 @@ const iceCreamTruck: CategoryIndexConfig = {
       paragraphs: [
         'Ice cream trucks are business assets, and many buyers spread the cost with equipment financing. Vendibook\'s financing page connects qualified buyers with financing options — applications, approval, rates, and terms are handled by the financing provider, not by Vendibook.',
       ],
-      links: [{ href: '/financing', label: 'Explore financing options' }],
+      links: [{ href: 'https://financing.approvepayments.com/vendibook', label: 'Explore financing options' }],
     },
   ],
   faqs: [
@@ -889,7 +889,7 @@ const iceCreamTruck: CategoryIndexConfig = {
     { href: SPECIALTY_DEFS.ice_cream.trailerPath!, label: 'Ice cream trailers for sale' },
     { href: '/food-trucks-for-sale', label: 'All food trucks for sale' },
     ...siblingLinks('ice_cream').slice(0, 3),
-    { href: '/financing', label: 'Equipment financing' },
+    { href: 'https://financing.approvepayments.com/vendibook', label: 'Equipment financing' },
     { href: '/sell-my-food-truck', label: 'Sell my ice cream truck' },
   ],
   sellerCta: {
@@ -940,7 +940,7 @@ const iceCreamTrailer: CategoryIndexConfig = {
       paragraphs: [
         'Ice cream trailers are business assets, and many buyers spread the cost with equipment financing. Vendibook\'s financing page connects qualified buyers with financing options — applications, approval, rates, and terms are handled by the financing provider, not by Vendibook.',
       ],
-      links: [{ href: '/financing', label: 'Explore financing options' }],
+      links: [{ href: 'https://financing.approvepayments.com/vendibook', label: 'Explore financing options' }],
     },
   ],
   faqs: [
@@ -974,7 +974,7 @@ const iceCreamTrailer: CategoryIndexConfig = {
     { href: SPECIALTY_DEFS.ice_cream.truckPath!, label: 'Ice cream trucks for sale' },
     { href: '/food-trailers-for-sale', label: 'All food trailers for sale' },
     ...siblingLinks('ice_cream').slice(0, 3),
-    { href: '/financing', label: 'Equipment financing' },
+    { href: 'https://financing.approvepayments.com/vendibook', label: 'Equipment financing' },
     { href: '/sell-my-food-truck', label: 'Sell my ice cream trailer' },
   ],
   sellerCta: {

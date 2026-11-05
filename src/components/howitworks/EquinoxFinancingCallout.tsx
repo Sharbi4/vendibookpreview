@@ -48,7 +48,7 @@ const EquinoxFinancingCallout = ({
                     directly, and can download a pro forma purchase sheet — which widens your buyer
                     pool beyond cash-in-hand shoppers. An 8.7% platform fee applies to an
                     APPROVE-financed Vendibook sale.{' '}
-                    <Link to="/financing" className="font-medium text-foreground underline underline-offset-4 hover:text-primary">
+                    <Link to="https://financing.approvepayments.com/vendibook" className="font-medium text-foreground underline underline-offset-4 hover:text-primary">
                       Learn about financing
                     </Link>
                     .
@@ -59,7 +59,7 @@ const EquinoxFinancingCallout = ({
                     pro forma purchase sheet to move faster on the truck or trailer you want.
                     Financing is offered by APPROVE, not Vendibook, and is subject to credit
                     approval.{' '}
-                    <Link to="/financing" className="font-medium text-foreground underline underline-offset-4 hover:text-primary">
+                    <Link to="https://financing.approvepayments.com/vendibook" className="font-medium text-foreground underline underline-offset-4 hover:text-primary">
                       Learn about financing
                     </Link>
                     .
@@ -71,7 +71,7 @@ const EquinoxFinancingCallout = ({
                 Funding LLC and/or its funding providers.
               </p>
               <Link
-                to="/financing"
+                to="https://financing.approvepayments.com/vendibook"
                 className="inline-flex items-center gap-2 rounded-full border border-border bg-background/70 px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:border-foreground/40"
               >
                 Explore financing options <ArrowRight className="h-4 w-4" />

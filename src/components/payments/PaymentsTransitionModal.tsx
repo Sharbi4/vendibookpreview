@@ -178,7 +178,7 @@ export function PaymentsTransitionModal() {
                     </Link>
                   </Button>
                   <Button size="sm" variant="ghost" asChild className="rounded-md">
-                    <Link to="/financing" onClick={() => void close()}>
+                    <Link to="https://financing.approvepayments.com/vendibook" onClick={() => void close()}>
                       Learn more
                     </Link>
                   </Button>
