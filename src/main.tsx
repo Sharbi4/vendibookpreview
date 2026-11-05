@@ -44,3 +44,13 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <App />
   </React.StrictMode>,
 );
+
+// Font diagnostic: reports whether the Avenir site font actually loaded in this browser.
+if (typeof document !== 'undefined' && 'fonts' in document) {
+  window.setTimeout(() => {
+    void document.fonts.ready.then(() => {
+      const faces = [...document.fonts].filter((f) => f.family.includes('Avenir'));
+      console.info('[font-check]', faces.map((f) => `${f.weight}/${f.style}:${f.status}`).join(', '), 'regular-available:', document.fonts.check("16px 'Avenir Next LT Pro'"));
+    });
+  }, 4000);
+}
