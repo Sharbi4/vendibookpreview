@@ -1,5 +1,4 @@
-import { PostPurchasePreview } from '@/components/home/PostPurchasePreview';
-import { BrandIcon } from '@/components/brand/BrandIcon';
+import { PostPurchasePeek } from '@/components/home/PostPurchasePeek';
 import FlipInsuranceSection from '@/components/booking/FlipInsuranceSection';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -29,9 +28,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
-import { Button } from '@/components/ui/button';
 import { GuideBreadcrumb } from '@/components/education/GuideBreadcrumb';
-import { FreightLink } from '@/components/shared/FreightLink';
 import imgBuying from '@/assets/how-buying-hero.jpg';
 import imgSelling from '@/assets/how-selling-hero.jpg';
 import imgCoffee from '@/assets/food-truck-coffee.jpg';
@@ -40,6 +37,7 @@ import loanArt from '@/assets/education/loan.svg';
 import documentsOkArt from '@/assets/education/documents-ok.svg';
 import deliveryMapArt from '@/assets/education/delivery-map.svg';
 import signArt from '@/assets/education/sign.svg';
+import './how-it-works.css';
 
 /**
  * /how-it-works — flagship brand page, not an explainer.
@@ -53,6 +51,9 @@ import signArt from '@/assets/education/sign.svg';
  * claims (verification is "where completed"), no fabricated social-proof
  * metrics, financing stays third-party and never guaranteed, freight stays a
  * separately coordinated option.
+ *
+ * Presentation: warm white glass panels, rounded corners, no numbered steps —
+ * the same treatment as the homepage Guarantee / BuyerMatch / Atlas bands.
  */
 
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -135,7 +136,6 @@ const HeroCollage = () => {
 /* ------------------------------------------------------------------ */
 
 interface FlowStep {
-  step: string;
   title: string;
   body: React.ReactNode;
   art: string;
@@ -143,22 +143,22 @@ interface FlowStep {
 }
 
 const FLOW: FlowStep[] = [
-  { step: '01', title: 'Find equipment that fits your next move',
+  { title: 'Find equipment that fits your next move',
     body: <>Compare photos, specifications, location, and pricing. Explore financing with third-party partners and use PricePilot to put the asking price in context.</>,
     art: searchPageArt, artAlt: 'Compare food trucks and trailers on Vendibook' },
-  { step: '02', title: 'See it. Ask questions. Get clear.',
+  { title: 'See it. Ask questions. Get clear.',
     body: <>Message the seller and schedule a video walkthrough from an eligible listing. See the layout, ask about the equipment, and discuss pickup or delivery before making your decision.</>,
     art: loanArt, artAlt: 'Evaluate equipment and plan your purchase' },
-  { step: '03', title: 'Agree on the deal. The seller approves.',
+  { title: 'Agree on the deal. The seller approves.',
     body: <>Make an offer or submit your purchase details. Keep the price, fulfillment choice, and agreement together. The seller reviews and accepts before you complete online payment.</>,
     art: documentsOkArt, artAlt: 'Seller reviews the purchase and agreement' },
-  { step: '04', title: 'Your final review. Then Pay now.',
+  { title: 'Your final review. Then Pay now.',
     body: <>After seller approval, review the final total and terms, choose your PayPal payment method, and submit payment online. Your transaction updates when payment is verified.</>,
     art: documentsOkArt, artAlt: 'Buyer reviews the final total before paying' },
-  { step: '05', title: 'A plan for every mile',
+  { title: 'A plan for every mile',
     body: <>Choose buyer pickup, seller delivery, or coordinated Vendibook Freight where available. Keep the agreed timing and handoff details on your transaction. Delivery tracking appears when the assigned seller or driver starts Delivery Mode.</>,
     art: deliveryMapArt, artAlt: 'Fulfillment and active delivery tracking' },
-  { step: '06', title: 'Walk through. Sign. Make it yours.',
+  { title: 'Walk through. Sign. Make it yours.',
     body: <>At pickup or drop-off, review the equipment together, document its condition with a video walkthrough and photos, and complete the required online signatures and handoff confirmations. Keep the receipt, agreements, and evidence in your transaction record.</>,
     art: signArt, artAlt: 'Condition walkthrough, signatures, and confirmed handoff' },
 ];
@@ -182,42 +182,40 @@ function FulfillmentJourney() {
   const reduce = useReducedMotion();
   const [selected, setSelected] = useState('delivery');
   const option = FULFILLMENT.find(item => item.id === selected)!;
-  return <section id="after-payment" className="py-16 md:py-24 bg-[#eee9e2] border-y border-[#ded5ca]">
-    <div className="container max-w-6xl mx-auto px-4">
-      <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-10 lg:gap-16 items-start">
+  return <section id="after-payment" className="hiw-section">
+    <div className="hiw-wrap">
+      <div className="hiw-fulfil-grid">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary mb-3">After payment, the details stay together</p>
-          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight leading-tight">The deal isn't done<br />until the handoff is.</h2>
-          <p className="mt-5 text-muted-foreground leading-relaxed">Know what happens next, who is responsible, and where the record lives. Choose a fulfillment path to see the steps.</p>
-          <div role="group" aria-label="Fulfillment options" className="mt-7 flex flex-wrap gap-2">
+          <p className="hiw-eyebrow">After payment, the details stay together</p>
+          <h2 className="hiw-title">The deal isn&rsquo;t done until the handoff is.</h2>
+          <p className="hiw-lede">Know what happens next, who is responsible, and where the record lives. Choose a fulfillment path to see the steps.</p>
+          <div role="group" aria-label="Fulfillment options" className="hiw-chips">
             {FULFILLMENT.map(item => <button key={item.id} id={`fulfillment-${item.id}`} type="button"
               aria-pressed={selected === item.id} aria-controls="fulfillment-details"
               onClick={() => setSelected(item.id)}
-              className={`inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-medium border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${selected === item.id ? 'bg-[#25211e] text-white border-[#25211e]' : 'bg-[#fffdf9] border-[#d8cfc4] hover:border-primary'}`}>
-              <item.icon className="h-4 w-4" />{item.label}</button>)}
+              className="hiw-chip-btn">
+              <item.icon aria-hidden="true" />{item.label}</button>)}
           </div>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Button variant="cta" asChild><Link to="/browse">Browse now <ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
-            <Button variant="cta-outline" asChild><Link to="/list">List now</Link></Button>
+          <div className="hiw-actions">
+            <Link to="/browse" className="hiw-btn">Browse now <ArrowRight aria-hidden="true" /></Link>
+            <Link to="/list" className="hiw-btn-ghost">List now</Link>
           </div>
         </div>
-        <motion.div key={selected} initial={reduce ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduce ? 0 : 0.25 }} id="fulfillment-details" role="region" aria-live="polite" aria-labelledby={`fulfillment-${selected}`} className="overflow-hidden rounded-[28px] border border-[#d8cfc4] bg-[#fffdf9] shadow-[0_25px_70px_-45px_rgba(45,31,20,.45)]">
-          <div className="bg-[#25211e] text-white p-7 md:p-8">
-            <span className="text-[11px] uppercase tracking-[0.18em] text-orange-300">{option.label}</span>
-            <h3 className="mt-3 text-2xl font-semibold leading-tight">{option.title}</h3>
-          </div>
-          <ol className="p-6 md:p-8 space-y-6">
+        <motion.div key={selected} initial={reduce ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduce ? 0 : 0.25 }} id="fulfillment-details" role="region" aria-live="polite" aria-labelledby={`fulfillment-${selected}`} className="hiw-panel">
+          <span className="hiw-detail-label">{option.label}</span>
+          <h3 className="hiw-detail-title">{option.title}</h3>
+          <ul className="hiw-detail-list">
             {[
               { icon: CalendarSearch, title: 'Coordinate the plan', body: option.body },
               { icon: MapPin, title: 'Follow the journey', body: option.tracking },
               { icon: Video, title: 'Walk through the condition', body: option.handoff },
               { icon: FileSignature, title: 'Sign and confirm', body: 'Complete the applicable digital documents and handoff confirmations. Find your receipt, signed paperwork, and transaction updates in your account.' },
-            ].map((step, index) => <li key={step.title} className="flex gap-4">
-              <BrandIcon icon={step.icon} size={40}/>
-              <div><h4 className="font-semibold"><span className="text-xs text-muted-foreground mr-2">0{index + 1}</span>{step.title}</h4><p className="mt-1 text-sm leading-relaxed text-muted-foreground">{step.body}</p></div>
+            ].map((step) => <li key={step.title} className="hiw-detail-row">
+              <span className="hiw-icon"><step.icon aria-hidden="true" /></span>
+              <div><h4>{step.title}</h4><p>{step.body}</p></div>
             </li>)}
-          </ol>
-          <div className="border-t border-[#e5ddd3] px-7 py-5 text-sm flex gap-3"><CheckCircle2 className="h-5 w-5 shrink-0 text-primary" /><p>Questions after the handoff? Open the transaction to message the other party or report an issue to Vendibook.</p></div>
+          </ul>
+          <p className="hiw-detail-foot"><CheckCircle2 aria-hidden="true" />Questions after the handoff? Open the transaction to message the other party or report an issue to Vendibook.</p>
         </motion.div>
       </div>
     </div>
@@ -331,7 +329,7 @@ const HowItWorks = () => {
   const reduce = useReducedMotion();
 
   return (
-    <div className="sale-light min-h-screen bg-background flex flex-col">
+    <div className="sale-light hiw min-h-screen flex flex-col">
       <SEO
         title="How Vendibook Works | Food Truck & Trailer Marketplace"
         description="Vendibook isn't classifieds. Discover, evaluate, finance, transport, and complete food truck and trailer transactions — all in one marketplace."
@@ -355,16 +353,8 @@ const HowItWorks = () => {
         {/* ---------------------------------------------------------- */}
         {/* HERO                                                        */}
         {/* ---------------------------------------------------------- */}
-        <section className="relative pt-12 pb-16 md:pt-20 md:pb-24 overflow-hidden">
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background:
-                'radial-gradient(900px 480px at 85% -5%, rgba(255,106,26,0.10), transparent 65%)',
-            }}
-            aria-hidden="true"
-          />
-          <div className="container max-w-6xl mx-auto px-4 relative z-10">
+        <section className="hiw-hero">
+          <div className="hiw-wrap">
             <GuideBreadcrumb
               items={[
                 { label: 'Home', to: '/' },
@@ -372,35 +362,31 @@ const HowItWorks = () => {
               ]}
               className="mb-8"
             />
-            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <div className="hiw-hero-grid">
               <motion.div
                 initial={reduce ? undefined : { opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-card border border-border text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground mb-6 shadow-sm">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary" aria-hidden="true" />
+                <span className="hiw-chip">
+                  <span className="hiw-chip-dot" aria-hidden="true" />
                   How Vendibook Works
-                </div>
-                <h1 className="text-4xl sm:text-5xl md:text-[3.4rem] font-bold tracking-tight text-foreground mb-5 leading-[1.12]">
-                  <span>Find your next truck.<br /><span className="text-primary">Finish the whole deal.</span></span>
+                </span>
+                <h1 className="hiw-h1">
+                  Find your next truck.
+                  <br />
+                  <em>Finish the whole deal.</em>
                 </h1>
-                <p className="text-lg text-muted-foreground mb-4 max-w-xl leading-relaxed">
+                <p className="hiw-hero-copy is-lead">
                   From the first video walkthrough to the final signature, buy and sell food trucks and trailers with a clear next step.
                 </p>
-                <p className="text-base text-muted-foreground mb-8 max-w-xl leading-relaxed">
+                <p className="hiw-hero-copy">
                   One marketplace for buying, selling, and renting food trucks, trailers,
                   kitchens, and vendor spaces — with messages, approvals, payment, delivery, and documents connected.
                 </p>
-                <div className="flex flex-wrap gap-3">
-                  <Button variant="cta" size="lg" className="rounded-full" asChild>
-                    <Link to="/browse">
-                      Browse now <ArrowRight className="w-4 h-4 ml-1.5" />
-                    </Link>
-                  </Button>
-                  <Button variant="cta-outline" size="lg" className="rounded-full" asChild>
-                    <Link to="/list">List now</Link>
-                  </Button>
+                <div className="hiw-actions">
+                  <Link to="/browse" className="hiw-btn">Browse now <ArrowRight aria-hidden="true" /></Link>
+                  <Link to="/list" className="hiw-btn-ghost">List now</Link>
                 </div>
               </motion.div>
 
@@ -412,57 +398,52 @@ const HowItWorks = () => {
         </section>
 
         {/* ---------------------------------------------------------- */}
-        {/* AFTER YOU BUY — show the transaction experience early       */}
+        {/* AFTER YOU BUY — one button opens the order-journey popup     */}
         {/* ---------------------------------------------------------- */}
-        <PostPurchasePreview />
+        <section className="hiw-section" aria-labelledby="purchase-preview-title">
+          <div className="hiw-wrap">
+            <div className="hiw-panel">
+              <p className="hiw-eyebrow">After you buy</p>
+              <h2 id="purchase-preview-title" className="hiw-title hiw-title-sm">Your purchase has a clear next step.</h2>
+              <p className="hiw-lede">
+                Open your order from Transactions to follow payment, delivery and the handoff. Live location and route
+                estimates appear when your delivery driver is actively sharing.
+              </p>
+              <PostPurchasePeek />
+            </div>
+          </div>
+        </section>
 
         {/* ---------------------------------------------------------- */}
-        {/* MARKETPLACE FLOW — editorial numbered rows                  */}
+        {/* MARKETPLACE FLOW — glass cards, no numbering                */}
         {/* ---------------------------------------------------------- */}
-        <section className="py-14 md:py-24 border-y border-border bg-card/50">
-          <div className="container max-w-6xl mx-auto px-4">
-            <motion.div {...(reduce ? {} : fadeUp)} className="mb-12 md:mb-16 max-w-2xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary mb-2">
-                The Vendibook way
-              </p>
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground leading-tight">
-                From first search to final signature — one connected process.
-              </h2>
-              <p className="text-base text-muted-foreground mt-3 leading-relaxed">
+        <section className="hiw-section">
+          <div className="hiw-wrap">
+            <motion.div {...(reduce ? {} : fadeUp)} className="hiw-head max-w-2xl">
+              <p className="hiw-eyebrow">The Vendibook way</p>
+              <h2 className="hiw-title">From first search to final signature — one connected process.</h2>
+              <p className="hiw-lede">
                 See the equipment. Agree on the deal. Pay after seller approval. Follow the handoff through to completion.
               </p>
             </motion.div>
 
-            <div className="grid md:grid-cols-2 gap-5 md:gap-6">
+            <div className="hiw-flow-grid">
               {FLOW.map((f) => (
                 <motion.div
-                  key={f.step}
+                  key={f.title}
                   {...(reduce ? {} : fadeUp)}
                   transition={{ duration: 0.5, delay: reduce ? 0 : 0.05, ease }}
-                  className="rounded-[28px] border border-border bg-[#fffdf9] p-6 sm:p-8 shadow-[0_15px_45px_-35px_rgba(24,20,16,.35)]"
+                  className="hiw-card"
                 >
-                  <div className="overflow-hidden rounded-[24px] border border-border bg-background shadow-[0_20px_48px_-24px_rgba(24,20,16,0.25)]">
+                  <div className="hiw-flow-art">
                     <img
                       src={f.art}
                       alt={f.artAlt}
                       loading="lazy"
-                      className="h-36 w-full object-contain p-4"
                     />
                   </div>
-                  <div>
-                    <span
-                      className="block text-sm font-semibold text-primary leading-none mt-6 mb-3 select-none"
-                      aria-hidden="true"
-                    >
-                      {f.step}
-                    </span>
-                    <h3 className="text-xl md:text-2xl font-bold text-foreground mb-3">
-                      {f.title}
-                    </h3>
-                    <p className="text-base text-muted-foreground leading-relaxed max-w-lg">
-                      {f.body}
-                    </p>
-                  </div>
+                  <h3>{f.title}</h3>
+                  <p>{f.body}</p>
                 </motion.div>
               ))}
             </div>
@@ -474,65 +455,46 @@ const HowItWorks = () => {
         {/* ---------------------------------------------------------- */}
         {/* BUYING / SELLING CARDS                                      */}
         {/* ---------------------------------------------------------- */}
-        <section className="py-14 md:py-24">
-          <div className="container max-w-6xl mx-auto px-4">
-            <motion.div {...(reduce ? {} : fadeUp)} className="mb-10 md:mb-12 max-w-2xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary mb-2">
-                Two sides, one table
-              </p>
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground leading-tight">
-                Built for the people on both ends of the deal.
-              </h2>
+        <section className="hiw-section">
+          <div className="hiw-wrap">
+            <motion.div {...(reduce ? {} : fadeUp)} className="hiw-head max-w-2xl">
+              <p className="hiw-eyebrow">Two sides, one table</p>
+              <h2 className="hiw-title">Built for the people on both ends of the deal.</h2>
             </motion.div>
 
-            <div className="grid md:grid-cols-2 gap-5 md:gap-6">
+            <div className="hiw-sides">
               {SIDES.map((s, i) => (
                 <motion.article
                   key={s.title}
                   {...(reduce ? {} : fadeUp)}
                   transition={{ duration: 0.5, delay: reduce ? 0 : i * 0.08, ease }}
-                  className="group flex flex-col overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_1px_2px_rgba(24,20,16,0.04),0_10px_28px_-18px_rgba(24,20,16,0.28)] hover:shadow-[0_24px_56px_-24px_rgba(24,20,16,0.35)] hover:-translate-y-1 transition-all duration-300"
+                  className="hiw-panel hiw-side"
                 >
-                  <div className="relative overflow-hidden">
+                  <div className="hiw-side-shot">
                     <img
                       src={s.image}
                       alt={s.imageAlt}
                       loading="lazy"
-                      className="aspect-[16/8] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                     />
-                    <div
-                      className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent"
-                      aria-hidden="true"
-                    />
-                    <span className="absolute top-4 left-4 inline-flex items-center gap-1.5 rounded-full bg-white/90 backdrop-blur px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-foreground shadow-sm">
-                      <s.icon className="w-3.5 h-3.5 text-primary" />
+                    <span className="hiw-side-tag">
+                      <s.icon aria-hidden="true" />
                       {s.eyebrow}
                     </span>
                   </div>
-                  <div className="flex flex-col flex-1 p-6 sm:p-8">
-                    <h3 className="text-xl md:text-2xl font-bold text-foreground mb-2">{s.title}</h3>
-                    <p className="text-base text-muted-foreground leading-relaxed mb-5">{s.body}</p>
-                    <ul className="space-y-2.5 mb-7">
+                  <div className="hiw-side-body">
+                    <h3>{s.title}</h3>
+                    <p>{s.body}</p>
+                    <ul className="hiw-points">
                       {s.points.map((pt) => (
-                        <li key={pt} className="flex items-start gap-2.5 text-sm text-foreground/85">
-                          <BadgeCheck className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+                        <li key={pt}>
+                          <BadgeCheck aria-hidden="true" />
                           {pt}
                         </li>
                       ))}
                     </ul>
-                    <div className="mt-auto flex flex-col gap-3">
-                      <Button variant="cta" className="rounded-full w-full sm:w-auto" asChild>
-                        <Link to={s.cta.to}>
-                          {s.cta.label} <ArrowRight className="w-4 h-4 ml-1.5" />
-                        </Link>
-                      </Button>
-                      <Link
-                        to={s.secondary.to}
-                        className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm"
-                      >
-                        {s.secondary.label}
-                        <ArrowRight className="w-3.5 h-3.5 ml-1" />
-                      </Link>
+                    <div className="hiw-side-actions">
+                      <Link to={s.cta.to} className="hiw-btn">{s.cta.label} <ArrowRight aria-hidden="true" /></Link>
+                      <Link to={s.secondary.to} className="hiw-link">{s.secondary.label} <ArrowRight aria-hidden="true" /></Link>
                     </div>
                   </div>
                 </motion.article>
@@ -544,49 +506,33 @@ const HowItWorks = () => {
         {/* ---------------------------------------------------------- */}
         {/* CONNECTED ECOSYSTEM                                         */}
         {/* ---------------------------------------------------------- */}
-        <section className="py-14 md:py-24 border-y border-border bg-card/50">
-          <div className="container max-w-6xl mx-auto px-4">
-            <motion.div {...(reduce ? {} : fadeUp)} className="mb-10 md:mb-12 max-w-2xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary mb-2">
-                The connected ecosystem
-              </p>
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground leading-tight">
-                The tools around the transaction, in the same place as the transaction.
-              </h2>
-              <p className="text-base text-muted-foreground mt-3 leading-relaxed">
+        <section className="hiw-section">
+          <div className="hiw-wrap">
+            <motion.div {...(reduce ? {} : fadeUp)} className="hiw-head max-w-2xl">
+              <p className="hiw-eyebrow">The connected ecosystem</p>
+              <h2 className="hiw-title">The tools around the transaction, in the same place as the transaction.</h2>
+              <p className="hiw-lede">
                 Pricing, financing, transport, and permits aren&rsquo;t afterthoughts here.
                 They&rsquo;re part of the platform.
               </p>
             </motion.div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+            <ul className="hiw-eco">
               {ECOSYSTEM.map((t, i) => (
-                <motion.div
+                <motion.li
                   key={t.name}
                   {...(reduce ? {} : fadeUp)}
                   transition={{ duration: 0.4, delay: reduce ? 0 : i * 0.05, ease }}
                 >
-                  <Link
-                    to={t.to}
-                    className="group flex flex-col h-full rounded-[24px] border border-border bg-card p-6 shadow-[0_1px_2px_rgba(24,20,16,0.04)] hover:shadow-[0_16px_40px_-20px_rgba(24,20,16,0.3)] hover:border-foreground/25 hover:-translate-y-0.5 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                  >
-                    <span className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-                      <BrandIcon icon={t.icon} size={36}/>
-                    </span>
-                    <span className="block text-base font-semibold text-foreground mb-1.5">
-                      {t.name}
-                    </span>
-                    <span className="block text-sm text-muted-foreground leading-relaxed mb-4 flex-1">
-                      {t.note}
-                    </span>
-                    <span className="inline-flex items-center text-sm font-semibold text-primary">
-                      Explore
-                      <ArrowRight className="w-3.5 h-3.5 ml-1 transition-transform group-hover:translate-x-0.5" />
-                    </span>
+                  <Link to={t.to} className="hiw-card hiw-tile">
+                    <span className="hiw-icon"><t.icon aria-hidden="true" /></span>
+                    <h3>{t.name}</h3>
+                    <p>{t.note}</p>
+                    <span className="hiw-link">Explore <ArrowRight aria-hidden="true" /></span>
                   </Link>
-                </motion.div>
+                </motion.li>
               ))}
-            </div>
+            </ul>
           </div>
         </section>
 
@@ -594,49 +540,37 @@ const HowItWorks = () => {
         {/* RENT / HOST strip                                           */}
         {/* ---------------------------------------------------------- */}
         <FlipInsuranceSection source="how_it_works" />
-        <section className="py-14 md:py-20">
-          <div className="container max-w-5xl mx-auto px-4">
+        <section className="hiw-section">
+          <div className="hiw-wrap">
             <motion.div
               {...(reduce ? {} : fadeUp)}
-              className="rounded-[28px] border border-border bg-card p-7 sm:p-10 shadow-[0_1px_2px_rgba(24,20,16,0.04),0_10px_28px_-18px_rgba(24,20,16,0.28)]"
+              className="hiw-panel"
             >
-              <div className="grid md:grid-cols-2 gap-8 md:gap-12">
-                <div className="flex gap-4">
-                  <span className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
-                    <CalendarSearch className="w-5 h-5 text-primary" />
-                  </span>
+              <div className="hiw-rent-grid">
+                <div className="hiw-rent-cell">
+                  <span className="hiw-icon"><CalendarSearch aria-hidden="true" /></span>
                   <div>
-                    <h2 className="text-lg font-bold text-foreground mb-1.5">Need it short-term?</h2>
-                    <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                    <h3>Need it short-term?</h3>
+                    <p>
                       Rent trucks, commercial kitchens, and vendor spaces with live
                       availability. Request to book, or use Instant Book where the host
                       offers it.
                     </p>
-                    <Link
-                      to="/search?mode=rent"
-                      className="group inline-flex items-center text-sm font-semibold text-primary"
-                    >
-                      Browse rentals
-                      <ArrowRight className="w-3.5 h-3.5 ml-1 transition-transform group-hover:translate-x-0.5" />
+                    <Link to="/search?mode=rent" className="hiw-link">
+                      Browse rentals <ArrowRight aria-hidden="true" />
                     </Link>
                   </div>
                 </div>
-                <div className="flex gap-4">
-                  <span className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
-                    <KeyRound className="w-5 h-5 text-primary" />
-                  </span>
+                <div className="hiw-rent-cell">
+                  <span className="hiw-icon"><KeyRound aria-hidden="true" /></span>
                   <div>
-                    <h2 className="text-lg font-bold text-foreground mb-1.5">Own equipment or space?</h2>
-                    <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                    <h3>Own equipment or space?</h3>
+                    <p>
                       Set your rates and calendar, review requests or switch on Instant
                       Book, and earn from what you already own.
                     </p>
-                    <Link
-                      to="/how-it-works-host"
-                      className="group inline-flex items-center text-sm font-semibold text-primary"
-                    >
-                      Read the host guide
-                      <ArrowRight className="w-3.5 h-3.5 ml-1 transition-transform group-hover:translate-x-0.5" />
+                    <Link to="/how-it-works-host" className="hiw-link">
+                      Read the host guide <ArrowRight aria-hidden="true" />
                     </Link>
                   </div>
                 </div>
@@ -646,7 +580,7 @@ const HowItWorks = () => {
             <motion.p
               {...(reduce ? {} : fadeUp)}
               transition={{ duration: 0.4, delay: reduce ? 0 : 0.15, ease }}
-              className="mt-8 text-center text-xs text-muted-foreground leading-relaxed max-w-2xl mx-auto"
+              className="hiw-fine mt-8 max-w-2xl mx-auto text-center"
             >
               Vendibook operates the marketplace — we don&rsquo;t own the equipment and
               we&rsquo;re not the seller, manufacturer, or lender. Financing is provided by
@@ -658,51 +592,30 @@ const HowItWorks = () => {
         {/* ---------------------------------------------------------- */}
         {/* FINAL CTA                                                   */}
         {/* ---------------------------------------------------------- */}
-        <section className="py-16 md:py-24 border-t border-border">
-          <div className="container max-w-4xl mx-auto px-4">
+        <section className="hiw-section">
+          <div className="hiw-wrap">
             <motion.div
               {...(reduce ? {} : fadeUp)}
-              className="relative overflow-hidden rounded-[32px] border border-border bg-card px-6 py-14 sm:px-12 md:py-16 text-center shadow-[0_28px_64px_-32px_rgba(24,20,16,0.35)]"
+              className="hiw-panel hiw-cta"
             >
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background:
-                    'radial-gradient(600px 300px at 50% 0%, rgba(255,106,26,0.10), transparent 70%)',
-                }}
-                aria-hidden="true"
-              />
-              <div className="relative">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary mb-5">
-                  <Handshake className="w-3.5 h-3.5" />
-                  The marketplace for mobile food
-                </span>
-                <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-4 leading-tight">
-                  Serious about mobile food? So are we.
-                </h2>
-                <p className="text-base md:text-lg text-muted-foreground mb-8 max-w-xl mx-auto leading-relaxed">
-                  Vendibook is where food truck and trailer buyers, sellers, and operators
-                  get the whole deal done — not just the first step of it.
-                </p>
-                <div className="flex flex-wrap gap-3 justify-center">
-                  <Button variant="cta" size="lg" className="rounded-full" asChild>
-                    <Link to="/browse">
-                      Browse now <ArrowRight className="w-4 h-4 ml-1.5" />
-                    </Link>
-                  </Button>
-                  <Button variant="cta-outline" size="lg" className="rounded-full" asChild>
-                    <Link to="/list">List now</Link>
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground mt-7 inline-flex items-center gap-1.5">
-                  <Wallet className="w-3.5 h-3.5" />
-                  Questions first? Visit the{' '}
-                  <Link to="/help" className="underline underline-offset-2 hover:text-foreground">
-                    Help Center
-                  </Link>
-                  .
-                </p>
+              <span className="hiw-chip">
+                <Handshake aria-hidden="true" />
+                The marketplace for mobile food
+              </span>
+              <h2>Serious about mobile food? So are we.</h2>
+              <p>
+                Vendibook is where food truck and trailer buyers, sellers, and operators
+                get the whole deal done — not just the first step of it.
+              </p>
+              <div className="hiw-actions">
+                <Link to="/browse" className="hiw-btn">Browse now <ArrowRight aria-hidden="true" /></Link>
+                <Link to="/list" className="hiw-btn-ghost">List now</Link>
               </div>
+              <p className="hiw-cta-fine">
+                <Wallet aria-hidden="true" className="inline w-3.5 h-3.5 -mt-0.5 mr-1" />
+                Questions first? Visit the{' '}
+                <Link to="/help">Help Center</Link>.
+              </p>
             </motion.div>
           </div>
         </section>
