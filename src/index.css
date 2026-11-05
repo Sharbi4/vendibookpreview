@@ -74,7 +74,8 @@
 
 @layer base {
   :root {
-    --font-site: 'Avenir Next LT Pro', 'Avenir Next', 'Avenir', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-heading: 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-site: 'Figtree', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     /* Vendibook Brand Colors */
     --vendibook-orange: 14 100% 57%;
     --vendibook-orange-light: 14 100% 95%;
@@ -444,6 +445,10 @@ body, body :where(*) {
   /* Avenir's forms need their natural spacing, including legacy headings
      and compact search filters that previously tightened the letters. */
   letter-spacing: 0 !important;
+}
+body :is(h1, h2, h3, h4, h5, h6, .font-display),
+body :is(h1, h2, h3, h4, h5, h6, .font-display) :where(*) {
+  font-family: var(--font-heading) !important;
 }
 body :where(*)::before, body :where(*)::after {
   font-family: inherit;
