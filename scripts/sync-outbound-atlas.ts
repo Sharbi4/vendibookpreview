@@ -2,6 +2,8 @@
 // Uses ELEVENLABS_API_KEY from the environment; never prints it. Refuses any other agent ID,
 // never resolves agents by name, never touches phone numbers, inbound agents or platform privacy.
 import { createHmac } from 'node:crypto';
+import { SPANISH_FIRST_MESSAGE } from '../supabase/functions/_shared/outboundAtlas.ts';
+import { spanishConversationPatch, verifySpanishReadback } from '../supabase/functions/_shared/agentSpanish.ts';
 import { OUTBOUND_AGENT_ID, OUTBOUND_DISPLAY_NAME, FIRST_MESSAGE, OUTBOUND_PROMPT, DYNAMIC_VARIABLES, OUTBOUND_KB_DOC_NAMES, OUTBOUND_TOOL_SECRET_NAME, OUTBOUND_TOOL_HEADER, OUTBOUND_TOOL_LABEL } from '../supabase/functions/_shared/outboundAtlas.ts';
 
 const APPLY = process.argv.includes('--apply');
@@ -27,6 +29,16 @@ const TOOLS = [
 const agent = await el(`/convai/agents/${OUTBOUND_AGENT_ID}`);
 if (agent.agent_id !== OUTBOUND_AGENT_ID) throw new Error('Persisted agent ID readback mismatch; aborting');
 console.log('readback ok:', agent.agent_id, '| current name:', agent.name);
+
+// Language maintenance never provisions tools, changes privacy or dispatches calls.
+if (process.argv.includes('--language-only')) {
+  const patch = spanishConversationPatch(agent, SPANISH_FIRST_MESSAGE);
+  if (!APPLY) { console.log('dry run: Spanish language support only'); process.exit(0); }
+  await el(`/convai/agents/${OUTBOUND_AGENT_ID}`, { method: 'PATCH', body: JSON.stringify({ conversation_config: patch }) });
+  verifySpanishReadback(agent, await el(`/convai/agents/${OUTBOUND_AGENT_ID}`), patch);
+  console.log('verified: outbound Spanish support; tools, voice, privacy and workflow preserved');
+  process.exit(0);
+}
 
 // Focused prompt corrections must not mutate tools, KB, workspace secrets or privacy.
 if (process.argv.includes('--prompt-only')) {
