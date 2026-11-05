@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { ArrowRight, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 /*
- * After-you-buy peek. The old "AFTER YOU BUY" homepage section was removed;
- * its order-journey image now lives behind one button that opens a glass
- * popup. Copy guardrails: illustrative order view only — no tracking,
- * insurance, escrow or timing promises. Tracking depends on the fulfillment
- * method, driver consent and connection.
+ * After-you-buy peek, placed inside the Vendibook Guarantee section.
+ * One button opens a glass popup holding the order-journey image.
+ * Copy guardrails: illustrative order view only — no tracking, insurance,
+ * escrow or timing promises. Tracking depends on the fulfillment method,
+ * driver consent and connection.
  */
 
 const JOURNEY_IMG = '/images/operations/buyer-order-journey.png';
@@ -23,26 +22,10 @@ export function PostPurchasePeek() {
   const [open, setOpen] = useState(false);
 
   return (
-    <section className="hb-peek" aria-labelledby="hb-peek-title">
-      <div className="hb-wrap">
-        <div className="hb-peek-card">
-          <div className="hb-peek-copy">
-            <p className="hb-eyebrow">After you buy</p>
-            <h2 id="hb-peek-title">Your purchase has a clear next step.</h2>
-            <p className="hb-peek-lede">
-              Every Vendibook order opens a single view of payment, delivery progress and the handoff.
-            </p>
-          </div>
-          <Button
-            variant="cta"
-            className="hb-peek-btn"
-            onClick={() => setOpen(true)}
-            data-cta-location="home_post_purchase_peek"
-          >
-            Know what happens after you buy from Vendibook<ArrowRight aria-hidden="true" />
-          </Button>
-        </div>
-      </div>
+    <>
+      <button type="button" className="hb-peek-trigger" onClick={() => setOpen(true)} data-cta-location="home_guarantee_post_purchase_peek">
+        Know what happens after you buy from Vendibook<ArrowRight aria-hidden="true" />
+      </button>
 
       <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
         <DialogPrimitive.Portal>
@@ -91,7 +74,7 @@ export function PostPurchasePeek() {
           </DialogPrimitive.Content>
         </DialogPrimitive.Portal>
       </DialogPrimitive.Root>
-    </section>
+    </>
   );
 }
 

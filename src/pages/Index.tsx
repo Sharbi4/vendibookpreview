@@ -218,6 +218,7 @@ const Index = () => {
               <Link to="/how-purchasing-works" className="hb-guarantee-link" data-cta-location="home_guarantee">
                 How buying works<ArrowRight aria-hidden="true" />
               </Link>
+              <PostPurchasePeek />
             </div>
             <ol className="hb-steps" aria-label="How the Vendibook Guarantee works">
               {GUARANTEE_STEPS.map((step, i) => (
@@ -240,7 +241,6 @@ const Index = () => {
         <HomeCategoryTiles />
 
         <HomeSellBand sellerStartHref={sellerStartHref} />
-        <PostPurchasePeek/>
       </main>
       <Footer />
       <NewsletterPopup />
