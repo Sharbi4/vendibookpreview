@@ -24,19 +24,13 @@ import {
   HomeRegisterBand,
   HomeSellBand,
 } from '@/components/home/HomeBuyerSections';
-import { Button } from '@/components/ui/button';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { usePublicFeatureFlag } from '@/hooks/usePublicFeatureFlag';
-import { useFinancingHandoff } from '@/hooks/useFinancingHandoff';
 import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { ApproveFinancingLogo } from '@/components/brand/ProviderLogos';
 import { EQUINOX_FLAG_KEY } from '@/lib/financing/disclosure';
-import { FINANCING_FOOTNOTE, FINANCING_HEADLINE } from '@/lib/financing/copy';
-import { trackFinancingCtaClick } from '@/lib/analytics';
-import financingPhoto from '@/assets/hero-financing-bg.jpg';
 import './home-buyer.css';
 
 /*
@@ -109,7 +103,6 @@ const Index = () => {
   const { user } = useAuth();
   const sellerStartHref = user ? '/list' : '/auth?mode=signup&role=host&redirect=%2Flist';
   const financingLive = usePublicFeatureFlag(EQUINOX_FLAG_KEY);
-  const { startFinancingApply, financingLeadDialog } = useFinancingHandoff();
 
   const saleQuery = useQuery({
     queryKey: ['home-v2-sale'],
@@ -245,45 +238,6 @@ const Index = () => {
         </section>
 
         <HomeCategoryTiles />
-
-        <section className="hb-section hb-section-tight" aria-labelledby="home-financing-title">
-          <div className="hb-wrap">
-            <div className="hb-finance">
-              <div className="hb-finance-copy">
-                <span className="hb-finance-partner">
-                  Financing partner <ApproveFinancingLogo className="hb-finance-logo" />
-                </span>
-                <h2 id="home-financing-title">{FINANCING_HEADLINE}</h2>
-                <p>Apply online with APPROVE and know your budget before you make an offer. Startups are considered.</p>
-                <div className="hb-finance-actions">
-                  {financingLive ? (
-                    <>
-                      <Button
-                        type="button"
-                        variant="cta"
-                        className="h-12 w-full rounded-full px-7 text-base sm:w-auto"
-                        data-cta-location="home_financing_band"
-                        onClick={() => startFinancingApply('home_banner')}
-                      >
-                        Check financing<ArrowRight aria-hidden="true" />
-                      </Button>
-                      <Link to="https://financing.approvepayments.com/vendibook" className="hb-finance-link">Estimate a monthly payment</Link>
-                    </>
-                  ) : (
-                    <Button asChild variant="cta" className="h-12 w-full rounded-full px-7 text-base sm:w-auto">
-                      <Link to="https://financing.approvepayments.com/vendibook" data-cta-location="home_financing_band" onClick={() => trackFinancingCtaClick('home_banner')}>
-                        Check financing<ArrowRight aria-hidden="true" />
-                      </Link>
-                    </Button>
-                  )}
-                </div>
-                <small className="hb-finance-note">{FINANCING_FOOTNOTE}</small>
-              </div>
-              <img className="hb-finance-photo" src={financingPhoto} alt="" width={1920} height={1080} loading="lazy" decoding="async" />
-              {financingLive ? financingLeadDialog : null}
-            </div>
-          </div>
-        </section>
 
         <HomeSellBand sellerStartHref={sellerStartHref} />
         <PostPurchasePreview/>
