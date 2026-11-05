@@ -609,7 +609,7 @@ const FoodTruckPrices = () => {
                 asChild variant="cta" className="shrink-0"
                 onClick={() => trackEvent({ category: 'SEO', action: 'price_report_financing_click', label: 'https://financing.approvepayments.com/vendibook' })}
               >
-                <Link to="/financing#calculator">Estimate your monthly payment <ArrowRight className="h-4 w-4" /></Link>
+                <Link to="https://financing.approvepayments.com/vendibook">Estimate your monthly payment <ArrowRight className="h-4 w-4" /></Link>
               </Button>
             </div>
           </Section>

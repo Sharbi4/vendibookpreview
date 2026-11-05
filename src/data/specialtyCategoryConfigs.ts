@@ -40,7 +40,7 @@ const coffee: CategoryIndexConfig = {
       ],
       links: [
         { href: '/food-truck-prices', label: 'Compare marketplace asking prices and startup costs' },
-        { href: '/financing#calculator', label: 'Estimate a monthly equipment payment' },
+        { href: 'https://financing.approvepayments.com/vendibook', label: 'Estimate a monthly equipment payment' },
         { href: '/how-to-buy-a-food-truck', label: 'Buying and inspection checklist' },
       ],
     },
