@@ -83,12 +83,17 @@ const handler = async (req: Request): Promise<Response> => {
       if (google) {
         try {
           const geoData = await googleGeocode({ address: `${zip}, USA` });
-          if (geoData?.status === "OK" && geoData.results?.length) {
-            const r = geoData.results[0];
-            const comps = r.address_components || [];
-            const cityComp = comps.find((c: any) => c.types.includes("locality") || c.types.includes("sublocality") || c.types.includes("postal_town"));
-            const stateComp = comps.find((c: any) => c.types.includes("administrative_area_level_1"));
-            const loc = r.geometry?.location;
+          // Google sometimes answers a ZIP with a country-level match
+          // ("United States", no city/state); that must fall back, or sellers
+          // get stuck on the location step.
+          const r = geoData?.status === "OK" ? geoData.results?.find((res: any) =>
+            (res.address_components || []).some((c: any) => c.types.includes("postal_code") && c.long_name === zip)) : null;
+          const comps = r?.address_components || [];
+          const findType = (t: string) => comps.find((c: any) => c.types.includes(t));
+          const cityComp = findType("locality") || findType("postal_town") || findType("sublocality") || findType("neighborhood");
+          const stateComp = findType("administrative_area_level_1");
+          const loc = r?.geometry?.location;
+          if (r && cityComp && stateComp && typeof loc?.lat === "number" && typeof loc?.lng === "number") {
             return buildJsonResponse({
               results: [{
                 id: `zip:${zip}`,
