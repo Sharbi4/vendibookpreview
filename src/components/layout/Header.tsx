@@ -489,7 +489,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
                   {gi > 0 && <DropdownMenuSeparator />}
                   <p className="px-2 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{group.label}</p>
                   {group.links.map((link) => (
-                    <DropdownMenuItem key={link.to} onSelect={() => navigate(link.to)} className="cursor-pointer">
+                    <DropdownMenuItem key={link.to} onSelect={() => (/^https?:\/\//.test(link.to) ? window.location.assign(link.to) : navigate(link.to))} className="cursor-pointer">
                       {link.label}
                     </DropdownMenuItem>
                   ))}
@@ -563,7 +563,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
                     {gi > 0 && <DropdownMenuSeparator />}
                     <p className="px-2 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{group.label}</p>
                     {group.links.map((link) => (
-                      <DropdownMenuItem key={link.to} onSelect={() => navigate(link.to)} className="cursor-pointer">
+                      <DropdownMenuItem key={link.to} onSelect={() => (/^https?:\/\//.test(link.to) ? window.location.assign(link.to) : navigate(link.to))} className="cursor-pointer">
                         {link.label}
                       </DropdownMenuItem>
                     ))}
