@@ -1,5 +1,5 @@
 import FinancingTopBanner from '@/components/home/FinancingTopBanner';
-import { PostPurchasePreview } from '@/components/home/PostPurchasePreview';
+import PostPurchasePeek from '@/components/home/PostPurchasePeek';
 import HomeBuyingBanner from '@/components/home/HomeBuyingBanner';
 import { buildHomepageSpotlight } from '@/lib/listings/homepageSpotlight';
 import { excludeTestListings } from '@/lib/excludeTestListings';
@@ -240,7 +240,7 @@ const Index = () => {
         <HomeCategoryTiles />
 
         <HomeSellBand sellerStartHref={sellerStartHref} />
-        <PostPurchasePreview/>
+        <PostPurchasePeek/>
       </main>
       <Footer />
       <NewsletterPopup />
