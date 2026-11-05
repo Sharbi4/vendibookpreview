@@ -7,6 +7,8 @@
   font-size: 12px; font-weight: 700;
   letter-spacing: .16em; text-transform: uppercase;
 }
+/* The popup is portalled outside any token scope, so keep its label orange here. */
+.hb-peek-modal .hb-eyebrow { color: hsl(var(--hb-orange, 13 100% 57%)); }
 
 .hb-peek-trigger {
   display: flex; width: fit-content; align-items: center; justify-content: center; gap: 10px;
