@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { ArrowRight, X } from 'lucide-react';
+import './post-purchase-peek.css';
 
 /*
  * After-you-buy peek, placed inside the Vendibook Guarantee section.
