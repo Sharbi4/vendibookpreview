@@ -71,3 +71,4 @@
 
 - [x] Avenir font loads same-origin on preview/live so hero + body text never fall back (2026-11-05)
 - [x] Bundle Avenir as WOFF2 so it loads in every browser (user saw fallback font on Windows Chrome)
+- [x] Homepage Guarantee section: warm white glass restyle (rounded translucent cards, no step numbers) + "Know what happens after you buy from Vendibook" button opening a glass popup with the order-journey image; old AFTER YOU BUY section removed from homepage only (2026-11-05)
