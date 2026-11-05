@@ -11,3 +11,17 @@ Spanish presets use a complete Spanish greeting rather than interpolating the we
 Reference: https://elevenlabs.io/docs/eleven-agents/customization/tools/system-tools/language-detection
 
 Configuration readback and tests establish enabled settings and preservation of integrations. They do not establish acoustic quality or a completed real customer call; voice acceptance should cover Spanish input, English-to-Spanish-to-English switching, Spanish tool explanations, and a consented Atlas/Allison handoff.
+
+## Production verification — November 5, 2026
+
+The ElevenLabs maintenance runtime executed both scripts from Git commit `b8e065a2a` and performed independent GET readbacks. All five agents have an `es` greeting, enabled `language_detection`, and one appended bilingual guidance section. Default English greetings and voices remain unchanged. Script preservation checks passed for tools, knowledge, model, speech recognition, turn settings, workflow, authentication and platform settings.
+
+| Agent | Registry tools | Knowledge documents |
+| --- | ---: | ---: |
+| Atlas website | 30 | 3 |
+| Allison website | 26 | 5 |
+| Vendi Voice | 9 | 0 |
+| Support phone | 17 | 5 |
+| Outbound Atlas | 4 | 2 |
+
+Eleven focused local tests passed. Provider conversation-simulation requests were rejected because that endpoint is no longer available; no simulated exchange completed. Real Spanish speech, switch-back, and handoff quality remain untested. No customer calls/messages, phone routing changes or frontend publication were performed.
