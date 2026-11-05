@@ -223,7 +223,7 @@ export default function WalkthroughNextSteps() {
                 </Link>
               ) : null}
               {financingAvailable && listing?.id && (
-                <Link className="wn-action is-highlight" to={`/financing?listing_id=${listing.id}`} onClick={() => track('walkthrough_post_call_financing_clicked')}>
+                <Link className="wn-action is-highlight" to={'https://financing.approvepayments.com/vendibook'} onClick={() => track('walkthrough_post_call_financing_clicked')}>
                   <Landmark /> Explore financing options
                 </Link>
               )}

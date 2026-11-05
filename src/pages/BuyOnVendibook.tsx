@@ -143,7 +143,7 @@ export default function BuyOnVendibook() {
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#ff986f]">Financing</p>
               <h2 id="buy-support-title" className="mt-4 text-3xl font-semibold tracking-tight">Make room for the right equipment.</h2>
               <p className="mt-5 leading-7 text-white/75">Eligible buyers can apply with a third-party financing partner. Decisions on complete applications typically arrive in 24–48 hours.* Ask about including eligible transportation costs in the financing arrangement.</p>
-              <Button variant="cta" className="mt-8 rounded-full" asChild><Link to="/financing">Explore financing <ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
+              <Button variant="cta" className="mt-8 rounded-full" asChild><Link to="https://financing.approvepayments.com/vendibook">Explore financing <ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
               <p className="mt-6 text-xs leading-5 text-white/60">{FINANCING_FOOTNOTE}</p>
             </div>
             <div className="rounded-[28px] border border-[#e8e0d8] bg-[#f7f3ee] p-8 sm:p-10">

@@ -650,7 +650,7 @@ export function createAtlasTools(deps: AtlasToolDeps) {
       const routes: Record<string, string> = {
         home: '/',
         search: '/search',
-        financing: '/financing',
+        financing: 'https://financing.approvepayments.com/vendibook',
         how_it_works: '/how-it-works',
         freight: '/vendibook-freight',
         payments: '/payments',
@@ -666,6 +666,10 @@ export function createAtlasTools(deps: AtlasToolDeps) {
       const page = String(p.page ?? '');
       const base = routes[page];
       if (!base) return 'That page is not available.';
+      if (/^https?:\/\//.test(base)) {
+        window.open(base, '_blank', 'noopener,noreferrer');
+        return `Opened the ${page.replace(/_/g, ' ')} page in a new tab.`;
+      }
       const text = typeof p.search_text === 'string' ? p.search_text.trim().slice(0, 80) : '';
       navigate(page === 'search' && text ? `${base}?q=${encodeURIComponent(text)}` : base);
       return `Opened the ${page.replace(/_/g, ' ')} page.`;

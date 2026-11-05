@@ -172,7 +172,7 @@ const wholeSale = [
     icon: Banknote,
     title: 'Buyer financing options',
     body: 'Eligible buyers can apply with third-party financing partners straight from your listing. Approval depends on the applicant and the equipment, and provider approval applies. Vendibook is not a lender and does not set rates, terms, or guarantee funding.',
-    href: '/financing',
+    href: 'https://financing.approvepayments.com/vendibook',
     cta: 'How buyer financing works',
     image: trailerGrill,
     alt: 'Food trailer with an orange grill setup parked at an outdoor event',
@@ -321,7 +321,7 @@ const SellMyFoodTruck = () => {
 
                   <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-muted-foreground">
                     {[
-                      { icon: Banknote, label: 'Financing options for eligible buyers', href: '/financing' },
+                      { icon: Banknote, label: 'Financing options for eligible buyers', href: 'https://financing.approvepayments.com/vendibook' },
                       { icon: ShieldCheck, label: 'Secure PayPal checkout, optional', href: '/payments' },
                       { icon: Truck, label: 'Pickup, delivery, or Vendibook Freight', href: '/ship-your-food-truck' },
                       { icon: ImagePlus, label: 'Guided listing with saved drafts', href: null },
@@ -607,7 +607,7 @@ const SellMyFoodTruck = () => {
                 <li><Link to="/food-trailers-for-sale" className="font-medium text-primary hover:underline">Food trailers for sale →</Link></li>
                 <li><Link to="/sell-food-trailer" className="font-medium text-primary hover:underline">Sell your food trailer →</Link></li>
                 <li><Link to="/sell-concession-trailer" className="font-medium text-primary hover:underline">Sell your concession trailer →</Link></li>
-                <li><Link to="/financing" className="font-medium text-primary hover:underline">How buyer financing works →</Link></li>
+                <li><Link to="https://financing.approvepayments.com/vendibook" className="font-medium text-primary hover:underline">How buyer financing works →</Link></li>
                 <li><Link to="/how-it-works?role=sell" className="font-medium text-primary hover:underline">The full seller journey →</Link></li>
                 <li><Link to="/tools/pricepilot" className="font-medium text-primary hover:underline">Estimate your asking price with PricePilot →</Link></li>
                 <li><Link to="/payments" className="font-medium text-primary hover:underline">Secure PayPal checkout on Vendibook →</Link></li>

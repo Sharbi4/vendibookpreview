@@ -73,9 +73,9 @@ const HeroPremium = ({ showGoogleSignIn = true, showRotator = true, guaranteeHre
             Secure checkout and a protected handoff on every purchase with the {guaranteeLink}. Financing available
             through{' '}
             <Link
-              to="/financing"
+              to="https://financing.approvepayments.com/vendibook"
               data-cta-location="home_hero_financing"
-              onClick={() => trackLeadEvent('hero_financing_clicked', { source: 'home_hero', destination: '/financing' })}
+              onClick={() => trackLeadEvent('hero_financing_clicked', { source: 'home_hero', destination: 'https://financing.approvepayments.com/vendibook' })}
             >
               APPROVE
             </Link>

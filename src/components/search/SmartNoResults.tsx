@@ -28,7 +28,7 @@ interface Suggestion {
  */
 const BuyerHelpCards = () => (
   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-    <Link to="/financing" className="group flex items-start gap-3 rounded-2xl border border-border bg-card p-4 hover:border-primary/50 transition-colors">
+    <Link to="https://financing.approvepayments.com/vendibook" className="group flex items-start gap-3 rounded-2xl border border-border bg-card p-4 hover:border-primary/50 transition-colors">
       <Banknote className="h-5 w-5 text-primary shrink-0 mt-0.5" aria-hidden="true" />
       <div className="text-left">
         <p className="font-semibold text-foreground text-sm">Explore financing options</p>

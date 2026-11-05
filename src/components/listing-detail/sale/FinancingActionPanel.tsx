@@ -146,7 +146,7 @@ export const FinancingActionPanel = ({
         </Button>
         <Button asChild size="sm" className="finance-cta-outline justify-center sm:col-span-2">
           <Link
-            to={`/financing?listing_id=${listing.id}`}
+            to={'https://financing.approvepayments.com/vendibook'}
             onClick={() => trackFinancingLearnMoreClick('listing_panel', listing.id)}
           >
             Apply for financing

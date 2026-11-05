@@ -612,7 +612,7 @@ const StartupGuide = () => {
                     </Link>
                   </Button>
                   <Button variant="outline" asChild className="rounded-2xl">
-                    <Link to="/financing">Explore financing</Link>
+                    <Link to="https://financing.approvepayments.com/vendibook">Explore financing</Link>
                   </Button>
                 </div>
               </div>
@@ -763,7 +763,7 @@ const StartupGuide = () => {
             </div>
             <FadeIn className="mt-6">
               <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
-                <Link to="/financing" className="hover:text-foreground transition-colors">
+                <Link to="https://financing.approvepayments.com/vendibook" className="hover:text-foreground transition-colors">
                   Equipment financing
                 </Link>
                 <Link to="/vendibook-freight" className="hover:text-foreground transition-colors">

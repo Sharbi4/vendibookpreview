@@ -105,7 +105,7 @@ export const PRICING_FAQ: PricingFaqEntry[] = [
     answer:
       'Eligible equipment listings may offer third-party financing referrals — currently led by APPROVE. The buyer applies directly with the lender; the seller does not manage the application. Vendibook is not the lender and does not decide approval, rates, payments or funding dates. Buyers can download a pro forma purchase summary from the listing for an application — it is not a payable invoice or proof of a sale.',
     audiences: ['seller', 'buyer', 'all'],
-    cta: { label: 'See current financing options', href: '/financing' },
+    cta: { label: 'See current financing options', href: 'https://financing.approvepayments.com/vendibook' },
   },
   {
     id: 'subscriptions-optional',

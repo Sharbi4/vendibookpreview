@@ -196,7 +196,7 @@ const SellerPaymentsExplainer = ({
               funding providers.
             </p>
             <Link
-              to="/financing"
+              to="https://financing.approvepayments.com/vendibook"
               className="inline-flex items-center gap-1.5 text-xs font-medium text-foreground hover:underline"
             >
               <Landmark className="h-3.5 w-3.5" /> Financing details

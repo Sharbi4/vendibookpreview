@@ -37,7 +37,7 @@ const BuyerServicesHub = () => {
               >
                 Browse inspection &amp; transport partners
               </Link>
-              <Link to="/financing" className="text-sm font-medium text-primary hover:underline">
+              <Link to="https://financing.approvepayments.com/vendibook" className="text-sm font-medium text-primary hover:underline">
                 See financing options
               </Link>
             </div>

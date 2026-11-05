@@ -44,7 +44,7 @@ const footerSections: FooterSection[] = [
       { label: 'BBQ Trucks & Trailers', href: '/bbq-trucks-trailers-for-sale' },
       { label: 'Food Trucks & Trailers for Rent', href: '/food-trucks-for-rent' },
       { label: 'Food Trailers for Rent', href: '/food-trailers-for-rent' },
-      { label: 'Food Truck Financing', href: '/financing' },
+      { label: 'Food Truck Financing', href: 'https://financing.approvepayments.com/vendibook' },
       { label: 'Shared Kitchens', href: '/shared-kitchens' },
       { label: 'Browse by City', href: '/cities' },
       { label: 'All Listings', href: '/search' },

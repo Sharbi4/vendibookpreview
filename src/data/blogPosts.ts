@@ -67,7 +67,7 @@ export const BLOG_POSTS: BlogPost[] = [
     featured: true,
     readingTime: 11,
     tags: ['APPROVE', 'Food Truck Financing', 'Food Trailer Financing', 'Equipment Financing', 'Mobile Food Business', 'Vendibook'],
-    content: `<p>Updated November 5, 2026: Explore equipment financing with APPROVE, Vendibook’s financing option. APPROVE connects applications with its lender network; lenders decide eligibility, approval, rates and terms. Vendibook is not a lender.</p><p><a href="/financing">Explore APPROVE financing</a></p>`,
+    content: `<p>Updated November 5, 2026: Explore equipment financing with APPROVE, Vendibook’s financing option. APPROVE connects applications with its lender network; lenders decide eligibility, approval, rates and terms. Vendibook is not a lender.</p><p><a href="https://financing.approvepayments.com/vendibook">Explore APPROVE financing</a></p>`,
   },
   {
     slug: 'texas-mobile-food-vendor-law-2026',
@@ -1097,7 +1097,7 @@ export const BLOG_POSTS: BlogPost[] = [
 <p class="mb-8"><a href="/browse" class="text-primary underline font-medium">Browse trucks, trailers, and vendor spaces</a> to see what is realistically available in your market right now.</p>
 
 <h2 class="text-2xl font-bold mt-10 mb-4">7. Financing</h2>
-<p class="mb-8">If you are not paying cash, look at equipment financing and small-business lending. Vendibook buyers can explore options on our <a href="/financing" data-cta="financing_startup_guide" class="text-primary underline font-medium">financing page</a>. Approval, rates, and terms are set by the lender based on your application — no one can promise them in advance.</p>
+<p class="mb-8">If you are not paying cash, look at equipment financing and small-business lending. Vendibook buyers can explore options on our <a href="https://financing.approvepayments.com/vendibook" data-cta="financing_startup_guide" class="text-primary underline font-medium">financing page</a>. Approval, rates, and terms are set by the lender based on your application — no one can promise them in advance.</p>
 
 <h2 class="text-2xl font-bold mt-10 mb-4">8. Lock in where you will operate</h2>
 <p class="mb-8">Private lots, breweries, business parks, and events all have their own rules on top of city permitting. Confirm property permission, zoning, and any fire or event requirements before you commit to a schedule.</p>
@@ -1500,7 +1500,7 @@ export const BLOG_POSTS: BlogPost[] = [
 <p class="mb-8">General classifieds reach a wide but unqualified audience and rarely have fields for hood dimensions or tank sizes. A specialist marketplace reaches fewer people, but the people who look are shopping for exactly this. Whichever you choose, expect to answer detailed questions and to allow an inspection.</p>
 
 <h2 class="text-2xl font-bold mt-10 mb-4">5. Selling on Vendibook</h2>
-<p class="mb-8">Vendibook charges an 8.7% seller commission on new eligible online equipment sales for Standard and Pro sellers, with no separate buyer fee; cash and pay-in-person sales carry no commission. Buyers can also explore <a href="/financing" class="text-primary underline font-medium">buyer financing</a>, which widens your pool. <a href="/list?mode=sale" data-cta="list_sale_valuation_guide" class="text-primary underline font-medium">Create a for-sale listing</a> or read <a href="/help/selling-end-to-end" class="text-primary underline font-medium">Selling end to end</a> in the Help Center.</p>
+<p class="mb-8">Vendibook charges an 8.7% seller commission on new eligible online equipment sales for Standard and Pro sellers, with no separate buyer fee; cash and pay-in-person sales carry no commission. Buyers can also explore <a href="https://financing.approvepayments.com/vendibook" class="text-primary underline font-medium">buyer financing</a>, which widens your pool. <a href="/list?mode=sale" data-cta="list_sale_valuation_guide" class="text-primary underline font-medium">Create a for-sale listing</a> or read <a href="/help/selling-end-to-end" class="text-primary underline font-medium">Selling end to end</a> in the Help Center.</p>
 
 <p class="text-sm text-muted-foreground">General information only, not an appraisal or financial advice. Timelines and prices vary by market, unit, and condition.</p>
     `,
@@ -1781,7 +1781,7 @@ export const BLOG_POSTS: BlogPost[] = [
 
 <ul class="list-disc pl-6 mb-6 space-y-2">
   <li>Online checkout through PayPal, with the transaction recorded on the platform</li>
-  <li>Buyer financing options through Vendibook's partner, <a href="/financing" class="text-primary underline">APPROVE</a>, subject to their approval and terms</li>
+  <li>Buyer financing options through Vendibook's partner, <a href="https://financing.approvepayments.com/vendibook" class="text-primary underline">APPROVE</a>, subject to their approval and terms</li>
   <li>Structured specs, documents, and messaging in one place</li>
   <li>Payouts to the seller tied to delivery or handoff confirmation rather than a handshake</li>
 </ul>
@@ -1936,7 +1936,7 @@ export const BLOG_POSTS: BlogPost[] = [
 <div class="rounded-2xl border border-primary/30 bg-primary/5 p-6 mb-10">
   <h3 class="text-xl font-bold mb-2">Financing on Vendibook</h3>
   <p class="mb-4">Buyer financing is available across the marketplace through our partner <strong>APPROVE</strong>. You apply with APPROVE; approval, rates, terms, and timelines are theirs to set. <strong>Vendibook is not a lender and cannot promise approval or terms.</strong> Vendibook's standard marketplace fee still applies to a financed purchase.</p>
-  <a href="/financing" data-cta="financing_article_primary" class="text-primary underline font-semibold">See how Vendibook financing works →</a>
+  <a href="https://financing.approvepayments.com/vendibook" data-cta="financing_article_primary" class="text-primary underline font-semibold">See how Vendibook financing works →</a>
 </div>
 
 <h2 class="text-2xl font-bold mt-10 mb-4">Common funding paths</h2>

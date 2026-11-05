@@ -267,11 +267,11 @@ const Index = () => {
                       >
                         Check financing<ArrowRight aria-hidden="true" />
                       </Button>
-                      <Link to="/financing#calculator" className="hb-finance-link">Estimate a monthly payment</Link>
+                      <Link to="https://financing.approvepayments.com/vendibook" className="hb-finance-link">Estimate a monthly payment</Link>
                     </>
                   ) : (
                     <Button asChild variant="cta" className="h-12 w-full rounded-full px-7 text-base sm:w-auto">
-                      <Link to="/financing" data-cta-location="home_financing_band" onClick={() => trackFinancingCtaClick('home_banner')}>
+                      <Link to="https://financing.approvepayments.com/vendibook" data-cta-location="home_financing_band" onClick={() => trackFinancingCtaClick('home_banner')}>
                         Check financing<ArrowRight aria-hidden="true" />
                       </Link>
                     </Button>

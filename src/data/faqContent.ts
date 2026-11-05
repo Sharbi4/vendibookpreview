@@ -93,7 +93,7 @@ const A = {
   tools: { label: "Open Premium Tools", href: "/dashboard/tools", requiresAuth: true },
   referrals: { label: "Refer & earn", href: "/refer", requiresAuth: true },
   purchases: { label: "My purchases", href: "/purchases", requiresAuth: true },
-  financing: { label: "Explore financing", href: "/financing" },
+  financing: { label: "Explore financing", href: "https://financing.approvepayments.com/vendibook" },
   buildStudio: { label: "Open Build Studio", href: "/build-studio" },
   atlas: { label: "Try Atlas", href: "/atlas" },
   refundPolicy: { label: "Refund policy", href: "/legal/refund-policy" },

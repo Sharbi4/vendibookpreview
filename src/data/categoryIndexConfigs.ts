@@ -181,7 +181,7 @@ export const CATEGORY_INDEX_CONFIGS: CategoryIndexConfig[] = [
           'Explore food trucks and trailers for sale and view available financing options for qualifying purchases. Financing is provided by third-party lending partners, is subject to approval, and is not available on every listing.',
         ],
         links: [
-          { href: '/financing', label: 'Explore financing options' },
+          { href: 'https://financing.approvepayments.com/vendibook', label: 'Explore financing options' },
           { href: '/tools/pricepilot', label: 'Check equipment value with PricePilot' },
         ],
       },

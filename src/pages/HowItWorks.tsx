@@ -289,7 +289,7 @@ const ECOSYSTEM: { icon: LucideIcon; name: string; note: string; to: string }[] 
     icon: BadgeDollarSign,
     name: 'Financing',
     note: 'Apply with third-party lending partners on eligible equipment.',
-    to: '/financing',
+    to: 'https://financing.approvepayments.com/vendibook',
   },
   {
     icon: Wallet,

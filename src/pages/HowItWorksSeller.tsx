@@ -157,7 +157,7 @@ const SAY_YES_FEATURED = {
   title: 'Financing',
   body: 'On eligible published for-sale equipment, buyers can apply for financing with Vendibook’s third-party partners — so “I can’t pay cash” doesn’t have to end the conversation. Vendibook isn’t the lender; approval and terms come from the financing provider.',
   cta: 'How financing works',
-  to: '/financing',
+  to: 'https://financing.approvepayments.com/vendibook',
 };
 
 const SAY_YES_ROWS: { icon: LucideIcon; title: string; body: string }[] = [

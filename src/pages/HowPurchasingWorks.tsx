@@ -273,7 +273,7 @@ const HowPurchasingWorks = () => {
               <p className="text-sm font-semibold uppercase tracking-[0.14em] text-primary">Financing before you buy</p>
               <h2 className="mt-3 text-2xl font-bold text-foreground">Plan for the full purchase.</h2>
               <p className="mt-4 text-sm leading-7 text-muted-foreground">Eligible buyers can apply with a third-party financing partner. Decisions on complete applications typically arrive in 24–48 hours; timing varies and approval is not guaranteed. Ask the provider whether eligible transportation can be included.</p>
-              <Link to="/financing" className="mt-5 inline-flex items-center gap-2 font-semibold text-primary underline underline-offset-4">Explore financing <ArrowRight className="h-4 w-4" /></Link>
+              <Link to="https://financing.approvepayments.com/vendibook" className="mt-5 inline-flex items-center gap-2 font-semibold text-primary underline underline-offset-4">Explore financing <ArrowRight className="h-4 w-4" /></Link>
             </div>
             <div className="rounded-3xl border border-border bg-background p-7 sm:p-9">
               <p className="text-sm font-semibold uppercase tracking-[0.14em] text-primary">Documents and title</p>

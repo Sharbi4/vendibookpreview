@@ -29,7 +29,7 @@ export const PostPublishFinancingCallout: React.FC<{ listingId?: string; classNa
           Vendibook.
         </p>
         <Link
-          to={listingId ? `/financing?listing_id=${listingId}` : '/financing'}
+          to={'https://financing.approvepayments.com/vendibook'}
           className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-amber-800 underline underline-offset-4"
         >
           See how financing works

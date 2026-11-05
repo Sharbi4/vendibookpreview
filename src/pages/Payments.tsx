@@ -270,7 +270,7 @@ const Payments = () => {
           </div>
         </section>
 
-        <section className="container mx-auto max-w-6xl px-4 py-16"><h2 className="text-3xl font-bold">Explore financing with APPROVE</h2><p className="mt-4 text-muted-foreground">Equipment financing is available through APPROVE’s lender network. Lenders decide eligibility, approval, rates and terms.</p><a href="/financing/approve" className="mt-6 inline-block rounded-full bg-orange-600 px-6 py-3 font-semibold text-white">Explore APPROVE financing</a></section>
+        <section className="container mx-auto max-w-6xl px-4 py-16"><h2 className="text-3xl font-bold">Explore financing with APPROVE</h2><p className="mt-4 text-muted-foreground">Equipment financing is available through APPROVE’s lender network. Lenders decide eligibility, approval, rates and terms.</p><a href="https://financing.approvepayments.com/vendibook" className="mt-6 inline-block rounded-full bg-orange-600 px-6 py-3 font-semibold text-white">Explore APPROVE financing</a></section>
         <section className="bg-muted/40 py-16 md:py-24">
           <div className="container mx-auto max-w-6xl px-4">
             <motion.div {...fadeUp} className="max-w-3xl">

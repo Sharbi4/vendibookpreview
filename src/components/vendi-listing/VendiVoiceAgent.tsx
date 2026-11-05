@@ -41,7 +41,7 @@ const UPSELLS: Record<
     title: 'Buyer financing',
     body: 'Let qualified buyers apply for equipment financing on your listing.',
     cta: 'How financing works',
-    href: '/financing',
+    href: 'https://financing.approvepayments.com/vendibook',
   },
   freight: {
     title: 'Nationwide delivery',

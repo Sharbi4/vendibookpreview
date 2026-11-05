@@ -155,7 +155,7 @@ const browseTopics: { title: string; icon: typeof BookOpen; articles: TopicLink[
     icon: Landmark,
     articles: [
       { label: 'How buyer financing works', to: '/help/buyer-financing' },
-      { label: 'Current financing options', to: '/financing' },
+      { label: 'Current financing options', to: 'https://financing.approvepayments.com/vendibook' },
       { label: 'When sellers get paid', to: '/faq?cat=pricing-fees#pricing-payout-timing' },
     ],
   },

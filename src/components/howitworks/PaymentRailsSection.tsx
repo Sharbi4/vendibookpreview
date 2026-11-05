@@ -113,7 +113,7 @@ const equinoxRail = (audience: RailsAudience): RailDef => ({
   ],
   detailNote:
     'Financing is offered by APPROVE’s lender network, not Vendibook, and is subject to credit approval. An 8.7% platform fee applies to financed sales. PayPal does not process an APPROVE-funded purchase.',
-  link: { label: 'See financing details', href: '/financing' },
+  link: { label: 'See financing details', href: 'https://financing.approvepayments.com/vendibook' },
   flowLink:
     audience === 'buyer'
       ? { label: 'See the exact steps on eligible listings', href: '/search?mode=sale' }
@@ -308,7 +308,7 @@ export const KeepExploring = ({ current }: { current: 'overview' | 'seller' | 'h
 
   const extras = [
     { id: 'payments', icon: Receipt, title: 'Payments overview', body: 'How PayPal checkout, fees, and payouts work.', href: '/payments' },
-    { id: 'financing', icon: Banknote, title: 'Equipment financing', body: 'Apply with APPROVE on eligible sale listings.', href: '/financing' },
+    { id: 'financing', icon: Banknote, title: 'Equipment financing', body: 'Apply with APPROVE on eligible sale listings.', href: 'https://financing.approvepayments.com/vendibook' },
     { id: 'identity', icon: BadgeCheck, title: 'Identity verification', body: 'The optional Plaid-powered trust add-on.', href: '/identity-verification' },
   ];
 
