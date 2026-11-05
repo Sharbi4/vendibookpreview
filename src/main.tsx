@@ -4,7 +4,6 @@ import App from "./App.tsx";
 import "./index.css";
 import "./lib/i18n"; // Initialize i18n
 import { Capacitor } from '@capacitor/core';
-import { isFontPreviewEnabled } from './lib/fontPairs';
 
 // Native resilience: disable Service Worker in the Capacitor container
 // to prevent stale cache / chunk-loading issues after app updates.
@@ -46,21 +45,13 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   </React.StrictMode>,
 );
 
-// Font diagnostic: reports whether the Avenir site font actually loaded in this browser.
+// Font diagnostic: reports whether the site faces (Archivo / Plus Jakarta Sans)
+// actually loaded in this browser.
 if (typeof document !== 'undefined' && 'fonts' in document) {
   window.setTimeout(() => {
     void document.fonts.ready.then(() => {
-      const faces = [...document.fonts].filter((f) => f.family.includes('Avenir'));
-      console.info('[font-check]', faces.map((f) => `${f.weight}/${f.style}:${f.status}`).join(', '), 'regular-available:', document.fonts.check("16px 'Avenir Next LT Pro'"));
+      const faces = [...document.fonts].filter((f) => /Archivo|Plus Jakarta Sans/.test(f.family));
+      console.info('[font-check]', faces.map((f) => `${f.weight}/${f.style}:${f.status}`).join(', '), 'site-faces-available:', document.fonts.check("16px 'Plus Jakarta Sans'") && document.fonts.check("16px 'Archivo'"));
     });
   }, 4000);
-}
-
-// Preview-only font pairing comparison panel. Never mounted on the published site.
-if (isFontPreviewEnabled()) {
-  void import('./components/preview/FontPairSwitcher')
-    .then((m) => m.mountFontPairSwitcher())
-    .catch(() => {
-      /* preview chrome is optional */
-    });
 }
