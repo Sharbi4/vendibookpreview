@@ -40,3 +40,13 @@ The dashboard defaults to the most recently published snapshot for the selected 
 The owner's October 31 09:30–10:00 America/Phoenix Aurora report includes 20 logged actions, 224 Facebook results, 19 Threads results, two prospects on hold, rechecks November 1 and 7, and zero qualified matches, outreach, replies or conversions. Cumulative 733 logged actions includes repeat checks; it is not reach. The report contradicts the earlier placement recap, so current placement totals are explicitly awaiting reconciliation. Do not overwrite the Day 1 snapshot or merge Hollywood activity into Dennis's campaign. Source evidence is owner-supplied, not independently platform-verified.
 
 No scheduled task or promised 30-minute delivery is created by publishing a snapshot. Use a stable key, retain the actual reporting period, and leave next_update_at null when no next publication is confirmed.
+
+## November 5 review update
+
+The owner supplied the elapsed November 4 10:17 AM–November 5 10:17 AM America/Phoenix window. Aurora has 11 scored prospects, all held or on stand-down, 127 search runs, and six dated reviews (November 6 or 7). One historical outreach comment on November 2 remains awaiting a response; none was sent in this reporting window. Scores indicate research priority, not confirmed buyer interest or purchasing capacity. The new snapshot replaces the latest view, without rewriting November 3 history or inferring new prospects from the changed total.
+
+`review_update` digests use anonymous generic buyer profiles when the new source does not supply a safely attributable equipment profile. Fixed hold status enums and optional `follow_up_on` dates describe each review. Overdue prospect dates remain visible; top-level planned-date lists still reject dates preceding the report. Promotions omitted from this report are not represented as newly reconfirmed placements. Exact zero window outcomes remain available in expandable reporting details.
+
+The Hollywood rental report is prepared separately in `src/test/fixtures/buyerMatchNovember5Hollywood.json`: two held rental prospects, 129 search runs, overdue November 3 follow-ups, an out-of-area request with an archived-listing draft, and a recurring-weekend request missing location/dates. Production inspection found no campaign for that listing and no current BuyerMatch entitlement for its owner. It is not attached to Dennis's campaign or published by bypassing membership checks.
+
+The accompanying external outreach approval extension is source context, not a customer metric or an instruction to turn on scheduled jobs. Importing this report does not change campaign permissions, activation, billing, or outbound activity.

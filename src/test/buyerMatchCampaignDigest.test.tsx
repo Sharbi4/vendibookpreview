@@ -3,8 +3,31 @@ import { cleanup, render, screen, within } from '@testing-library/react';
 import BuyerMatchProgress from '@/components/monetization/BuyerMatchProgress';
 import type { BuyerMatchMonitoringReport } from '@/lib/monetization/buyerMatchIntelligence';
 import fixture from './fixtures/buyerMatchCampaignReport.json';
+import aurora from './fixtures/buyerMatchNovember5Aurora.json';
+import hollywood from './fixtures/buyerMatchNovember5Hollywood.json';
 afterEach(cleanup);
 describe('Reviewed campaign digest',()=>{
+ it('shows current holds and scheduled reviews without inventing new outreach',()=>{
+  const {container}=render(<BuyerMatchProgress update={{id:'nov5',campaign_id:'c',created_at:'2026-11-05T18:00:00Z',next_update_at:null,steps:{review:'planned'},report:aurora as BuyerMatchMonitoringReport}}/>);
+  expect(screen.getByText('Prospects identified').nextElementSibling).toHaveTextContent('11');
+  expect(screen.getByText('Dated follow-up reviews').nextElementSibling).toHaveTextContent('6');
+  expect(screen.getByText('Targeted searches · last 24 hours').nextElementSibling).toHaveTextContent('127');
+  expect(screen.getAllByRole('article')).toHaveLength(11);
+  expect(screen.getAllByText('Contact paused · scheduled recheck')).toHaveLength(2);
+  expect(screen.getByText('Outreach held · capacity review')).toBeInTheDocument();
+  expect(screen.getByText(/1 outreach comment reported/)).toHaveTextContent('November 2, 2026');
+  expect(container.textContent).not.toMatch(/Chandra|Kristi|Robin|qualified prospects|Direct outreach completed|placements planned beneath/);
+  expect(screen.queryByRole('region',{name:'Promotion log'})).not.toBeInTheDocument();
+  expect(container.querySelector('time[datetime="2026-11-05T14:16:00Z"]')).toHaveTextContent(/7:16/);
+ });
+ it('keeps overdue rental follow-ups and location/draft problems explicit',()=>{
+  const {container}=render(<BuyerMatchProgress update={{id:'rental',campaign_id:'r',created_at:'2026-11-05T18:00:00Z',next_update_at:null,steps:{review:'planned'},report:hollywood as BuyerMatchMonitoringReport}}/>);
+  expect(screen.getAllByRole('article')).toHaveLength(2);
+  expect(screen.getAllByText(/Follow-up overdue since/)).toHaveLength(2);
+  expect(screen.getByText(/outside the listing’s South Florida market/)).toBeInTheDocument();
+  expect(screen.getByText(/Location and specific dates still need confirmation/)).toBeInTheDocument();
+  expect(container.textContent).not.toMatch(/Errks|Rick Fox|national matching supported/);
+ });
  it('shows nine anonymous prospects, completed outreach and separately labelled pending placements',()=>{
   const {container}=render(<BuyerMatchProgress update={{id:'r',campaign_id:'c',created_at:'2026-11-03T18:00:00Z',next_update_at:null,steps:{review:'planned'},report:fixture as BuyerMatchMonitoringReport}}/>);
   expect(screen.getByText('Prospects identified').nextElementSibling).toHaveTextContent('9');

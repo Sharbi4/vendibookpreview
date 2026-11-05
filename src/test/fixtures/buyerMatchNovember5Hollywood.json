@@ -1,0 +1,51 @@
+{
+  "report_kind": "monitoring",
+  "period_start": "2026-11-04T17:17:00Z",
+  "period_end": "2026-11-05T17:17:00Z",
+  "actions_logged": null,
+  "facebook_items_reviewed": null,
+  "threads_items_reviewed": null,
+  "new_prospects": 0,
+  "qualified_matches": null,
+  "comments_published": null,
+  "conversations_started": null,
+  "new_replies": null,
+  "interested_buyers": null,
+  "links_shared": null,
+  "meetings_requested": null,
+  "new_conversions": 0,
+  "follow_ups_pending": 2,
+  "follow_up_dates": [],
+  "cumulative_actions": null,
+  "prospects_under_review": 2,
+  "placement_status": "updated_report",
+  "listing_verified_at": "2026-11-05T14:16:00Z",
+  "campaign_digest": {
+    "campaign_start": "2026-10-30",
+    "report_date": "2026-11-05",
+    "searches_24h": 129,
+    "direct_outreach_total": 0,
+    "review_update": true,
+    "mode": "rent",
+    "promotions": [],
+    "prospects": [
+      {
+        "profile": "short_rental",
+        "score": 42,
+        "status": "draft_revision",
+        "follow_up_on": "2026-11-03",
+        "posted_on": null,
+        "contacted_at": null
+      },
+      {
+        "profile": "recurring_rental",
+        "score": 42,
+        "status": "location_review",
+        "follow_up_on": "2026-11-03",
+        "posted_on": null,
+        "contacted_at": null
+      }
+    ]
+  },
+  "drafts_held": 1
+}

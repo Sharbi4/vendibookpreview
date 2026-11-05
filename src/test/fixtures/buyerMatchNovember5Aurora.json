@@ -1,0 +1,126 @@
+{
+  "report_kind": "monitoring",
+  "period_start": "2026-11-04T17:17:00Z",
+  "period_end": "2026-11-05T17:17:00Z",
+  "actions_logged": null,
+  "facebook_items_reviewed": null,
+  "threads_items_reviewed": null,
+  "new_prospects": 0,
+  "qualified_matches": null,
+  "comments_published": 0,
+  "conversations_started": null,
+  "new_replies": 0,
+  "interested_buyers": null,
+  "links_shared": null,
+  "meetings_requested": null,
+  "new_conversions": 0,
+  "follow_ups_pending": 6,
+  "follow_up_dates": [
+    "2026-11-06",
+    "2026-11-07"
+  ],
+  "cumulative_actions": null,
+  "prospects_under_review": 11,
+  "placement_status": "updated_report",
+  "listing_verified_at": "2026-11-05T14:16:00Z",
+  "campaign_digest": {
+    "campaign_start": "2026-10-30",
+    "report_date": "2026-11-05",
+    "searches_24h": 127,
+    "direct_outreach_total": 1,
+    "review_update": true,
+    "mode": "sale",
+    "outreach_last_date": "2026-11-02",
+    "promotions": [],
+    "prospects": [
+      {
+        "profile": "buyer_review",
+        "score": 80,
+        "status": "stand_down",
+        "follow_up_on": "2026-11-06",
+        "posted_on": null,
+        "contacted_at": null
+      },
+      {
+        "profile": "buyer_review",
+        "score": 61,
+        "status": "capacity_review",
+        "follow_up_on": null,
+        "posted_on": null,
+        "contacted_at": null
+      },
+      {
+        "profile": "buyer_review",
+        "score": 59,
+        "status": "held",
+        "follow_up_on": null,
+        "posted_on": null,
+        "contacted_at": null
+      },
+      {
+        "profile": "buyer_review",
+        "score": 57,
+        "status": "stand_down",
+        "follow_up_on": "2026-11-07",
+        "posted_on": null,
+        "contacted_at": null
+      },
+      {
+        "profile": "buyer_review",
+        "score": 52,
+        "status": "held",
+        "follow_up_on": "2026-11-07",
+        "posted_on": null,
+        "contacted_at": null
+      },
+      {
+        "profile": "buyer_review",
+        "score": 48,
+        "status": "held",
+        "follow_up_on": null,
+        "posted_on": null,
+        "contacted_at": null
+      },
+      {
+        "profile": "buyer_review",
+        "score": 47,
+        "status": "held",
+        "follow_up_on": null,
+        "posted_on": null,
+        "contacted_at": null
+      },
+      {
+        "profile": "buyer_review",
+        "score": 45,
+        "status": "held",
+        "follow_up_on": "2026-11-07",
+        "posted_on": null,
+        "contacted_at": null
+      },
+      {
+        "profile": "buyer_review",
+        "score": 44,
+        "status": "held",
+        "follow_up_on": "2026-11-07",
+        "posted_on": null,
+        "contacted_at": null
+      },
+      {
+        "profile": "buyer_review",
+        "score": 43,
+        "status": "held",
+        "follow_up_on": null,
+        "posted_on": null,
+        "contacted_at": null
+      },
+      {
+        "profile": "buyer_review",
+        "score": 42,
+        "status": "held",
+        "follow_up_on": "2026-11-07",
+        "posted_on": null,
+        "contacted_at": null
+      }
+    ]
+  }
+}
