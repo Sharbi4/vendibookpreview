@@ -69,6 +69,7 @@ export interface BuyerMatchMonitoringReport {
   drafts_held?: number; scored_prospects?: number; score_threshold?: number;
   listing_verified_at?: string; draft_hold_reason?: 'channel_unavailable'; conversations_in_progress?: number;
   campaign_digest?: BuyerMatchCampaignDigest;
+  review_digest?: BuyerMatchCampaignDigest;
 }
 export interface BuyerMatchCampaignDigest {
   campaign_start: string; report_date: string; searches_24h: number; direct_outreach_total: number;

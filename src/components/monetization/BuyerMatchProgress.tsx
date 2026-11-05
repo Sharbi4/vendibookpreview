@@ -61,6 +61,7 @@ export default function BuyerMatchProgress({ update, historical = false }: { upd
 }
 
 function MonitoringReport({ report: r }: { report: BuyerMatchMonitoringReport }) {
+  if (r.review_digest) return <BuyerMatchCampaignDigest digest={r.review_digest} listingVerifiedAt={r.listing_verified_at} report={r}/>;
   if (r.campaign_digest) return <BuyerMatchCampaignDigest digest={r.campaign_digest} listingVerifiedAt={r.listing_verified_at} report={r}/>;
   const date = (value: string) => new Intl.DateTimeFormat(undefined, {month:'long',day:'numeric',timeZone:'UTC'}).format(new Date(value+'T12:00:00Z'));
   return <div className="space-y-7 px-6 py-7 sm:px-9">

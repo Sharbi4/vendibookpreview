@@ -23,6 +23,7 @@ await db.exec(readFileSync('supabase/migrations/20261031180000_buyermatch_monito
 await db.exec(readFileSync('supabase/migrations/20261101170000_buyermatch_pipeline_reports.sql','utf8'));
 await db.exec(readFileSync('supabase/migrations/20261103190000_buyermatch_campaign_digest.sql','utf8'));
 await db.exec(readFileSync('supabase/migrations/20261105180000_buyermatch_review_updates.sql','utf8'));
+await db.exec(readFileSync('supabase/migrations/20261105183000_buyermatch_review_compatibility.sql','utf8'));
 const asUser=async n=>{await db.exec('reset role');await q("select set_config('request.jwt.claim.sub',$1,false)",[id(n)]);await db.exec('set role authenticated');};
 const next='2099-01-01T00:00:00Z';
 let passed=0;
@@ -116,6 +117,6 @@ for(const [index,change] of invalidDigests.entries()) await test('rejects privat
 
 const reviewFixtures=['buyerMatchNovember5Aurora.json','buyerMatchNovember5Hollywood.json'].map(name=>JSON.parse(readFileSync('src/test/fixtures/'+name,'utf8').replaceAll('2026-','2025-')));
 for(const [index,data] of reviewFixtures.entries()) await test('review snapshot preserves owner privacy and overdue dates '+index,async()=>{await asUser(1);const first=await monitor(data);assert.equal((await monitor(data))[0].id,first[0].id);await asUser(2);assert.deepEqual((await q('select monitoring_report from buyermatch_progress_updates'))[0].monitoring_report,data);await asUser(3);assert.equal((await q('select id from buyermatch_progress_updates')).length,0);});
-for(const change of [d=>d.campaign_digest.prospects[0].follow_up_on='Private name',d=>d.campaign_digest.prospects[0].follow_up_on='2025-02-30',d=>d.campaign_digest.prospects[0].status='contacted',d=>d.campaign_digest.mode='all',d=>d.campaign_digest.review_update='yes',d=>d.campaign_digest.outreach_last_date='2099-01-01']) await test('rejects unsafe review metadata',async()=>{await asUser(1);const d=structuredClone(reviewFixtures[0]);change(d);await assert.rejects(()=>monitor(d));});
+for(const change of [d=>d.review_digest.prospects[0].follow_up_on='Private name',d=>d.review_digest.prospects[0].follow_up_on='2025-02-30',d=>d.review_digest.prospects[0].status='contacted',d=>d.review_digest.mode='all',d=>d.review_digest.review_update='yes',d=>d.review_digest.outreach_last_date='2099-01-01']) await test('rejects unsafe review metadata',async()=>{await asUser(1);const d=structuredClone(reviewFixtures[0]);change(d);await assert.rejects(()=>monitor(d));});
 
 console.log(`${passed} progress access/audit cases passed`);await db.close();
