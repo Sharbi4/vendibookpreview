@@ -106,6 +106,7 @@
   font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: hsl(var(--hiw-stone));
 }
 .hiw-chip-dot { width: 7px; height: 7px; border-radius: 999px; background: hsl(var(--hiw-orange)); }
+.hiw-chip svg { width: 16px; height: 16px; color: hsl(var(--hiw-orange)); }
 
 /* ── Hero ── */
 .hiw-hero { position: relative; padding: 40px 0 56px; overflow: hidden; }
