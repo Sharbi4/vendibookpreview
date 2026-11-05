@@ -1,5 +1,7 @@
 # Roadmap
 
+- [done] Removed the homepage financing band (Financing partner / APPROVE panel) and its dead imports and CSS; homepage verified in the preview with no gap, header Financing link and /financing page still working, 10 financing tests pass under vitest. Preview only; nothing published.
+
 - [done] Owner picked Archivo (headings) + Plus Jakarta Sans (all other text) from the preview comparison; both bundled as WOFF2 in src/assets/fonts with CDN copies as fallback, tokens updated in src/index.css, Google Fonts links removed, comparison panel removed. Header/body/headline verified in the preview.
 
 - [done] Financing and abandoned rental emails now offer personal callback and 30-minute sales-team meeting options; deployed both senders, authenticated live previews returned 200, 3 validation tests pass and Contact destinations verified. Meeting currently uses Allison to find a time (no direct Calendly URL configured); callback anchor change is preview-only. No customer emails sent or frontend published.
