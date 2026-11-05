@@ -30,16 +30,58 @@
 .buyermatch-theme :focus-visible { outline-color: hsl(var(--primary)); }
 
 @font-face {
-  font-family: 'SofiaProSoftLight';
-  src: url('https://vendibook.com/__l5e/assets-v1/5c9bc164-9241-46f4-98fa-bc6ea22ce45e/SofiaProSoftLight.otf') format('opentype');
-  font-weight: 300;
+  font-family: 'Avenir Next LT Pro';
+  src: url('https://vendibook.com/__l5e/assets-v1/78c18cde-7059-4201-bcaf-39391e9adb60/AvenirNextLTPro-UltLt.otf') format('opentype');
+  font-weight: 100 200;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Avenir Next LT Pro';
+  src: url('https://vendibook.com/__l5e/assets-v1/4fd907b0-f582-410c-bdcd-95e0d13c17af/AvenirNextLTPro-Regular.otf') format('opentype');
+  font-weight: 300 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Avenir Next LT Pro';
+  src: url('https://vendibook.com/__l5e/assets-v1/47446841-9541-47f2-b1b5-a32d960b9f3a/AvenirNextLTPro-MediumIt.otf') format('opentype');
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Avenir Next LT Pro';
+  src: url('https://vendibook.com/__l5e/assets-v1/d2f56c8f-1b68-4afe-b9e5-8be26cd98e5a/AvenirNextLTPro-Demi.otf') format('opentype');
+  font-weight: 500 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Avenir Next LT Pro';
+  src: url('https://vendibook.com/__l5e/assets-v1/de9bad8d-edce-48dc-8e06-4a16f9f9e713/AvenirNextLTPro-DemiIt.otf') format('opentype');
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Avenir Next LT Pro';
+  src: url('https://vendibook.com/__l5e/assets-v1/d1c97d9f-bef8-4224-b76d-9a1e797b77ab/AvenirNextLTPro-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Avenir Next LT Pro';
+  src: url('https://vendibook.com/__l5e/assets-v1/efcf4e6e-5bb1-4227-b936-42c9e2ac35c6/AvenirNextLTPro-Heavy.otf') format('opentype');
+  font-weight: 800 900;
   font-style: normal;
   font-display: swap;
 }
 
 @layer base {
   :root {
-    --font-site: 'SofiaProSoftLight', 'Sofia Pro', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-site: 'Avenir Next LT Pro', 'Avenir Next', 'Avenir', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     /* Vendibook Brand Colors */
     --vendibook-orange: 14 100% 57%;
     --vendibook-orange-light: 14 100% 95%;
@@ -402,11 +444,11 @@
 }
 
 /* Override legacy page-specific faces, including portalled menus and dialogs.
-   The supplied face is Light; browsers synthesize heavier requested weights.
+   Avenir Next LT Pro supplies real weights from ultra light to heavy.
    Keep code/reference monospace and payment brand lettering intact. */
 body, body :where(*) {
   font-family: var(--font-site) !important;
-  /* Sofia's soft forms need their natural spacing, including legacy headings
+  /* Avenir's forms need their natural spacing, including legacy headings
      and compact search filters that previously tightened the letters. */
   letter-spacing: 0 !important;
 }
