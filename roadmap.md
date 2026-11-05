@@ -1,5 +1,7 @@
 # Roadmap
 
+- [done] Preview-only font pairing switcher on the homepage (bottom-left panel) lets the owner click through Current Outfit+Figtree, Sora+Manrope, Space Grotesk+DM Sans, Syne+Plus Jakarta Sans, Archivo+Epilogue and Instrument Serif+Work Sans; all six pairs bundled as local WOFF2, header/body/headline swap verified for every pair and build OK. Waiting on the owner's pick before making any pairing permanent.
+
 - [done] Financing and abandoned rental emails now offer personal callback and 30-minute sales-team meeting options; deployed both senders, authenticated live previews returned 200, 3 validation tests pass and Contact destinations verified. Meeting currently uses Allison to find a time (no direct Calendly URL configured); callback anchor change is preview-only. No customer emails sent or frontend published.
 
 - [done] Email contact audit: canonical (866) 690-6227 and tel link reused across auth/transactional/marketing footers; 122 affected services deployed, 7 tests pass, authenticated live preview returns 200 with correct phone/link and no old number. No email sent or frontend published.
