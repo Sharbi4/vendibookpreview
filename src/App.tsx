@@ -184,7 +184,7 @@ const PermitPathUpgrades = lazy(() => import("./pages/PermitPathUpgrades"));
 const Partners = lazy(() => import("./pages/Partners"));
 const Press = lazy(() => import("./pages/Press"));
 const AdminAuthority = lazy(() => import("./pages/AdminAuthority"));
-const Financing = lazy(() => import("./pages/Financing"));
+const Financing = lazy(() => import("./pages/FinancingRedirect"));
 const ListingPurchaseReviewIntake = lazy(() => import("./pages/ListingPurchaseReviewIntake"));
 const ProtectedSalePage = lazy(() => import("./pages/ProtectedSale"));
 const TransactionDetail = lazy(() => import("./pages/TransactionDetail"));
