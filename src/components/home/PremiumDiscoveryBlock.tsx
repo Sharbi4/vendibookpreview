@@ -1,14 +1,14 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
+import { ArrowRight, Megaphone, ClipboardCheck, LineChart } from 'lucide-react';
 import { trackLeadEvent } from '@/lib/leadTracking';
 
-/**
- * Compact premium discovery block on the homepage.
- * Visually restrained, light premium card on the dark editorial page.
- * Sends users to /pricing as the single source of truth for upgrades.
- */
+const POINTS = [
+  { icon: Megaphone, title: 'Buyer & renter matching', text: 'For eligible sale and rental listings.' },
+  { icon: ClipboardCheck, title: 'Reviewed outreach', text: 'Every campaign is reviewed before it goes out.' },
+  { icon: LineChart, title: 'Real activity reports', text: 'See what actually happened, nothing invented.' },
+];
+
+/** Homepage BuyerMatch AI band — warm white glass. Sends users to /pricing for upgrades. */
 const PremiumDiscoveryBlock = () => {
   const handleClick = () => {
     trackLeadEvent('homepage_premium_discovery_click', {
@@ -19,62 +19,38 @@ const PremiumDiscoveryBlock = () => {
   };
 
   return (
-    <section className="py-10 sm:py-14 bg-background">
-      <div className="container max-w-6xl mx-auto px-5 sm:px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-60px' }}
-          transition={{ duration: 0.5 }}
-          className="sale-light relative overflow-hidden rounded-3xl p-6 sm:p-10 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.65)]"
-        >
-          {/* Warm ember wash */}
-          <div
-            className="absolute -top-1/2 -right-1/4 w-[420px] h-[420px] rounded-full pointer-events-none"
-            style={{
-              background:
-                'radial-gradient(circle, rgba(255,81,36,0.10) 0%, rgba(255,186,8,0.05) 40%, transparent 70%)',
-              filter: 'blur(50px)',
-            }}
-          />
-
-          <div className="relative flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-8">
-            <div className="flex-1 min-w-0">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-foreground/[0.08] bg-foreground/[0.03] mb-4">
-                <img src="/brand/vendibook-logo-email.png" alt="Vendibook" className="h-5 w-auto" />
-                <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/70">
-                  Pro · BuyerMatch AI
-                </span>
-              </div>
-
-              <h2 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight leading-[1.15] mb-2">
-                Find your next buyer or renter with BuyerMatch AI.
-              </h2>
-
-              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-2xl">
-                Included with Pro: buyer and renter matching for eligible sale and rental listings, reviewed outreach and real activity reports. Tell us about your equipment or space and who you want to reach. Campaign review and capacity apply; results are not guaranteed.
-              </p>
-            </div>
-
-            <div className="shrink-0 flex flex-col sm:items-end gap-3">
-              <Button
-                asChild
-                variant="cta"
-                size="lg"
-                className="rounded-2xl px-6 gap-2 whitespace-nowrap"
-                onClick={handleClick}
-              >
-                <Link to="/pricing#buyermatch-overview">
-                  Explore BuyerMatch AI
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-              <p className="text-xs text-muted-foreground sm:text-right">
-                Start free. Upgrade only when it makes sense for your business.
-              </p>
+    <section className="hb-ai" aria-labelledby="home-buyermatch-title">
+      <div className="hb-wrap">
+        <div className="hb-ai-panel hb-ai-split">
+          <div className="hb-ai-copy">
+            <span className="hb-ai-chip">
+              <img src="/brand/vendibook-logo-email.png" alt="Vendibook" />
+              <span>Pro · BuyerMatch AI</span>
+            </span>
+            <h2 id="home-buyermatch-title">Find your next buyer or renter.</h2>
+            <p className="hb-ai-lede">
+              Tell us about your equipment or space and who you want to reach. BuyerMatch AI is included with Vendibook Pro.
+            </p>
+            <div className="hb-ai-actions">
+              <Link to="/pricing#buyermatch-overview" className="hb-ai-btn" onClick={handleClick}>
+                Explore BuyerMatch AI <ArrowRight aria-hidden="true" />
+              </Link>
+              <span className="hb-ai-note">Start free. Upgrade only when it makes sense.</span>
             </div>
           </div>
-        </motion.div>
+          <ul className="hb-ai-cards">
+            {POINTS.map(({ icon: Icon, title, text }) => (
+              <li key={title} className="hb-ai-card">
+                <span className="hb-ai-icon"><Icon aria-hidden="true" /></span>
+                <div>
+                  <h3>{title}</h3>
+                  <p>{text}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <p className="hb-ai-fine">Campaign review and capacity apply; results are not guaranteed.</p>
+        </div>
       </div>
     </section>
   );
