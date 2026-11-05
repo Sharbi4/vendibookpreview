@@ -20,7 +20,7 @@ vi.mock('@/components/financing/FinancingLeadDialog', () => ({ FinancingLeadDial
 import { useFinancingHandoff } from '@/hooks/useFinancingHandoff';
 import { EQUINOX_APPLY_URL } from '@/lib/financing/disclosure';
 
-describe('financing apply opens Equinox in a new tab', () => {
+describe('financing apply opens APPROVE in a new tab', () => {
   let tab: { location: { href: string }; opener: unknown; closed: boolean; close: () => void };
   let open: ReturnType<typeof vi.spyOn>;
   const assign = vi.fn();
@@ -32,7 +32,7 @@ describe('financing apply opens Equinox in a new tab', () => {
   });
   afterEach(() => { open.mockRestore(); assign.mockReset(); invoke.mockReset(); });
 
-  it('sends the new tab to Equinox, cuts the opener and leaves this page alone', async () => {
+  it('sends the new tab to APPROVE, cuts the opener and leaves this page alone', async () => {
     const { result } = renderHook(() => useFinancingHandoff());
     await act(async () => { result.current.startFinancingApply('financing_page_hero' as never); });
     // No 'noopener' feature: that makes window.open return null.
@@ -42,7 +42,7 @@ describe('financing apply opens Equinox in a new tab', () => {
     expect(assign).not.toHaveBeenCalled();
   });
 
-  it('uses the listing-specific apply link in the new tab', async () => {
+  it('keeps the approved portal destination after listing eligibility verification', async () => {
     invoke.mockResolvedValue({ data: { applyUrl: 'https://financing.approvepayments.com/vendibook?ref=l1' }, error: null });
     const { result } = renderHook(() => useFinancingHandoff());
     await act(async () => { result.current.startFinancingApply('listing_detail' as never, 'l1'); });
