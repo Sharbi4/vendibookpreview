@@ -221,9 +221,8 @@ const Index = () => {
               <PostPurchasePeek />
             </div>
             <ol className="hb-steps" aria-label="How the Vendibook Guarantee works">
-              {GUARANTEE_STEPS.map((step, i) => (
+              {GUARANTEE_STEPS.map((step) => (
                 <li key={step.title}>
-                  <span className="hb-step-num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
                   <div><h3>{step.title}</h3><p>{step.body}</p></div>
                 </li>
               ))}
