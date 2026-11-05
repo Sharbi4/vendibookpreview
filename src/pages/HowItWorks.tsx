@@ -402,13 +402,15 @@ const HowItWorks = () => {
         {/* ---------------------------------------------------------- */}
         <section className="hiw-section" aria-labelledby="purchase-preview-title">
           <div className="hiw-wrap">
-            <div className="hiw-panel">
-              <p className="hiw-eyebrow">After you buy</p>
-              <h2 id="purchase-preview-title" className="hiw-title hiw-title-sm">Your purchase has a clear next step.</h2>
-              <p className="hiw-lede">
-                Open your order from Transactions to follow payment, delivery and the handoff. Live location and route
-                estimates appear when your delivery driver is actively sharing.
-              </p>
+            <div className="hiw-panel hiw-peek-panel">
+              <div className="hiw-peek-copy">
+                <p className="hiw-eyebrow">After you buy</p>
+                <h2 id="purchase-preview-title" className="hiw-title hiw-title-sm">Your purchase has a clear next step.</h2>
+                <p className="hiw-lede">
+                  Open your order from Transactions to follow payment, delivery and the handoff. Live location and route
+                  estimates appear when your delivery driver is actively sharing.
+                </p>
+              </div>
               <PostPurchasePeek />
             </div>
           </div>

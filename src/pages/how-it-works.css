@@ -218,7 +218,6 @@
 .hiw-cta-fine a { color: hsl(var(--hiw-ink)); text-decoration: underline; text-underline-offset: 2px; }
 
 /* Phone: keep the hero actions clear of the fixed assistant pill at the bottom right. */
-@media (max-width: 899px) {
   .hiw-hero { padding-top: 22px; }
   .hiw-hero .hiw-wrap > div:first-child { margin-bottom: 14px; }
   .hiw-h1 { margin-top: 14px; }
