@@ -65,8 +65,7 @@ const HeroPremium = ({ showGoogleSignIn = true, showRotator = true, guaranteeHre
 
       <div className="hp-hero-inner">
         <div className="hp-hero-copy">
-          <motion.p {...rise(0)} className="hp-hero-kicker">Food trucks · Trailers · Commissary kitchens</motion.p>
-          <motion.h1 id="home-hero-heading" {...rise(0.05)}>
+          <motion.h1 id="home-hero-heading" {...rise(0)}>
             Buy, sell &amp; rent food trucks and trailers
           </motion.h1>
           <motion.p {...rise(0.12)} className="hp-hero-lede">
