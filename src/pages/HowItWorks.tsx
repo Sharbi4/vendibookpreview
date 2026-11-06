@@ -372,10 +372,6 @@ const HowItWorks = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                <span className="hiw-chip">
-                  <span className="hiw-chip-dot" aria-hidden="true" />
-                  How Vendibook Works
-                </span>
                 <h1 className="hiw-h1">
                   Find your next truck.
                   <br />
