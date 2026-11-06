@@ -3,7 +3,7 @@
 .pvb-wash {
   position: absolute; inset: 0;
   background:
-    linear-gradient(90deg, hsl(38 32% 96% / 0.95) 0%, hsl(38 32% 96% / 0.86) 45%, hsl(38 32% 96% / 0.55) 100%),
+    linear-gradient(90deg, hsl(38 32% 96% / 0.94) 0%, hsl(38 32% 96% / 0.78) 42%, hsl(38 32% 96% / 0.25) 100%),
     linear-gradient(180deg, hsl(38 32% 96% / 0) 60%, hsl(38 32% 96% / 1) 100%);
   backdrop-filter: saturate(1.05);
 }
