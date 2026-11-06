@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import PageVideoBackdrop from '@/components/common/PageVideoBackdrop';
-import contactVideo from '@/assets/videos/contact-food-truck-loop.mp4.asset.json';
-import contactPoster from '@/assets/videos/contact-food-truck-poster.jpg.asset.json';
+import contactVideo from '@/assets/videos/contact-ice-cream-truck.mp4.asset.json';
+import contactPoster from '@/assets/videos/ice-cream-truck-poster.jpg.asset.json';
 import { Link } from 'react-router-dom';
 import { ArrowRight, CalendarClock, CheckCircle2, Loader2, MessageSquareText, Phone, PhoneCall, Sparkles } from 'lucide-react';
 import SEO from '@/components/SEO';

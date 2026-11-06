@@ -1,7 +1,7 @@
 import { PostPurchasePeek } from '@/components/home/PostPurchasePeek';
 import PageVideoBackdrop from '@/components/common/PageVideoBackdrop';
-import hiwVideo from '@/assets/videos/hiw-food-truck-loop.mp4.asset.json';
-import hiwPoster from '@/assets/videos/hiw-food-truck-poster.jpg.asset.json';
+import hiwVideo from '@/assets/videos/marketplace-network.mp4.asset.json';
+import hiwPoster from '@/assets/videos/marketplace-network-poster.jpg.asset.json';
 import FlipInsuranceSection from '@/components/booking/FlipInsuranceSection';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
