@@ -127,19 +127,27 @@ Deno.serve(async (req) => {
         if (t) t.count += 1;
         else threads.set(r.from_phone, { phone: r.from_phone, last_text: String(r.body ?? "").slice(0, 160), last_at: r.created_at, count: 1 });
       }
-      const phones = [...threads.keys()];
-      const { data: replies } = phones.length
-        ? await db.from("sms_message_log_v2").select("recipient_phone_e164, created_at").in("recipient_phone_e164", phones)
-          .eq("template_id", "support_reply_freeform").eq("send_status", "sent").order("created_at", { ascending: false })
-        : { data: [] };
+      // Team replies, including conversations the team started (e.g. after a callback request).
+      const { data: replies } = await db.from("sms_message_log_v2")
+        .select("recipient_phone_e164, created_at, template_variables")
+        .eq("template_id", "support_reply_freeform").eq("send_status", "sent")
+        .order("created_at", { ascending: false }).limit(500);
       const lastReply = new Map<string, string>();
-      for (const r of replies ?? []) if (!lastReply.has(r.recipient_phone_e164)) lastReply.set(r.recipient_phone_e164, r.created_at);
+      for (const r of replies ?? []) {
+        if (lastReply.has(r.recipient_phone_e164)) continue;
+        lastReply.set(r.recipient_phone_e164, r.created_at);
+        if (!threads.has(r.recipient_phone_e164)) {
+          const text = String((r.template_variables as Record<string, unknown> | null)?.body ?? "Text from the team");
+          threads.set(r.recipient_phone_e164, { phone: r.recipient_phone_e164, last_text: `You: ${text}`.slice(0, 160), last_at: r.created_at, count: 0 });
+        }
+      }
       return json({
         threads: [...threads.values()].map((t) => ({
           ...t,
           last_reply_at: lastReply.get(t.phone) ?? null,
-          needs_reply: !lastReply.get(t.phone) || lastReply.get(t.phone)! < t.last_at,
-        })),
+          needs_reply: t.count > 0 && (!lastReply.get(t.phone) || lastReply.get(t.phone)! < t.last_at),
+        })).sort((a, b) => (b.last_reply_at && b.last_reply_at > b.last_at ? b.last_reply_at : b.last_at)
+          .localeCompare(a.last_reply_at && a.last_reply_at > a.last_at ? a.last_reply_at : a.last_at)),
       });
     }
     if (body.action === "text_thread") {
