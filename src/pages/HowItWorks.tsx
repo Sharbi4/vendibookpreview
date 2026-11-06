@@ -1,4 +1,7 @@
 import { PostPurchasePeek } from '@/components/home/PostPurchasePeek';
+import PageVideoBackdrop from '@/components/common/PageVideoBackdrop';
+import hiwVideo from '@/assets/videos/hiw-food-truck-loop.mp4.asset.json';
+import hiwPoster from '@/assets/videos/hiw-food-truck-poster.jpg.asset.json';
 import FlipInsuranceSection from '@/components/booking/FlipInsuranceSection';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -353,7 +356,8 @@ const HowItWorks = () => {
         {/* ---------------------------------------------------------- */}
         {/* HERO                                                        */}
         {/* ---------------------------------------------------------- */}
-        <section className="hiw-hero">
+        <section className="hiw-hero pvb-host">
+          <PageVideoBackdrop videoUrl={hiwVideo.url} posterUrl={hiwPoster.url} />
           <div className="hiw-wrap">
             <GuideBreadcrumb
               items={[
