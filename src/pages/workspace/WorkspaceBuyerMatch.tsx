@@ -1,5 +1,5 @@
 import { matchingListingPrice } from '@/lib/monetization/buyerMatchIntelligence';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowUpRight, Copy, Loader2 } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -21,6 +21,10 @@ interface Engagement { visits?: number; unique_sessions?: number; daily?: { day:
 
 export default function WorkspaceBuyerMatch() {
   const query = useBuyerMatch(); const client = useQueryClient(); const [params, setParams] = useSearchParams();
+  const [clock, setClock] = useState(Date.now());
+  useEffect(() => { const timer = setInterval(() => setClock(Date.now()), 15000); return () => clearInterval(timer); }, []);
+  const syncedAt = query.dataUpdatedAt || 0;
+  const syncLabel = clock - syncedAt < 60000 ? 'Just now' : progressTimestamp(new Date(syncedAt).toISOString());
   const [listing, setListing] = useState(''); const [geography, setGeography] = useState(''); const [criteria, setCriteria] = useState('');
   const action = useMutation({ mutationFn: ({ name, payload }: { name: string; payload: Record<string, unknown> }) => buyerMatchAction(name, payload), onSuccess: () => client.invalidateQueries({ queryKey: ['buyermatch'] }) });
   const act: Act = (name, payload) => action.mutate({ name, payload });
@@ -44,6 +48,7 @@ export default function WorkspaceBuyerMatch() {
         <p className={bm.eyebrow}>BuyerMatch · Vendibook Pro</p>
         <h1 className={bm.h1 + ' mt-4'}>Find your next buyer or renter.</h1>
         <p className={bm.lead + ' mt-5'}>Our team researches demand for equipment and spaces like yours, contacts prospects only with documented permission, and logs verified activity here. Replies come to your Vendibook messages.</p>
+        {!!data && syncedAt > 0 && <p className={bm.note + ' mt-4'} role="status">{query.isError ? 'Refresh unavailable · Last synced: ' : 'Last synced: '}<time dateTime={new Date(syncedAt).toISOString()} title={progressTimestamp(new Date(syncedAt).toISOString())}>{syncLabel}</time><span className="ml-2">{query.isFetching ? 'Checking for updates…' : 'Checks automatically every minute.'}</span></p>}
       </div>
       <div className="mt-7 flex flex-wrap gap-3">
         <Link to="/dashboard/buyermatch/membership" className={bm.quiet}>Manage membership</Link>

@@ -6,16 +6,25 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import WorkspaceBuyerMatch from '@/pages/workspace/WorkspaceBuyerMatch';
 import type { BuyerMatchData } from '@/lib/monetization/buyerMatchIntelligence';
 import type { ListingSignals } from '@/hooks/useBuyerMatchSignals';
-const mocks=vi.hoisted(()=>({data:null as BuyerMatchData|null|undefined,action:vi.fn(),error:null as Error|null,signals:{} as Record<string,ListingSignals>}));
-vi.mock('@/hooks/useBuyerMatch',()=>({useBuyerMatch:()=>({data:mocks.data,isLoading:false,error:mocks.error,refetch:vi.fn()}),buyerMatchAction:(...args:unknown[])=>mocks.action(...args)}));
+const mocks=vi.hoisted(()=>({data:null as BuyerMatchData|null|undefined,action:vi.fn(),error:null as Error|null,syncedAt:0,signals:{} as Record<string,ListingSignals>}));
+vi.mock('@/hooks/useBuyerMatch',()=>({useBuyerMatch:()=>({data:mocks.data,dataUpdatedAt:mocks.syncedAt,isError:!!mocks.error,isFetching:false,isLoading:false,error:mocks.error,refetch:vi.fn()}),buyerMatchAction:(...args:unknown[])=>mocks.action(...args)}));
 vi.mock('@/hooks/useBuyerMatchSignals',()=>({SIGNAL_WINDOW_DAYS:30,useBuyerMatchSignals:()=>({data:mocks.signals,isLoading:false,isError:false,refetch:vi.fn()})}));
 vi.mock('@/hooks/useCatalogPrices',()=>({useCatalogPrice:()=>({cents:7900,billingType:'recurring'})}));
 vi.mock('@/contexts/AuthContext',()=>({useAuth:()=>({user:{id:'seller'}})}));
 vi.mock('@/components/workspace/WorkspaceShell',()=>({default:({children}:{children:ReactNode})=><div>{children}</div>}));
 function show(){return render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false},mutations:{retry:false}}})}><MemoryRouter><WorkspaceBuyerMatch/></MemoryRouter></QueryClientProvider>);}
 const pastCampaign={id:'c1',listing_id:'listing',status:'paused',created_at:'2026-10-01T00:00:00Z',listing_snapshot:{id:'listing',title:'Food truck'}};
-beforeEach(()=>{cleanup();mocks.action.mockReset();mocks.error=null;mocks.signals={};mocks.data={config:{entitled:true,is_admin:false,submissions_enabled:true,fulfillment_enabled:false,max_campaigns:3},campaigns:[],reports:[],listings:[{id:'listing',title:'Food truck'}],events:[],links:[]};});
+beforeEach(()=>{cleanup();mocks.action.mockReset();mocks.error=null;mocks.syncedAt=0;mocks.signals={};mocks.data={config:{entitled:true,is_admin:false,submissions_enabled:true,fulfillment_enabled:false,max_campaigns:3},campaigns:[],reports:[],listings:[{id:'listing',title:'Food truck'}],events:[],links:[]};});
 describe('BuyerMatch seller experience',()=>{
+ it('shows a successful sync as just now without replacing the report publication time',()=>{
+  mocks.syncedAt=Date.now();
+  mocks.data!.campaigns=[{...pastCampaign,status:'pending_activation'}];
+  mocks.data!.progress=[{id:'p',campaign_id:'c1',steps:{review:'planned'},created_at:'2026-10-30T18:00:00Z',next_update_at:null}];
+  show();
+  expect(screen.getByRole('status')).toHaveTextContent('Last synced: Just now');
+  expect(document.querySelector('time[datetime="2026-10-30T18:00:00Z"]')).toBeTruthy();
+ });
+
  it('shows the selected listing preparation report without inventing verified outreach',()=>{
   mocks.data!.campaigns=[{...pastCampaign,status:'pending_activation'}];
   mocks.data!.progress=[{id:'progress',campaign_id:'c1',steps:{priority:'complete',community_access:'in_progress'},created_at:'2026-10-30T18:00:00Z',next_update_at:'2026-10-30T18:30:00Z'}];

@@ -20,7 +20,7 @@ export function useBuyerMatch() {
     return () => { void supabase.removeChannel(channel); };
   }, [user?.id, client]);
   return useQuery<BuyerMatchData>({
-    queryKey: ['buyermatch', user?.id], enabled: !!user, refetchInterval: 60000,
+    queryKey: ['buyermatch', user?.id], enabled: !!user, refetchInterval: 60000, refetchOnMount: 'always', refetchOnWindowFocus: 'always',
     queryFn: async () => {
       if (!user) throw new Error('Sign in required');
       const config = await buyerMatchAction('config');
