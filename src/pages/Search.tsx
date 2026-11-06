@@ -1,7 +1,7 @@
 import '@/components/search/mobileSearch.css';
 import PageVideoBackdrop from '@/components/common/PageVideoBackdrop';
-import searchVideo from '@/assets/videos/search-food-truck-loop.mp4.asset.json';
-import searchPoster from '@/assets/videos/search-food-truck-poster.jpg.asset.json';
+import searchVideo from '@/assets/videos/trailer-showcase.mp4.asset.json';
+import searchPoster from '@/assets/videos/trailer-showcase-poster.jpg.asset.json';
 import { illustrativeFinancingNote } from '@/lib/financing/calculator';
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { ImpressionTracker } from '@/components/analytics/ImpressionTracker';

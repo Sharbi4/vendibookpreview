@@ -7,8 +7,8 @@ interface PageVideoBackdropProps {
 }
 
 /**
- * Muted looping background clip for light page headers (animated from a real
- * Vendibook listing photo). Sits behind content under a warm-white wash so
+ * Muted looping background clip for light page headers using owner-selected
+ * media. Sits behind content under a warm-white wash so
  * dark text stays readable. Reduced-motion users get the still photo only.
  * Parent must be `position: relative` with content above (z-index ≥ 1).
  */
