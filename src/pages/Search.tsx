@@ -1,4 +1,7 @@
 import '@/components/search/mobileSearch.css';
+import PageVideoBackdrop from '@/components/common/PageVideoBackdrop';
+import searchVideo from '@/assets/videos/search-food-truck-loop.mp4.asset.json';
+import searchPoster from '@/assets/videos/search-food-truck-poster.jpg.asset.json';
 import { illustrativeFinancingNote } from '@/lib/financing/calculator';
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { ImpressionTracker } from '@/components/analytics/ImpressionTracker';
@@ -914,7 +917,8 @@ const Search = () => {
         {/* Search header — warm ivory band, one premium What / Where     */}
         {/* control, dark confident action. No gradients or grid texture. */}
         {/* ------------------------------------------------------------ */}
-        <div className="border-b border-[#1b1714]/[0.08] bg-[#faf8f5]">
+        <div className="pvb-host border-b border-[#1b1714]/[0.08] bg-[#faf8f5]">
+          <PageVideoBackdrop videoUrl={searchVideo.url} posterUrl={searchPoster.url} />
           <div className="container py-4 sm:py-6">
             {/* Page title — quiet, editorial */}
             <div className="mb-3 sm:mb-4">

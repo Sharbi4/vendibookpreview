@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import PageVideoBackdrop from '@/components/common/PageVideoBackdrop';
+import contactVideo from '@/assets/videos/contact-food-truck-loop.mp4.asset.json';
+import contactPoster from '@/assets/videos/contact-food-truck-poster.jpg.asset.json';
 import { Link } from 'react-router-dom';
 import { ArrowRight, CalendarClock, CheckCircle2, Loader2, MessageSquareText, Phone, PhoneCall, Sparkles } from 'lucide-react';
 import SEO from '@/components/SEO';
@@ -113,7 +116,8 @@ export default function Contact() {
       <Header />
 
       <main className="flex-1">
-        <section className="vc-hero">
+        <section className="vc-hero pvb-host">
+          <PageVideoBackdrop videoUrl={contactVideo.url} posterUrl={contactPoster.url} />
           <div className="vc-wrap">
             <p className="vc-eyebrow">Vendibook support</p>
             <h1>We’re here for you, <em>every step of the way.</em></h1>
