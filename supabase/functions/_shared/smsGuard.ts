@@ -25,6 +25,13 @@ export type GuardedSendInput = {
   body: string;
   /** Idempotency key. If a row already exists with the same value, we skip. */
   idempotencyKey?: string;
+  /**
+   * Only for a human team member replying from the admin console: a support
+   * ticket where this person left this number for a callback within
+   * INBOUND_REPLY_DAYS counts as their request to be contacted about it.
+   * Automated senders must never set this.
+   */
+  allowCallbackRequestBasis?: boolean;
 };
 
 export type GuardResult =
@@ -136,7 +143,21 @@ export async function sendGuardedSms(input: GuardedSendInput): Promise<GuardResu
       .maybeSingle();
     inbound = data ?? null;
   }
-  if (!prefOk && !inbound) {
+  let callbackTicket: { id: string; created_at: string } | null = null;
+  if (!prefOk && !inbound && input.allowCallbackRequestBasis && input.category === 'customer_care'
+    && pref?.transactional_status !== 'opted_out') {
+    const since = new Date(Date.now() - INBOUND_REPLY_DAYS * 86_400_000).toISOString();
+    const { data } = await db
+      .from('support_tickets')
+      .select('id, created_at')
+      .eq('callback_phone_e164', phoneE164)
+      .gte('created_at', since)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    callbackTicket = data ?? null;
+  }
+  if (!prefOk && !inbound && !callbackTicket) {
     const logId = await logBlocked(db, input, phoneE164, 'no_active_consent');
     return { ok: false, reason: 'no_active_consent', logId };
   }
@@ -173,7 +194,9 @@ export async function sendGuardedSms(input: GuardedSendInput): Promise<GuardResu
         phone_verified_at: pref.phone_verified_at,
         checked_at: new Date().toISOString(),
       }
-    : { inbound_conversation_message_id: inbound!.id, last_inbound_at: inbound!.created_at, checked_at: new Date().toISOString() };
+    : inbound
+      ? { inbound_conversation_message_id: inbound.id, last_inbound_at: inbound.created_at, checked_at: new Date().toISOString() }
+      : { callback_request_ticket_id: callbackTicket!.id, callback_requested_at: callbackTicket!.created_at, sent_by: 'admin_console', checked_at: new Date().toISOString() };
 
   const { data: log, error: logErr } = await db
     .from('sms_message_log_v2')

@@ -204,10 +204,11 @@ Deno.serve(async (req) => {
         templateVariables: { body: text },
         body: /reply stop/i.test(text) ? text : `${text} Reply STOP to opt out.`,
         idempotencyKey: typeof body.idempotency_key === "string" ? body.idempotency_key.slice(0, 80) : crypto.randomUUID(),
+        allowCallbackRequestBasis: true,
       });
       if (!result.ok) {
         const why: Record<string, string> = {
-          no_active_consent: "This number hasn't agreed to Vendibook texts or texted us in the last 7 days. Call or email instead.",
+          no_active_consent: "This number hasn't agreed to Vendibook texts, texted us, or asked for a callback in the last 7 days. Call or email instead.",
           suppressed_number: "This number replied STOP, so it can't be texted.",
           invalid_phone_format: "That isn't a valid US phone number.",
           provider_not_configured: "Texting isn't configured.",
