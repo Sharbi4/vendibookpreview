@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
-import { Banknote, ExternalLink, FileDown, Loader2, Lock } from 'lucide-react';
+import { Banknote, FileDown, Loader2, Lock } from 'lucide-react';
 import { PayPalMonogram, PayPalWordmark, ApproveFinancingLogo } from '@/components/brand/ProviderLogos';
 import { Button } from '@/components/ui/button';
 import { SaleCard } from '@/components/listing-detail/sale/SaleCard';
 import { generateFinancingPurchaseSheet } from '@/lib/financing/purchaseSheet';
 import { FinancingAvailableBadge } from '@/components/financing/FinancingAvailableBadge';
 import { useEquinoxFinancingEnabled } from '@/hooks/useListingFinancing';
-import { useFinancingHandoff } from '@/hooks/useFinancingHandoff';
+import { ApproveApplicationButton } from '@/components/financing/ApproveApplicationButton';
 import { isFinanceableSaleListing } from '@/lib/financing/disclosure';
 import { financingCalculatorUrl, illustrativeFinancingNote, illustrativeMonthlyPayment } from '@/lib/financing/calculator';
 import { toast } from 'sonner';
@@ -31,13 +31,13 @@ interface FinancingActionPanelProps {
 
 /**
  * Per-listing financing surface. Renders ONLY when the global
- * `equinox_financing_enabled` flag is on AND this seller opted this listing in.
+ * APPROVE launch flag is on for a published sale listing.
  * All sheet data comes from the authoritative server path.
  */
 export const FinancingActionPanel = ({
   listing,
   className,
-  showPaymentLockup = true,
+  showPaymentLockup = false,
 }: FinancingActionPanelProps) => {
   const [busy, setBusy] = useState(false);
   const { startFinancingApply, financingLeadDialog } = useFinancingHandoff();
@@ -122,14 +122,7 @@ export const FinancingActionPanel = ({
       )}
 
       <div className="grid gap-2 sm:grid-cols-2">
-        <Button
-          size="sm"
-          className="finance-cta justify-center font-semibold"
-          onClick={handleApply}
-        >
-          Apply Now with APPROVE
-          <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
-        </Button>
+        <ApproveApplicationButton listing={listing} />
 
         <Button
           size="sm"
@@ -144,14 +137,7 @@ export const FinancingActionPanel = ({
           )}
           Download Purchase Sheet (PDF)
         </Button>
-        <Button asChild size="sm" className="finance-cta-outline justify-center sm:col-span-2">
-          <Link
-            to={'https://financing.approvepayments.com/vendibook'}
-            onClick={() => trackFinancingLearnMoreClick('listing_panel', listing.id)}
-          >
-            Apply for financing
-          </Link>
-        </Button>
+
       </div>
 
       {showPaymentLockup && (
