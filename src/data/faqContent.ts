@@ -289,10 +289,13 @@ export const faqCategories: FaqCategory[] = [
         id: "financing",
         question: "Can I finance a food truck or trailer?",
         answer:
-          "Eligible equipment listings may offer third-party financing referrals — currently led by APPROVE. Vendibook is not the lender and does not decide approval, rates, payments or funding dates. You can download a pro forma purchase summary from an eligible listing to submit with your application; it is not a payable invoice.",
-        keywords: ["financing", "monthly", "loan", "equinox", "equipment financing"],
+          "APPROVE is Vendibook’s financing partner for eligible equipment. Select Apply with APPROVE on a for-sale listing to open the provider’s application directly, without a Vendibook handoff form. Vendibook is not the lender and does not decide approval, rates, payments or funding dates. You can download a pro forma purchase summary from an eligible listing to submit with your application; it is not a payable invoice.",
+        keywords: ["financing", "monthly", "loan", "approve", "equipment financing"],
         actions: [A.financing],
       },
+      { id: "financing-estimates", question: "Where can I see financing estimates and offers?", answer: "Review estimates and available offers in the APPROVE application. Listing pages do not display estimated monthly payments. Lenders determine eligibility, rates, down payment, repayment terms and funding timing; estimates are not an approval or guaranteed offer.", keywords: ["approve", "financing"], actions: [A.financing] },
+      { id: "financing-status", question: "How do I check my financing application status?", answer: "Use the application information and communications provided by APPROVE, or contact your financing provider. Vendibook does not currently provide verified application-status tracking in its dashboard. Approval alone does not mean your equipment purchase is paid or complete.", keywords: ["approve", "financing"], actions: [A.financing] },
+      { id: "financing-payment-methods", question: "Does APPROVE replace PayPal checkout or Square rentals?", answer: "APPROVE replaces Equinox and PayPal installment financing offers. Ordinary PayPal purchase checkout and Square rental payments remain available through their existing flows. Vendibook is not a lender.", keywords: ["approve", "financing"], actions: [A.financing] },
       {
         id: "buy-out-of-state",
         question: "Can I buy from a seller in another state?",
