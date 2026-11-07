@@ -4,6 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 import { buyerCommitted, saleResumeUrl } from "./saleRecovery.ts";
+import { listingAcceptsGuestDraft } from "../_shared/guestCheckoutDraft.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -227,8 +228,135 @@ Deno.serve(async (req) => {
     }
   }
 
+  // ── Guest checkouts (email left at the first step, not signed in) ──
+  let guestSent2h = 0;
+  let guestSent24h = 0;
+
+  const completeGuest = (id: string) =>
+    supabase.from("guest_checkout_drafts").update({ completed_at: now.toISOString() }).eq("id", id);
+
+  const sendGuestEmail = async (draft: any, variant: "2h" | "24h") => {
+    const { data: listing } = await supabase
+      .from("listings").select("id, title, status, mode").eq("id", draft.listing_id).maybeSingle();
+    if (!listingAcceptsGuestDraft(draft.flow, listing)) {
+      await completeGuest(draft.id);
+      return false;
+    }
+
+    // Marketing unsubscribes are honored for guest reminders too.
+    const { count: unsubCount } = await supabase
+      .from("email_unsubscribes").select("id", { count: "exact", head: true }).ilike("email", draft.email);
+    if ((unsubCount ?? 0) > 0) {
+      await completeGuest(draft.id);
+      return false;
+    }
+
+    // They sent a guest Request to Buy / message for this listing: no nudge.
+    const { count: leadCount } = await supabase
+      .from("listing_leads").select("id", { count: "exact", head: true })
+      .eq("listing_id", draft.listing_id).ilike("email", draft.email).gte("created_at", draft.created_at);
+    if ((leadCount ?? 0) > 0) {
+      await completeGuest(draft.id);
+      return false;
+    }
+
+    // They signed in and continued: the signed-in draft (or the purchase) takes over.
+    const signedInTable = draft.flow === "sale" ? "sale_checkout_drafts" : "booking_drafts";
+    const { count: signedInCount } = await supabase
+      .from(signedInTable).select("id", { count: "exact", head: true })
+      .eq("listing_id", draft.listing_id).ilike("email", draft.email).gte("updated_at", draft.updated_at);
+    if ((signedInCount ?? 0) > 0) {
+      await completeGuest(draft.id);
+      return false;
+    }
+    const { data: profiles } = await supabase
+      .from("profiles").select("id").ilike("email", draft.email).limit(5);
+    const ids = (profiles || []).map((p: any) => p.id);
+    if (ids.length) {
+      let committed = false;
+      if (draft.flow === "sale") {
+        const [{ data: txs }, { count: reqCount }] = await Promise.all([
+          supabase.from("sale_transactions").select("status")
+            .in("buyer_id", ids).eq("listing_id", draft.listing_id).gte("created_at", draft.created_at),
+          supabase.from("sale_purchase_requests").select("id", { count: "exact", head: true })
+            .in("buyer_id", ids).eq("listing_id", draft.listing_id).gte("created_at", draft.created_at),
+        ]);
+        committed = buyerCommitted((txs || []).map((t: any) => t.status), reqCount ?? 0);
+      } else {
+        const { count } = await supabase
+          .from("booking_requests").select("id", { count: "exact", head: true })
+          .in("shopper_id", ids).eq("listing_id", draft.listing_id).gte("created_at", draft.created_at);
+        committed = (count ?? 0) > 0;
+      }
+      if (committed) {
+        await completeGuest(draft.id);
+        return false;
+      }
+    }
+
+    const fmt = (d: string | null) =>
+      d ? new Date(`${d}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : undefined;
+
+    const { error } = draft.flow === "sale"
+      ? await invokeTransactionalEmail({
+          templateName: "sale-checkout-abandoned",
+          recipientEmail: draft.email,
+          idempotencyKey: `guest-sale-abandon-${variant}-${draft.id}-${draft.updated_at}`,
+          templateData: {
+            listingTitle: listing!.title,
+            totalPrice: money(draft.total_price),
+            resumeUrl: saleResumeUrl(draft.resume_path, listing!.id, !!draft.request_only),
+            requestOnly: !!draft.request_only,
+            variant,
+          },
+        })
+      : await invokeTransactionalEmail({
+          templateName: "booking-abandoned",
+          recipientEmail: draft.email,
+          idempotencyKey: `guest-abandon-${variant}-${draft.id}-${draft.updated_at}`,
+          templateData: {
+            listingTitle: listing!.title,
+            startDate: fmt(draft.start_date),
+            endDate: fmt(draft.end_date),
+            resumeUrl: `https://vendibook.com${
+              typeof draft.resume_path === "string" && draft.resume_path.startsWith("/book/") && !draft.resume_path.startsWith("//")
+                ? draft.resume_path
+                : `/book/${listing!.id}`
+            }`,
+            variant,
+          },
+        });
+    if (error) {
+      errors.push(`guest-${variant}/${draft.id}: ${error.message}`);
+      return false;
+    }
+    return true;
+  };
+
+  const { data: guest2h } = await supabase
+    .from("guest_checkout_drafts").select("*")
+    .is("completed_at", null).is("email_2h_sent_at", null)
+    .lte("updated_at", cutoff2h).gt("updated_at", cutoff72h).limit(100);
+  for (const draft of guest2h || []) {
+    if (await sendGuestEmail(draft, "2h")) {
+      await supabase.from("guest_checkout_drafts").update({ email_2h_sent_at: now.toISOString() }).eq("id", draft.id);
+      guestSent2h++;
+    }
+  }
+
+  const { data: guest24h } = await supabase
+    .from("guest_checkout_drafts").select("*")
+    .is("completed_at", null).is("email_24h_sent_at", null).not("email_2h_sent_at", "is", null)
+    .lte("updated_at", cutoff24h).gt("updated_at", cutoff72h).limit(100);
+  for (const draft of guest24h || []) {
+    if (await sendGuestEmail(draft, "24h")) {
+      await supabase.from("guest_checkout_drafts").update({ email_24h_sent_at: now.toISOString() }).eq("id", draft.id);
+      guestSent24h++;
+    }
+  }
+
   return new Response(
-    JSON.stringify({ ok: true, sent2h, sent24h, saleSent2h, saleSent24h, errors }),
+    JSON.stringify({ ok: true, sent2h, sent24h, saleSent2h, saleSent24h, guestSent2h, guestSent24h, errors }),
     { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
   );
 });
