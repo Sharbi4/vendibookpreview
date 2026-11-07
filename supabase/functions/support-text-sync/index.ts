@@ -52,7 +52,27 @@ Deno.serve(async (req) => {
       signal: AbortSignal.timeout(10000),
     });
     await probe.body?.cancel();
-    return json({ auth_token_present: true, auth_token_valid: probe.ok, twilio_status: probe.status });
+    // Send a signed no-op to the live webhook exactly as Twilio would.
+    const webhookUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/twilio-inbound-webhook`;
+    const params: Record<string, string> = { VendibookSelfTest: 'webhook_signing', To: SUPPORT_LINE };
+    const data = webhookUrl + Object.keys(params).sort().map((k) => k + params[k]).join('');
+    const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(token), { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
+    const mac = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(data)));
+    const signature = btoa(String.fromCharCode(...mac));
+    const hook = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Twilio-Signature': signature },
+      body: new URLSearchParams(params),
+      signal: AbortSignal.timeout(10000),
+    });
+    const hookText = (await hook.text()).slice(0, 40);
+    return json({
+      auth_token_present: true,
+      auth_token_valid: probe.ok,
+      twilio_status: probe.status,
+      webhook_status: hook.status,
+      webhook_accepts_signed: hook.ok && hookText === 'signed-ok',
+    });
   }
 
   const cutoff = Date.now() - LOOKBACK_HOURS * 3_600_000;

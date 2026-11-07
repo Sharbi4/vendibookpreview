@@ -90,6 +90,13 @@ Deno.serve(async (req) => {
       return new Response('invalid signature', { status: 403 });
     }
 
+    // Signed health check from support-text-sync (only a holder of the auth
+    // token can produce a valid signature). Proves the signature/URL path
+    // without touching consent, tickets or alerts.
+    if (params.VendibookSelfTest === 'webhook_signing') {
+      return new Response('signed-ok', { status: 200 });
+    }
+
     const { reply } = await processInboundText(supabase, params);
     return twiml(reply);
   } catch (e) {
