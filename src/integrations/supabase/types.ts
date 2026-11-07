@@ -212,6 +212,30 @@ export type Database = {
         }
         Relationships: []
       }
+      approve_application_events: {
+        Row: {
+          application_id: string
+          event_hash: string
+          id: string
+          received_at: string
+          status: string
+        }
+        Insert: {
+          application_id: string
+          event_hash: string
+          id?: string
+          received_at?: string
+          status: string
+        }
+        Update: {
+          application_id?: string
+          event_hash?: string
+          id?: string
+          received_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       asset_requests: {
         Row: {
           admin_notes: string | null
