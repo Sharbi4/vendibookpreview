@@ -85,6 +85,43 @@ const ComplimentaryFeaturedBoostEmail = ({
 
       <CtaButton href={listingHref}>View your featured listing</CtaButton>
 
+      {viewsMultiplier ? (
+        <>
+          <Divider />
+          <H2>Why Featured works</H2>
+          <Section
+            style={{
+              margin: '0 0 12px',
+              padding: '18px 20px',
+              borderRadius: '12px',
+              border: `1px solid ${color.border}`,
+              backgroundColor: color.brandSoft ?? '#FFF4EE',
+            }}
+          >
+            <Text style={{ ...t.h1, margin: '0', color: color.brand }}>{`${viewsMultiplier}x more views`}</Text>
+            <Text style={{ ...t.small, margin: '4px 0 0' }}>
+              Over the last 30 days, Featured listings on {BRAND_NAME} averaged about {viewsMultiplier} times
+              the daily views of other listings. Results vary by listing.
+            </Text>
+          </Section>
+          <ActionRow
+            href={listingHref}
+            title="Seen first"
+            description="Shown ahead of other listings on the homepage, in search and in category rows."
+          />
+          <ActionRow
+            href={listingHref}
+            title="Seen by active buyers"
+            description="Featured spots go where shoppers are already browsing trucks and trailers."
+          />
+          <ActionRow
+            href={listingHref}
+            title={`${durationDays} days, no cost`}
+            description="Nothing to pay and nothing to cancel. The placement simply ends on its own."
+          />
+        </>
+      ) : null}
+
       <Divider />
 
       <H2>Turn the extra attention into buyers</H2>
