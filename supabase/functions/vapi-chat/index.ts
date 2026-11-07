@@ -1,3 +1,4 @@
+import { getCaller } from '../_shared/callerGuard.ts';
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
@@ -32,9 +33,17 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  // Paid chat: signed-in members only.
+  if (!(await getCaller(req))) {
+    return new Response(JSON.stringify({ error: 'Please sign in to chat with support.' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   try {
     if (!VAPI_PRIVATE_KEY) {
-      return new Response(JSON.stringify({ error: 'VAPI_PRIVATE_KEY not configured' }), {
+      return new Response(JSON.stringify({ error: 'Support chat is not available right now.' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -70,7 +79,7 @@ Deno.serve(async (req) => {
 
     if (!res.ok) {
       console.error('Vapi chat error:', res.status, data);
-      return new Response(JSON.stringify({ error: data?.message || 'Vapi error', details: data }), {
+      return new Response(JSON.stringify({ error: 'Support chat is not available right now.' }), {
         status: res.status,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
