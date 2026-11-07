@@ -15,6 +15,7 @@ import { CUSTOMER_SUCCESS_MEETING_URL, SUPPORT_PHONE_DISPLAY, SUPPORT_PHONE_E164
 import { followUpDueAt, formatEt, inFollowUpHours } from '../../supabase/functions/_shared/followUpWindow';
 import { trackFormSubmit } from '@/lib/analytics';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
+import TextUsNow from '@/components/contact/TextUsNow';
 import './contact.css';
 
 type Way = 'phone' | 'text' | 'email';
@@ -141,7 +142,7 @@ export default function Contact() {
               <p>Answered 24/7. Our phone assistant helps right away and connects you with a person whenever you want one.</p>
               <span className="vc-card-go">Call now <ArrowRight className="h-4 w-4" aria-hidden="true" /></span>
             </a>
-            <a className="vc-card" href={`sms:${SUPPORT_PHONE_E164}`}>
+            <a className="vc-card" href="#text-us">
               <span className="vc-card-icon"><MessageSquareText className="h-5 w-5" aria-hidden="true" /></span>
               <h3>Text {SUPPORT_PHONE_DISPLAY}</h3>
               <p>Prefer texting? Send us a message any time and get help right in your messages.</p>
@@ -161,6 +162,8 @@ export default function Contact() {
             </button>
           </div>
         </section>
+
+        <TextUsNow />
 
         <section id="callback" className="vc-wrap vc-main scroll-mt-24" aria-label="Request a callback">
           <div className="vc-panel">
