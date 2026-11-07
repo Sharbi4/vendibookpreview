@@ -91,6 +91,13 @@ const saveRecentSearch = (query: string) => {
 
 interface HeaderProps {
   hideSearch?: boolean;
+  /**
+   * Homepage only: while the page is at the top, the header turns transparent
+   * so the hero video shows behind it. It publishes its height as
+   * --site-header-h so the hero can slide underneath, and turns solid again
+   * once the visitor scrolls.
+   */
+  overlay?: boolean;
 }
 
 const HEADER_MENU_LINKS = [
@@ -123,8 +130,32 @@ const HEADER_CATEGORY_LINKS = [
   },
 ] as const;
 
-const Header = ({ hideSearch = false }: HeaderProps) => {
+const Header = ({ hideSearch = false, overlay = false }: HeaderProps) => {
   const { t } = useTranslation();
+  const headerRef = useRef<HTMLElement>(null);
+  const [atTop, setAtTop] = useState(true);
+
+  // Overlay mode: publish the header height for the hero and track scroll.
+  useEffect(() => {
+    if (!overlay) return;
+    const root = document.documentElement;
+    const el = headerRef.current;
+    const setHeight = () => {
+      if (el) root.style.setProperty('--site-header-h', `${el.offsetHeight}px`);
+    };
+    const onScroll = () => setAtTop(window.scrollY < 24);
+    setHeight();
+    onScroll();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(setHeight) : null;
+    if (el && ro) ro.observe(el);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener('scroll', onScroll);
+      root.style.removeProperty('--site-header-h');
+    };
+  }, [overlay]);
+  const transparent = overlay && atTop;
   
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [mobileSearchQuery, setMobileSearchQuery] = useState('');
@@ -313,12 +344,17 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
   return (
     <>
     <header data-site-chrome=""
-      className="marketplace-header sticky top-0 z-50 w-full border-b border-border/30 shadow-sm"
+      ref={headerRef}
+      data-overlay={overlay ? (transparent ? 'top' : 'scrolled') : undefined}
+      className={`marketplace-header sticky top-0 z-50 w-full border-b transition-[background,border-color,box-shadow] duration-300 ${transparent ? 'border-transparent shadow-none' : 'border-border/30 shadow-sm'}`}
       style={{
         // Near-opaque charcoal instead of backdrop-filter: blur(24px).
         // backdrop-filter over animated/scrolling content re-samples every frame
         // and causes flicker / graphic tearing during scroll on many GPUs.
-        background: 'hsl(0, 0%, 4%)',
+        // Overlay mode at the top: a soft dark fade so the hero video shows through.
+        background: transparent
+          ? 'linear-gradient(180deg, hsl(0 0% 4% / .55) 0%, hsl(0 0% 4% / .18) 70%, transparent 100%)'
+          : 'hsl(0, 0%, 4%)',
         // Promote to its own compositor layer so scroll repaints don't drag the header.
         transform: 'translateZ(0)',
         willChange: 'transform',
@@ -582,7 +618,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
           ))}
         </div>
       </nav>
-      <div className="h-[3px] bg-primary" aria-hidden="true" />
+      <div className={`h-[3px] bg-primary transition-opacity duration-300 ${transparent ? 'opacity-0' : 'opacity-100'}`} aria-hidden="true" />
     </header>
   </>
   );
