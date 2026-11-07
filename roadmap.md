@@ -1,6 +1,6 @@
 # Roadmap
 
-- [open] Give the Charlotte 2024 food trailer listing (3b6f1f77) a free 30-day featured spot and email the seller with the branded template, including the 3.7x views highlight.
+- [done] Charlotte 2024 food trailer (3b6f1f77) featured free until 2026-12-07 (hourly expiry job ends it); branded email with 3.7x views highlight sent to the seller.
 - [open] Homepage BuyerMatch band: center the animation in the right half (~50%) and make the band shorter.
 
 - [done] Report APPROVE financing clicks, checkout activity and whether follow-up emails go out (read-only).
