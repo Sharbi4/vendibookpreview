@@ -1,0 +1,64 @@
+.home-atlas-banner-section { padding: 36px 0 56px; }
+.home-atlas-banner {
+  position: relative; isolation: isolate; overflow: hidden;
+  display: grid; grid-template-columns: 1.05fr 1fr; align-items: center; gap: 40px;
+  padding: clamp(28px, 4vw, 56px); border-radius: 28px;
+  color: #fff; background: radial-gradient(ellipse at 95% 0%, #f57a38 0%, transparent 55%), linear-gradient(120deg, #8f270e, #c63d13 60%, #ab3210);
+  border: 1px solid rgba(255,255,255,.28);
+  box-shadow: 0 20px 50px -25px rgba(126,36,12,.4), inset 0 1px 0 rgba(255,255,255,.3);
+}
+.home-atlas-banner::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: repeating-radial-gradient(ellipse at 100% 0%, transparent 0 18px, rgba(255,255,255,.07) 19px 20px, transparent 21px 32px);
+}
+.home-atlas-watermark {
+  position: absolute; width: 480px; height: 480px; right: -90px; bottom: -170px;
+  z-index: -1; background: rgba(255,255,255,.10); transform: rotate(-16deg); pointer-events: none;
+  mask: url('/brand/vendibook-icon-512.png') center / contain no-repeat;
+  -webkit-mask: url('/brand/vendibook-icon-512.png') center / contain no-repeat;
+}
+.home-atlas-wordmark { display: block; width: 136px; height: auto; margin-bottom: 28px; }
+.home-atlas-eyebrow { color: #ffdbca; font-size: 11px; line-height: 1.4; font-weight: 650; letter-spacing: .15em; text-transform: uppercase; margin-bottom: 12px; }
+.home-atlas-banner h2 { color: #fff; font-size: clamp(28px, 3.6vw, 44px); line-height: 1.09; font-weight: 750; letter-spacing: -.035em; margin: 0; }
+.home-atlas-description { color: #ffe8de; font-size: 15px; line-height: 1.7; max-width: 410px; margin-top: 18px; }
+.home-atlas-explore {
+  display: inline-flex; justify-content: center; align-items: center; gap: 32px;
+  min-height: 52px; margin-top: 26px; padding: 14px 22px;
+  border-radius: 12px; border: 1px solid rgba(255,255,255,.65);
+  background: linear-gradient(130deg, rgba(255,255,255,.97), rgba(255,235,222,.9));
+  color: #70220e !important; font-size: 14px; font-weight: 700; text-decoration: none !important;
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 6px 22px rgba(78,20,4,.16), inset 0 1px 0 #fff;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+.home-atlas-explore svg { width: 18px; height: 18px; }
+.home-atlas-explore:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(78,20,4,.25); }
+.home-atlas-explore:focus-visible { outline: 3px solid #fff; outline-offset: 5px; }
+.home-atlas-features {
+  padding: 26px; border: 1px solid rgba(255,255,255,.28); border-radius: 20px;
+  background: linear-gradient(130deg, rgba(100,25,5,.38), rgba(113,30,8,.54));
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
+}
+.home-atlas-features-label { color: #ffe3d4; font-size: 11px; text-transform: uppercase; letter-spacing: .12em; font-weight: 600; margin-bottom: 20px; }
+.home-atlas-features ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 20px; }
+.home-atlas-features li { display: flex; gap: 12px; align-items: flex-start; }
+.home-atlas-check { display: grid; place-items: center; flex: 0 0 22px; height: 22px; border-radius: 50%; background: rgba(255,255,255,.15); margin-top: 1px; }
+.home-atlas-check svg { width: 14px; height: 14px; color: #fff; }
+.home-atlas-features h3 { color: #fff; font-size: 15px; line-height: 1.5; font-weight: 650; margin: 0; }
+.home-atlas-features li p { color: #ffe3d6; font-size: 13px; line-height: 1.6; margin-top: 3px; }
+.home-atlas-assurance { border-top: 1px solid rgba(255,255,255,.18); padding-top: 16px; margin-top: 20px; color: #ffded0; font-size: 11px; line-height: 1.6; }
+@media (max-width: 700px) {
+  .home-atlas-banner-section { padding: 24px 0 36px; }
+  .home-atlas-banner { grid-template-columns: 1fr; gap: 24px; padding: 24px; border-radius: 22px; }
+  .home-atlas-wordmark { width: 120px; margin-bottom: 22px; }
+  .home-atlas-banner h2 { font-size: clamp(27px, 7vw, 36px); }
+  .home-atlas-description { font-size: 14px; margin-top: 14px; }
+  .home-atlas-explore { display: flex; width: 100%; margin-top: 20px; }
+  .home-atlas-features { padding: 20px 16px; border-radius: 16px; }
+  .home-atlas-features ul { gap: 16px; }
+  .home-atlas-watermark { width: 390px; height: 390px; right: -130px; bottom: -110px; }
+}
+@media (prefers-reduced-motion: reduce) { .home-atlas-explore { transition: none; } .home-atlas-explore:hover { transform: none; } }
+/* Render the supplied email wordmark as a monochrome mark on orange. */
+.home-atlas-wordmark { filter: grayscale(1) invert(1); mix-blend-mode: screen; }
