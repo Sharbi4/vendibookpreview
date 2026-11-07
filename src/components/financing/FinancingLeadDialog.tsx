@@ -57,7 +57,7 @@ export const FinancingLeadDialog = ({
           <DialogTitle>Before we hand you off</DialogTitle>
           <DialogDescription>
             So we can follow up and help with your purchase. Your application itself is completed
-            with <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />.
+            with <ApproveFinancingLogo className="approve-logo-inline" />.
           </DialogDescription>
         </DialogHeader>
 
@@ -93,7 +93,7 @@ export const FinancingLeadDialog = ({
           <div className="flex flex-col gap-2 pt-1">
             <Button type="submit" className="w-full" disabled={submitting}>
               {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Continue to <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />
+              Continue to <ApproveFinancingLogo className="approve-logo-inline" />
             </Button>
             <Button
               type="button"
@@ -108,7 +108,7 @@ export const FinancingLeadDialog = ({
         </form>
 
         <p className="text-[11px] leading-relaxed text-muted-foreground/80">
-          Vendibook is not a lender. Financing is subject to <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" /> and/or its funding
+          Vendibook is not a lender. Financing is subject to <ApproveFinancingLogo className="approve-logo-inline" /> and/or its funding
           providers&rsquo; approval and terms.
         </p>
       </DialogContent>

@@ -197,7 +197,7 @@ const Footer = () => {
         </ul>
         <div className="vf-partners">
           <span className="vf-partner"><span>Payments by</span><PayPalWordmark className="h-3.5" /></span>
-          <span className="vf-partner"><span>Financing by</span><ApproveFinancingLogo className="h-5 vf-mono" /></span>
+          <span className="vf-partner"><span>Financing by</span><span className="vf-approve-plate"><ApproveFinancingLogo className="h-5" /></span></span>
         </div>
       </div>
 

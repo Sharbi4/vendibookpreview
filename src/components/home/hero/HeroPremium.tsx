@@ -84,17 +84,19 @@ const HeroPremium = ({ showGoogleSignIn = true, showRotator = true, guaranteeHre
             Buy, sell &amp; rent food trucks and trailers
           </motion.h1>
           <motion.p {...rise(0.12)} className="hp-hero-lede">
-            Secure checkout and a protected handoff on every purchase with the {guaranteeLink}. Financing available
-            through{' '}
+            Secure checkout and a protected handoff on every purchase with the {guaranteeLink}.
+          </motion.p>
+          <motion.div {...rise(0.14)} className="hp-financing-brand">
             <Link
               to="https://financing.approvepayments.com/vendibook"
+              className="hp-financing-brand-link"
               data-cta-location="home_hero_financing"
               onClick={() => trackLeadEvent('hero_financing_clicked', { source: 'home_hero', destination: 'https://financing.approvepayments.com/vendibook' })}
             >
-              <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />
+              <span>Financing available through</span>
+              <ApproveFinancingLogo className="hp-financing-logo" />
             </Link>
-            .
-          </motion.p>
+          </motion.div>
         </div>
 
         <motion.div {...rise(0.18)} className="hp-hero-actions">

@@ -3767,3 +3767,10 @@ a.approve-premium-cta:focus-visible { outline: 3px solid #3276fa; outline-offset
 .sale-financing-panel { color: #17243b; }
 .sale-financing-panel > div:first-child, .sale-financing-panel > h3 { color: #17243b; }
 .sale-financing-panel > p { color: #5c687c; }
+
+/* Brand clear space: no pills, padding, or forced text-sized wordmarks. */
+.approve-brand-logo { flex-shrink: 0; background: transparent; padding: 0; border-radius: 0; }
+.approve-brand-logo.approve-logo-inline {
+  height: clamp(18px, 1.15em, 28px); width: auto; max-width: 135px;
+  margin: .2em .35em; vertical-align: middle;
+}

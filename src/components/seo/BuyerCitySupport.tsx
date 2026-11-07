@@ -44,11 +44,11 @@ export function BuyerCitySupport({ city, path, category }: { city: string; path:
     <div><p className="v2-home-eyebrow">A clearer path to ownership</p><h2 id="buyer-help-title" className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">Your next move, with help when you need it.</h2></div>
     <div className={`grid gap-4 ${financing ? 'lg:grid-cols-3' : 'md:grid-cols-2'}`}>
       {financing && <article className="flex flex-col items-start rounded-3xl border border-border bg-white p-6 shadow-sm sm:p-8">
-        <BrandIcon icon={CreditCard} size={52} /><p className="mt-6 text-xs font-semibold uppercase tracking-widest text-primary"><ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" /></p><h3 className="mt-2 text-xl font-semibold">A purchase plan that fits.</h3>
+        <BrandIcon icon={CreditCard} size={52} /><p className="mt-6 text-xs font-semibold uppercase tracking-widest text-primary"><ApproveFinancingLogo className="approve-logo-inline" /></p><h3 className="mt-2 text-xl font-semibold">A purchase plan that fits.</h3>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">Apply online for equipment financing. Personal and business credit are considered alongside your business details.</p>
         <Button className="mt-6 w-full" variant="cta" onClick={() => { track('city_financing_apply', 'https://financing.approvepayments.com/vendibook'); startFinancingApply('buyer_city'); }}>Apply for financing <ArrowUpRight className="ml-2 h-4 w-4" /></Button>
         <Link to="https://financing.approvepayments.com/vendibook" className="mt-3 text-sm font-medium underline underline-offset-4">How financing works</Link>
-        <p className="mt-5 text-xs leading-5 text-muted-foreground">Approval is not guaranteed. Rates, eligibility and terms are determined by <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" /> and/or its funding providers. Vendibook is not a lender.</p>
+        <p className="mt-5 text-xs leading-5 text-muted-foreground">Approval is not guaranteed. Rates, eligibility and terms are determined by <ApproveFinancingLogo className="approve-logo-inline" /> and/or its funding providers. Vendibook is not a lender.</p>
       </article>}
       <article className="flex flex-col items-start rounded-3xl border border-[#33414e] bg-[#202c36] p-6 text-white sm:p-8">
         <BrandIcon icon={MessageCircle} size={52} /><p className="mt-6 text-xs font-semibold uppercase tracking-widest text-orange-300">Atlas · AI sales assistant</p><h3 className="mt-2 text-xl font-semibold">Find your fit. Ask Atlas.</h3>

@@ -87,12 +87,12 @@ export function PlaidLogo({
 /** Owner-supplied official APPROVE artwork, hosted locally. */
 export function ApproveFinancingLogo({ className }: { className?: string }) {
   return <img src="/brand/approve-logo-primary.svg" alt="APPROVE" width={614} height={129}
-    className={cn('inline-block h-6 w-auto max-w-full object-contain rounded-sm bg-white px-1 py-0.5 align-middle', className)} />;
+    className={cn('approve-brand-logo inline-block h-6 w-auto max-w-full object-contain align-middle', className)} />;
 }
 
 /** Keep readable inline copy while displaying the official financing wordmark. */
 export function ApproveBrandText({ children }: { children: ReactNode }) {
   return <>{Children.map(children, child => typeof child !== 'string' ? child : child.split(/(APPROVE)/g).map((part, i) => part === 'APPROVE'
-    ? <ApproveFinancingLogo key={i} className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />
+    ? <ApproveFinancingLogo key={i} className="approve-logo-inline" />
     : part))}</>;
 }

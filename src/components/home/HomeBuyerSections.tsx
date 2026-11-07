@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type RefObject } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ApproveFinancingLogo, PayPalWordmark, PlaidLogo } from '@/components/brand/ProviderLogos';
+import { ApproveFinancingLogo, PayPalMonogram, PlaidLogo } from '@/components/brand/ProviderLogos';
 import { FLIP_INSURANCE } from '@/lib/flipInsurance';
 import { trackLeadEvent } from '@/lib/leadTracking';
 /*
@@ -48,22 +48,9 @@ const SIGNUP_HREF = '/auth?mode=signup';
 
 /* ── Guarantee + partner strip (directly under the hero) ── */
 
-function SquareWordmark() {
-  return (
-    <span className="hb-square-mark" aria-label="Square">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <rect x="2.5" y="2.5" width="19" height="19" rx="4.5" fill="none" stroke="currentColor" strokeWidth="3" />
-        <rect x="8.5" y="8.5" width="7" height="7" rx="1.2" fill="currentColor" />
-      </svg>
-      Square
-    </span>
-  );
-}
-
 export function HomePartnerStrip({ guaranteeHref, financingLive }: { guaranteeHref: string; financingLive: boolean }) {
   const partners = [
-    { key: 'paypal', href: '/payments', role: 'Checkout', mark: <PayPalWordmark surface="dark" className="hb-logo hb-logo-paypal" /> },
-    { key: 'square', href: '/payments', role: 'Card payments', mark: <SquareWordmark /> },
+    { key: 'paypal', href: '/payments', role: 'Checkout', mark: <PayPalMonogram className="hb-logo hb-logo-paypal" /> },
     ...(financingLive
       ? [{ key: 'equinox', href: 'https://financing.approvepayments.com/vendibook', role: 'Financing', mark: <ApproveFinancingLogo className="hb-logo hb-logo-equinox" /> }]
       : []),

@@ -3669,7 +3669,7 @@ export const PublishWizard: React.FC = () => {
                           </div>
                           <div className="rounded-xl border border-border bg-card p-4 space-y-3">
                             <p className="text-sm text-muted-foreground">
-                              Buyers can apply for equipment financing through <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" /> on
+                              Buyers can apply for equipment financing through <ApproveFinancingLogo className="approve-logo-inline" /> on
                               every published for-sale listing. Nothing to turn on, and it never
                               changes how you get paid.
                             </p>

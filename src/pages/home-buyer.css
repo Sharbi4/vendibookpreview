@@ -67,11 +67,11 @@
 .hb-partner-mark { display: flex; height: 26px; align-items: center; color: hsl(var(--v2h-ink)); }
 .hb-partner-role { color: hsl(var(--v2h-stone)); font-size: 11.5px; font-weight: 600; }
 /* One monochrome treatment so mismatched brand files read as a set. */
-.hb-logo { width: auto; max-width: 112px; object-fit: contain; filter: brightness(0); opacity: .82; }
+.hb-logo { width: auto; max-width: 112px; object-fit: contain; filter: none; opacity: 1; }
 .hb-logo-paypal { height: 20px; }
 .hb-logo-equinox { height: 24px; }
 .hb-logo-plaid { height: 20px; }
-.hb-logo-flip { height: 36px; max-width: 84px; filter: grayscale(1) contrast(1.15); opacity: .9; }
+.hb-logo-flip { height: 36px; max-width: 84px; filter: none; opacity: 1; }
 .hb-square-mark {
   display: inline-flex; align-items: center; gap: 6px; opacity: .82;
   font-size: 19px; font-weight: 700; letter-spacing: -.02em;
@@ -399,4 +399,22 @@
   .hb-ai-split { grid-template-columns: minmax(0, 1fr) 380px; gap: 32px 72px; align-items: center; }
   .hb-ai-split .hb-ai-fine { grid-column: 1 / -1; }
   .hb-ai-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* Original-color partner marks with equal breathing room. */
+.hb-partners-logos ul { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.hb-partners-logos li { align-items: stretch; }
+.hb-partner-link {
+  margin: 0; padding: 16px 12px; min-height: 100px;
+  align-items: flex-start; justify-content: space-between; gap: 12px;
+  border: 1px solid hsl(var(--v2h-line)); border-radius: 12px; background: #fff;
+}
+.hb-partner-link .hb-logo { filter: none; opacity: 1; object-position: left center; max-width: 120px; }
+.hb-partner-link .hb-logo-paypal { height: 30px; }
+.hb-partner-link .hb-logo-equinox { height: 25px; }
+.hb-partner-link .hb-logo-plaid { height: 25px; }
+.hb-partner-link .hb-logo-flip { height: 36px; }
+@media (max-width: 600px) {
+  .hb-partners-logos ul { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .hb-partner-link { padding: 14px; }
 }

@@ -70,3 +70,5 @@
   .vf-badges li { padding: 0; border-left: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .vb-footer *, .vb-footer *::before, .vb-footer *::after { transition: none !important; } }
+.vf-approve-plate { display: inline-flex; padding: 10px 12px; border-radius: 6px; background: #fff; }
+.vf-approve-plate img { opacity: 1; filter: none; }

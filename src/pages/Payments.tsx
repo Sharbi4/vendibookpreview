@@ -271,7 +271,7 @@ const Payments = () => {
           </div>
         </section>
 
-        <section className="container mx-auto max-w-6xl px-4 py-16"><h2 className="text-3xl font-bold">Explore financing with <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" /></h2><p className="mt-4 text-muted-foreground">Equipment financing is available through <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />’s lender network. Lenders decide eligibility, approval, rates and terms.</p><a href="https://financing.approvepayments.com/vendibook" className="mt-6 inline-block rounded-full bg-orange-600 px-6 py-3 font-semibold text-white">Explore <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" /> financing</a></section>
+        <section className="container mx-auto max-w-6xl px-4 py-16"><h2 className="text-3xl font-bold">Explore financing with <ApproveFinancingLogo className="approve-logo-inline" /></h2><p className="mt-4 text-muted-foreground">Equipment financing is available through <ApproveFinancingLogo className="approve-logo-inline" />’s lender network. Lenders decide eligibility, approval, rates and terms.</p><a href="https://financing.approvepayments.com/vendibook" className="mt-6 inline-block rounded-full bg-orange-600 px-6 py-3 font-semibold text-white">Explore <ApproveFinancingLogo className="approve-logo-inline" /> financing</a></section>
         <section className="bg-muted/40 py-16 md:py-24">
           <div className="container mx-auto max-w-6xl px-4">
             <motion.div {...fadeUp} className="max-w-3xl">
@@ -405,7 +405,7 @@ const Payments = () => {
         <section className="py-12">
           <div className="container mx-auto max-w-4xl px-4">
             <p className="text-xs leading-relaxed text-muted-foreground">
-Financing is available through <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />’s lender network and is subject to lender approval and terms. Vendibook is not a lender.
+Financing is available through <ApproveFinancingLogo className="approve-logo-inline" />’s lender network and is subject to lender approval and terms. Vendibook is not a lender.
             </p>
             <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-xs">
               <Link to="/legal/payments-terms" className="font-semibold text-primary hover:underline">Payments Terms</Link>

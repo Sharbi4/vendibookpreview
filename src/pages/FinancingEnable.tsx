@@ -73,7 +73,7 @@ export default function FinancingEnable() {
           <section className={PANEL}>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Financing options apply to for-sale listings. Once you have equipment listed for
-              sale, you can offer buyers the option to apply with <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />.
+              sale, you can offer buyers the option to apply with <ApproveFinancingLogo className="approve-logo-inline" />.
             </p>
             <div className="mt-5 flex gap-2 flex-wrap">
               <Button asChild>

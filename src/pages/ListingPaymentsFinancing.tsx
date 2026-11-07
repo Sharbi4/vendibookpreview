@@ -137,7 +137,7 @@ export default function ListingPaymentsFinancing() {
               <h2 className="text-base font-semibold">Buyer financing is included</h2>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Every published for-sale listing on Vendibook shows financing options through <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />
+              Every published for-sale listing on Vendibook shows financing options through <ApproveFinancingLogo className="approve-logo-inline" />
               Funding — there is nothing to switch on. Buyers see a financing badge, an{' '}
               <a
                 href={EQUINOX_APPLY_URL}
@@ -145,7 +145,7 @@ export default function ListingPaymentsFinancing() {
                 rel="noopener noreferrer"
                 className="underline underline-offset-2"
               >
-                Apply with <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />
+                Apply with <ApproveFinancingLogo className="approve-logo-inline" />
                 <ExternalLink className="inline h-3 w-3 ml-0.5" />
               </a>{' '}
               link, and a downloadable pro forma purchase summary. Financing never changes how or

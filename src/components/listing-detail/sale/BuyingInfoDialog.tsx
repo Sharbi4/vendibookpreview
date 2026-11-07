@@ -95,7 +95,7 @@ export const BuyingInfoDialog = ({
           </Row>
           {financingEnabled && (
             <Row icon={Banknote} title="Equipment financing">
-              Financing is offered through <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />.{' '}
+              Financing is offered through <ApproveFinancingLogo className="approve-logo-inline" />.{' '}
               <Link
                 to={'https://financing.approvepayments.com/vendibook'}
                 className="underline underline-offset-2"

@@ -188,12 +188,12 @@ const SellerPaymentsExplainer = ({
               Optional buyer financing
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" /> is an optional per-listing add-on for eligible for-sale trucks,
+              <ApproveFinancingLogo className="approve-logo-inline" /> is an optional per-listing add-on for eligible for-sale trucks,
               trailers, and carts. When enabled, buyers can apply and download the financing
-              purchase sheet. An 8.7% platform fee applies to an <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />-financed Vendibook sale.
+              purchase sheet. An 8.7% platform fee applies to an <ApproveFinancingLogo className="approve-logo-inline" />-financed Vendibook sale.
             </p>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Vendibook is not a lender. Approval and terms are determined by <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" /> and/or its
+              Vendibook is not a lender. Approval and terms are determined by <ApproveFinancingLogo className="approve-logo-inline" /> and/or its
               funding providers.
             </p>
             <Link

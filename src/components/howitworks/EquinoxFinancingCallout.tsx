@@ -45,10 +45,10 @@ const EquinoxFinancingCallout = ({
                 {isSeller ? (
                   <>
                     On eligible for-sale trucks, trailers, and carts you can switch on the optional
-                    <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" /> add-on. Buyers see a financing option on your listing, can apply
+                    <ApproveFinancingLogo className="approve-logo-inline" /> add-on. Buyers see a financing option on your listing, can apply
                     directly, and can download a pro forma purchase sheet — which widens your buyer
                     pool beyond cash-in-hand shoppers. An 8.7% platform fee applies to an
-                    <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />-financed Vendibook sale.{' '}
+                    <ApproveFinancingLogo className="approve-logo-inline" />-financed Vendibook sale.{' '}
                     <Link to="https://financing.approvepayments.com/vendibook" className="font-medium text-foreground underline underline-offset-4 hover:text-primary">
                       Learn about financing
                     </Link>
@@ -56,9 +56,9 @@ const EquinoxFinancingCallout = ({
                   </>
                 ) : (
                   <>
-                    On eligible for-sale listings you can apply with <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" /> and download a
+                    On eligible for-sale listings you can apply with <ApproveFinancingLogo className="approve-logo-inline" /> and download a
                     pro forma purchase sheet to move faster on the truck or trailer you want.
-                    Financing is offered by <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />, not Vendibook, and is subject to credit
+                    Financing is offered by <ApproveFinancingLogo className="approve-logo-inline" />, not Vendibook, and is subject to credit
                     approval.{' '}
                     <Link to="https://financing.approvepayments.com/vendibook" className="font-medium text-foreground underline underline-offset-4 hover:text-primary">
                       Learn about financing
@@ -68,7 +68,7 @@ const EquinoxFinancingCallout = ({
                 )}
               </p>
               <p className="text-xs text-muted-foreground leading-relaxed mb-6">
-                Vendibook is not a lender. Approval, rates, and terms are determined by <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />
+                Vendibook is not a lender. Approval, rates, and terms are determined by <ApproveFinancingLogo className="approve-logo-inline" />
                 Funding LLC and/or its funding providers.
               </p>
               <Link

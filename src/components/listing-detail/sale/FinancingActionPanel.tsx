@@ -120,7 +120,7 @@ export const FinancingActionPanel = ({
 
       <p className="text-[11px] text-muted-foreground/80 mt-3 leading-relaxed">
         The purchase summary is a pro forma document, not proof of sale, ownership, or financing
-        approval. Financing is subject to <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" /> and/or its funding providers&rsquo;
+        approval. Financing is subject to <ApproveFinancingLogo className="approve-logo-inline" /> and/or its funding providers&rsquo;
         approval and terms. Vendibook is not a lender.
       </p>    </SaleCard>
   );
