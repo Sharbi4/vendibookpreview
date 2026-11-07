@@ -531,16 +531,22 @@
   .bm-status { opacity: 1; transform: translate(-50%, 0); }
 }
 
-@media (min-width: 960px) {
-  .hb-ai--compact { padding: 64px 0; }
-  .hb-ai--compact .hb-ai-compact-panel { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: 400px; padding: 40px 44px; align-items: center; }
+@media (min-width: 768px) {
+  .hb-ai--compact { padding: 48px 0; }
+  .hb-ai--compact .hb-ai-compact-panel { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: 0; padding: 30px 40px; align-items: center; }
+  .hb-ai--compact .hb-ai-copy { padding-right: 12px; }
+  .hb-ai--compact .hb-ai-points { margin-top: 12px; gap: 5px; }
+  .hb-ai--compact .hb-ai-copy .hb-ai-actions { margin-top: 14px; }
+  .hb-ai--compact .hb-ai-fine { margin-top: 8px; }
+  /* Right half of the band: the feed window sits centred inside it. */
   .hb-ai--compact .hb-ai-compact-panel > .bm-scene {
-    position: absolute; top: 0; right: 0; bottom: 0; width: 54%; height: auto; margin: 0;
-    -webkit-mask-image: linear-gradient(90deg, transparent 0, hsl(0 0% 0%) 26%);
-            mask-image: linear-gradient(90deg, transparent 0, hsl(0 0% 0%) 26%);
+    position: absolute; top: 0; right: 0; bottom: 0; width: 50%; height: auto; margin: 0;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, hsl(0 0% 0%) 12%);
+            mask-image: linear-gradient(90deg, transparent 0, hsl(0 0% 0%) 12%);
   }
   .bm-viewport { height: 300px; }
-  .bm-window { left: auto; right: 48px; top: 50%; width: 360px; transform: translateY(-46%) rotate(-3deg); }
+  .bm-window { left: 50%; right: auto; top: 50%; width: min(360px, 78%); transform: translate(-50%, -50%) rotate(-2deg); }
+  .bm-status { bottom: 12px; }
 }
 
 /* Original-color partner marks with equal breathing room. */
