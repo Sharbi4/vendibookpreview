@@ -37,7 +37,6 @@ export default function HomeAtlasBand() {
                     <MessageCircle aria-hidden="true" /> Chat
                   </button>
                 </div>
-                <p className="home-atlas-conversation-note">Voice or text. Powered by ElevenLabs.</p>
               </div>
             )}
             <Link to="/atlas" className="home-atlas-explore" data-cta-location="home_atlas_band_more">
