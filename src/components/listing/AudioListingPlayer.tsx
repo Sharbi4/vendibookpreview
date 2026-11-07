@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Headphones, Loader2, Pause, Play, Square } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
   listingId: string;
@@ -29,13 +30,19 @@ export function AudioListingPlayer({ listingId, className, variant = "card" }: P
 
   const fetchAndPlay = async () => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast.error("Sign in to listen to the audio tour.");
+        return;
+      }
       setState("loading");
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/listing-narration`;
       const resp = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({ listing_id: listingId }),
       });

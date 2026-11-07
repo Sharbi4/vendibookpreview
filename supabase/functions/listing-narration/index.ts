@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { getCaller, unauthorizedResponse } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -112,6 +113,8 @@ async function tts(text: string, voiceId: string): Promise<ArrayBuffer> {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  // Paid AI + speech generation: signed-in members only.
+  if (!(await getCaller(req))) return unauthorizedResponse(corsHeaders);
 
   try {
     const { listing_id, voice_id } = await req.json();
