@@ -6,7 +6,7 @@
 // functions that hand-build HTML for Resend. Pure strings: no React, no
 // Deno APIs, so the same code runs in Deno and in Vitest.
 //
-//   • brandHeadHtml()   — Poppins <link>/@import, sans-serif reset on every
+//   • brandHeadHtml()   — site fonts <link>/@import, sans-serif reset on every
 //                         text element, and the Outlook (mso) Arial override
 //                         so Word-engine Outlook never falls back to Times.
 //   • injectBrandHead() — adds that block to an existing HTML document.
@@ -18,10 +18,11 @@ import {
   CTA_SHADOW,
   FONT_STACK,
   GOOGLE_FONTS_HREF,
+  HEADING_FONT_STACK,
   color,
 } from './tokens.ts'
 
-/** What Word-engine Outlook renders instead of Poppins (never Times). */
+/** What Word-engine Outlook renders instead of the web fonts (never Times). */
 export const MSO_FONT_STACK = 'Arial, Helvetica, sans-serif'
 
 const BRAND_HEAD_MARKER = '<!-- vb-brand-head -->'
@@ -39,7 +40,8 @@ const escHtml = (v: unknown) =>
 export const EMAIL_HEAD_CSS = `
 @import url('${GOOGLE_FONTS_HREF}');
 :root { color-scheme: light only; supported-color-schemes: light only; }
-body, table, td, th, p, a, li, h1, h2, h3, h4 { font-family: ${FONT_STACK}; }
+body, table, td, th, p, a, li { font-family: ${FONT_STACK}; }
+h1, h2, h3, h4 { font-family: ${HEADING_FONT_STACK} !important; }
 body, table, td, div, p, a, li { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
 table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
 .vb-cta a { font-family: ${FONT_STACK}; }
@@ -86,7 +88,7 @@ export function brandHeadHtml(opts: { meta?: boolean; extraCss?: string } = {}):
 /**
  * Adds the brand head block to a full HTML document (idempotent). A
  * document without <head> gets one; a bare fragment is wrapped in a minimal
- * document whose body carries the Poppins stack.
+ * document whose body carries the body font stack.
  */
 export function injectBrandHead(html: string): string {
   if (!html || html.includes(BRAND_HEAD_MARKER)) return html
@@ -109,7 +111,7 @@ function vmlWidth(label: string): number {
  * cell with the brand orange fill (`bgcolor` + background-color), the site
  * gradient where supported, the orange glow (box-shadow — Apple Mail/iOS;
  * Gmail/Outlook ignore it and keep the solid fill), a 999px pill radius and
- * white Poppins 600 16px link text. Outlook desktop gets a VML roundrect in
+ * white 600-weight 16px link text. Outlook desktop gets a VML roundrect in
  * the same orange with the same label. The whole pill is a real link with
  * real text — no images.
  */

@@ -3,7 +3,7 @@
 // VENDIBOOK MASTER EMAIL DESIGN SYSTEM — shared blocks
 //
 // Every block is email-client-safe: inline styles plus one shared <head>
-// block (Poppins + Outlook Arial fallback, see ./bulletproof.ts),
+// block (site fonts + Outlook Arial fallback, see ./bulletproof.ts),
 // table-friendly React Email primitives, no JS, no background imagery.
 // ─────────────────────────────────────────────────────────────
 
@@ -44,7 +44,7 @@ import { brandHeadHtml, ctaButtonHtml, type CtaVariant } from './bulletproof.ts'
 // ---- <head> ----------------------------------------------------------
 /**
  * Shared <head> for every React Email template: charset/viewport/colour-scheme
- * metas, Poppins from Google Fonts (<link> + @import), a sans-serif font
+ * metas, the site fonts from Google Fonts (<link> + @import), a sans-serif font
  * reset on body/table/td/p/a/h1-h3 and the Outlook (mso) Arial override.
  * Rendered as raw HTML because React cannot emit conditional comments.
  */

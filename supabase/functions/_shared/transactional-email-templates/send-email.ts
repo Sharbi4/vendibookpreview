@@ -72,7 +72,7 @@ export async function sendTemplateEmail(
 
   const templateData = options.templateData ?? {}
   const element = React.createElement(template.component, templateData)
-  // Brand chrome safety net (Poppins + Outlook font fix); a no-op for
+  // Brand chrome safety net (site fonts + Outlook font fix); a no-op for
   // templates that already render <BrandHead />.
   const html = injectBrandHead(await renderAsync(element))
   const text = await renderAsync(element, { plainText: true })

@@ -1,4 +1,4 @@
-import { FONT_STACK, t } from '../email-brand/tokens.ts'
+import { FONT_STACK, HEADING_FONT_STACK, t } from '../email-brand/tokens.ts'
 
 // Light Vendibook email tokens — clean white card, charcoal type, soft
 // dividers, restrained orange CTA. Used by the membership lifecycle emails so
@@ -14,7 +14,7 @@ export const l = {
   headerWrap: { padding: '0 0 20px' } as const,
   card: { backgroundColor: '#ffffff', border: '1px solid #e7e2dc', borderRadius: '12px', padding: '32px 28px' } as const,
   kicker: { fontSize: '10px', letterSpacing: '0.22em', color: ORANGE, fontWeight: 700, margin: '0 0 12px', textTransform: 'uppercase' as const },
-  h1: { fontSize: '25px', lineHeight: 1.2, fontWeight: 700, color: '#1c1917', margin: '0 0 12px', letterSpacing: '-0.015em' } as const,
+  h1: { fontFamily: HEADING_FONT_STACK, fontSize: '25px', lineHeight: 1.2, fontWeight: 700, color: '#1c1917', margin: '0 0 12px', letterSpacing: '-0.015em' } as const,
   lede: { fontSize: '15.5px', lineHeight: 1.6, color: '#57534e', margin: '0 0 22px' } as const,
   text: { fontSize: '15px', lineHeight: 1.65, color: '#44403c', margin: '0 0 16px' } as const,
   small: { fontSize: '13px', lineHeight: 1.55, color: '#78716c', margin: '0 0 10px' } as const,

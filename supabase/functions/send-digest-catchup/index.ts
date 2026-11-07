@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
     if (body?.confirm !== campaignId) {
       return json({ error: "Send requires confirm to equal campaignId." }, 400);
     }
-    // Brand chrome (Poppins + Outlook font fix); idempotent for composed HTML.
+    // Brand chrome (site fonts + Outlook font fix); idempotent for composed HTML.
     html = injectBrandHead(html);
 
 
