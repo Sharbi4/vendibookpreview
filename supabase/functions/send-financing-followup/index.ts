@@ -66,6 +66,7 @@ Deno.serve(async (req) => {
     name: name || null,
     email,
     source,
+    provider: 'approve',
   })
   if (insertError) {
     console.error('financing lead insert failed', insertError)

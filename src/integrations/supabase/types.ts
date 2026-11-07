@@ -4488,6 +4488,57 @@ export type Database = {
         }
         Relationships: []
       }
+      guest_checkout_drafts: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          email: string
+          email_24h_sent_at: string | null
+          email_2h_sent_at: string | null
+          end_date: string | null
+          flow: string
+          id: string
+          listing_id: string
+          request_only: boolean
+          resume_path: string | null
+          start_date: string | null
+          total_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          email: string
+          email_24h_sent_at?: string | null
+          email_2h_sent_at?: string | null
+          end_date?: string | null
+          flow: string
+          id?: string
+          listing_id: string
+          request_only?: boolean
+          resume_path?: string | null
+          start_date?: string | null
+          total_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          email?: string
+          email_24h_sent_at?: string | null
+          email_2h_sent_at?: string | null
+          end_date?: string | null
+          flow?: string
+          id?: string
+          listing_id?: string
+          request_only?: boolean
+          resume_path?: string | null
+          start_date?: string | null
+          total_price?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       handoff_exceptions: {
         Row: {
           created_at: string
