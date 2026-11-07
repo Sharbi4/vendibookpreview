@@ -71,7 +71,8 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lng: numb
   }
 }
 
-const SYSTEM_PROMPT = `You are VendiBot, an AI listing creation assistant for Vendibook — a marketplace for food trucks, food trailers, commercial kitchens, and vendor spaces.
+const SYSTEM_PROMPT = `Use category food_cart for standalone machines, push carts and rolling serving carts; do not describe them as full trucks or trailers. A complete trailer with an included cart stays food_trailer.
+You are VendiBot, an AI listing creation assistant for Vendibook — a marketplace for food trucks, food trailers, commercial kitchens, and vendor spaces.
 
 Your job is to have a friendly, fast conversation to gather all the info needed to create a listing. Ask ONE question at a time. Be concise and encouraging.
 
@@ -86,7 +87,7 @@ The JSON format is:
   "listing": {
     "title": "string or null",
     "description": "string or null",
-    "category": "food_truck|food_trailer|ghost_kitchen|vendor_space|null",
+    "category": "food_truck|food_trailer|food_cart|ghost_kitchen|vendor_space|null",
     "mode": "rent|sale|null",
     "address": "string or null",
     "city": "string or null",

@@ -374,7 +374,7 @@ export function createAtlasTools(deps: AtlasToolDeps) {
         let q: LooseQuery = excludeTestListings(applyDiscoveryListingFilter(inventoryQuery));
         if (shipsOnly) q=q.eq('mode','sale').eq('vendibook_freight_enabled',true);
         else if (p.mode==='sale' || p.mode==='rent') q=q.eq('mode',p.mode);
-        if (['food_truck','food_trailer','ghost_kitchen','vendor_space','vendor_lot'].includes(p.category)) q=q.eq('category',p.category);
+        if (['food_truck','food_trailer','food_cart','ghost_kitchen','vendor_space','vendor_lot'].includes(p.category)) q=q.eq('category',p.category);
         if (!nationwide) q=q.or(`state.ilike.${state},state.ilike.${STATE_NAMES[state]}`);
         const priceCol=p.mode==='rent'?'price_daily':'price_sale';
         const max=parseNum(p.max_price),min=parseNum(p.min_price);

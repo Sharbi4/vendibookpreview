@@ -144,6 +144,7 @@ export interface CategoryBasics {
 }
 
 export function getCategoryBasics(category: ListingCategory): CategoryBasics {
+  if (category === 'food_cart') return { modelYear: false, kitchenBuildYear: false, dimensions: true, titled: false, readiness: 'operational' };
   if (MOBILE_VEHICLE_CATEGORIES.includes(category)) {
     return {
       modelYear: true,
@@ -280,7 +281,7 @@ export interface StageRequirementInput {
  * Mobile assets sold on Vendibook must ship with real measurements: buyers
  * size doors, garages and freight quotes off them. Width stays optional.
  */
-const DIMENSION_REQUIRED_CATEGORIES: ListingCategory[] = ['food_truck', 'food_trailer'];
+const DIMENSION_REQUIRED_CATEGORIES: ListingCategory[] = ['food_truck', 'food_trailer', 'food_cart'];
 
 export const requiresSaleDimensions = (
   mode: 'rent' | 'sale',
@@ -412,6 +413,13 @@ export function getStageRequirements(input: StageRequirementInput): StageRequire
 
 /** Guided photo prompts by category — minimum set is the first three. */
 export function getPhotoPrompts(category: ListingCategory): string[] {
+  if (category === 'food_cart') return [
+    'Full cart or standalone equipment',
+    'Working surface and included equipment',
+    'Power connection and manufacturer rating plate (hide personal details)',
+    'Ventilation and fire suppression, if installed',
+    'Any disclosed damage or wear',
+  ];
   if (isStaticCategory(category)) {
     return [
       'Wide shot of the overall space',

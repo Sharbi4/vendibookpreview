@@ -93,6 +93,7 @@ export const DOCUMENT_GROUPS: DocumentGroup[] = [
 
 // Default documents by category
 export const DEFAULT_DOCUMENTS_BY_CATEGORY: Record<ListingCategory, DocumentType[]> = {
+  food_cart: [],
   food_truck: [
     'drivers_license',
     'commercial_liability_insurance',

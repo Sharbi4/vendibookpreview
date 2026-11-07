@@ -34,7 +34,7 @@ const str = (v: unknown): string | null => {
 };
 
 const MOBILE = ['food_truck', 'food_trailer'];
-const KITCHEN = ['food_truck', 'food_trailer', 'ghost_kitchen'];
+const KITCHEN = ['food_truck', 'food_trailer', 'food_cart', 'ghost_kitchen'];
 
 export const UNKNOWN_LABEL = 'Not provided by the seller';
 

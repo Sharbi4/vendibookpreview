@@ -12,7 +12,7 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "
 
 const BodySchema = z.object({
   mode: z.enum(["rent", "sale"]),
-  category: z.enum(["food_truck", "food_trailer", "ghost_kitchen", "vendor_lot", "vendor_space"]),
+  category: z.enum(["food_truck", "food_trailer", "food_cart", "ghost_kitchen", "vendor_lot", "vendor_space"]),
   location: z.string().trim().max(255).optional().nullable(),
   city: z.string().trim().max(120).optional().nullable(),
   state: z.string().trim().max(40).optional().nullable(),

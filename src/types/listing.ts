@@ -1,7 +1,7 @@
 export type ListingMode = 'rent' | 'sale';
 
 // Include both vendor_space (new) and vendor_lot (legacy) for backward compatibility
-export type ListingCategory = 'food_truck' | 'food_trailer' | 'ghost_kitchen' | 'vendor_space' | 'vendor_lot';
+export type ListingCategory = 'food_truck' | 'food_trailer' | 'food_cart' | 'ghost_kitchen' | 'vendor_space' | 'vendor_lot';
 
 export type FulfillmentType = 'pickup' | 'delivery' | 'both' | 'on_site';
 
@@ -44,7 +44,10 @@ export type VendorSpaceSubcategory =
   | 'street_corner'
   | 'food_truck_park';
 
-export type ListingSubcategory = 
+export type CartEquipmentSubcategory = 'food_cart' | 'ice_cream_dessert' | 'coffee_beverage' | 'cooking_equipment' | 'refrigeration' | 'other_equipment';
+
+export type ListingSubcategory =
+  | CartEquipmentSubcategory 
   | FoodTruckSubcategory 
   | FoodTrailerSubcategory 
   | GhostKitchenSubcategory 
@@ -56,6 +59,14 @@ export const SUBCATEGORIES_BY_CATEGORY: Record<ListingCategory, {
   label: string; 
   description: string 
 }[]> = {
+  food_cart: [
+    { value: 'food_cart', label: 'Food & Serving Cart', description: 'Push carts, rolling counters and serving carts' },
+    { value: 'ice_cream_dessert', label: 'Ice Cream & Dessert', description: 'Donut machines, dessert carts and frozen dessert equipment' },
+    { value: 'coffee_beverage', label: 'Coffee & Beverage', description: 'Coffee carts, espresso machines and beverage equipment' },
+    { value: 'cooking_equipment', label: 'Cooking Equipment', description: 'Standalone commercial cooking equipment' },
+    { value: 'refrigeration', label: 'Refrigeration', description: 'Commercial refrigerators, freezers and cold display equipment' },
+    { value: 'other_equipment', label: 'Other Equipment', description: 'Other food-service carts and equipment' },
+  ],
   food_truck: [
     { value: 'full_service_kitchen', label: 'Full-Service Kitchen', description: 'Complete cooking setup for any cuisine' },
     { value: 'coffee_beverage', label: 'Coffee & Beverage', description: 'Espresso, smoothies, and specialty drinks' },
@@ -105,6 +116,10 @@ export const SUBCATEGORIES_BY_CATEGORY: Record<ListingCategory, {
 
 // Labels for display
 export const SUBCATEGORY_LABELS: Record<string, string> = {
+  food_cart: 'Food & Serving Cart',
+  cooking_equipment: 'Cooking Equipment',
+  refrigeration: 'Refrigeration',
+  other_equipment: 'Other Equipment',
   // Food Truck
   full_service_kitchen: 'Full-Service Kitchen',
   coffee_beverage: 'Coffee & Beverage',
@@ -189,6 +204,11 @@ export interface Listing {
 
 // Category-specific amenities
 export const AMENITIES_BY_CATEGORY: Record<ListingCategory, { label: string; items: { id: string; label: string }[] }[]> = {
+  food_cart: [{ label: 'Equipment & Safety', items: [
+    { id: 'wheels', label: 'Wheels / Casters' }, { id: 'downdraft_vent', label: 'Downdraft Vent' },
+    { id: 'fire_suppression', label: 'Fire Suppression' }, { id: 'shore_power', label: 'Plug-in Power' },
+    { id: 'nsf_certified', label: 'NSF Certified' }, { id: 'training_included', label: 'Training Included' },
+  ] }],
   food_truck: [
     {
       label: 'Core Utilities',
@@ -439,6 +459,7 @@ export const AMENITIES_BY_CATEGORY: Record<ListingCategory, { label: string; ite
 
 // Listing tags for search and filtering
 export const LISTING_TAGS: Record<ListingCategory, { general: string[]; rent: string[]; sale: string[] }> = {
+  food_cart: { general: ['Rolling Cart', 'Standalone Equipment', 'Commercial Equipment'], rent: ['Pickup Available', 'Training Available'], sale: ['Used Equipment', 'New Equipment'] },
   food_truck: {
     general: [
       'Turnkey Ready',
@@ -643,6 +664,7 @@ export interface ListingFormData {
 }
 
 export const CATEGORY_LABELS: Record<ListingCategory, string> = {
+  food_cart: 'Carts & Equipment',
   food_truck: 'Food Truck',
   food_trailer: 'Food Trailer',
   ghost_kitchen: 'Shared Kitchen',
@@ -663,7 +685,7 @@ export const FULFILLMENT_LABELS: Record<FulfillmentType, string> = {
 };
 
 export const isMobileAsset = (category: ListingCategory | null): boolean => {
-  return category === 'food_truck' || category === 'food_trailer';
+  return category === 'food_truck' || category === 'food_trailer' || category === 'food_cart';
 };
 
 export const isStaticLocation = (category: ListingCategory | null): boolean => {

@@ -293,7 +293,7 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
       )}
 
       {/* Physical Specifications - Consolidated "Spec Sheet" */}
-      {formData.mode === 'sale' && (formData.category === 'food_truck' || formData.category === 'food_trailer') && (
+      {formData.mode === 'sale' && (formData.category === 'food_truck' || formData.category === 'food_trailer' || formData.category === 'food_cart') && (
         <div className="bg-muted/30 border border-border rounded-xl p-5 space-y-4">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg">

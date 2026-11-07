@@ -38,6 +38,7 @@
           "enum": [
             "food_truck",
             "food_trailer",
+            "food_cart",
             "ghost_kitchen",
             "vendor_space",
             "vendor_lot"

@@ -494,9 +494,9 @@ async function getPricing(): Promise<Response> {
 // ---- Listings: search, details, links, seller messages and new drafts ----
 
 const SITE = "https://vendibook.com";
-const CATEGORIES = ["food_truck", "food_trailer", "ghost_kitchen", "vendor_lot", "vendor_space"] as const;
+const CATEGORIES = ["food_truck", "food_trailer", "food_cart", "ghost_kitchen", "vendor_lot", "vendor_space"] as const;
 const CATEGORY_LABEL: Record<string, string> = {
-  food_truck: "food truck", food_trailer: "food trailer", ghost_kitchen: "shared or ghost kitchen",
+  food_cart: "cart or food-service equipment", food_truck: "food truck", food_trailer: "food trailer", ghost_kitchen: "shared or ghost kitchen",
   vendor_lot: "vendor lot", vendor_space: "vendor space",
 };
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

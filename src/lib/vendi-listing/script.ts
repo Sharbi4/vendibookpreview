@@ -108,7 +108,7 @@ export interface Question {
   apply: (d: VendiDraft, raw: string) => ApplyResult;
 }
 
-const MOBILE_CATEGORIES = ['food_truck', 'food_trailer'];
+const MOBILE_CATEGORIES = ['food_truck', 'food_trailer', 'food_cart'];
 const STATIC_CATEGORIES = ['ghost_kitchen', 'vendor_space', 'vendor_lot'];
 
 export const isMobileAsset = (category?: string | null) => MOBILE_CATEGORIES.includes(category ?? '');
@@ -116,6 +116,7 @@ export const isStaticLocation = (category?: string | null) => STATIC_CATEGORIES.
 
 export const CATEGORY_OPTIONS: QuestionOption[] = [
   { value: 'food_truck', label: 'Food Truck', description: 'Drivable mobile kitchen' },
+  { value: 'food_cart', label: 'Carts & Equipment', description: 'Food carts, rolling setups and standalone equipment' },
   { value: 'food_trailer', label: 'Food Trailer', description: 'Towable concession build' },
   { value: 'ghost_kitchen', label: 'Commercial Kitchen', description: 'Licensed kitchen space' },
   { value: 'vendor_lot', label: 'Vendor Lot', description: 'Land or lot for vendors' },

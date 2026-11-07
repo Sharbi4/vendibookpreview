@@ -1,0 +1,11 @@
+# Carts & Equipment
+
+Owner decision, November 6, 2026: standalone machines, push carts and rolling food-service setups belong in their own category rather than Food Truck or Food Trailer. Canonical database value: `food_cart`; display: **Carts & Equipment**. Sale and rental modes are supported. Dessert equipment, including a mini donut machine on a cart, can use `ice_cream_dessert`. A whole trailer package containing a cart remains a trailer.
+
+Apply migrations in order and commit between them: `20261106180000` adds the enum value; `20261106180100` uses it for one explicitly reviewed listing. No RLS, ownership, billing or publication changes are introduced.
+
+The November 6 production review found one clear public standalone cart: listing `86efe80b-2581-47a8-a836-769364460aa6`, “Charcuterie cart.” Its seller describes a folding wooden unit on wheels, with food slots and a shelf, fitting in a Honda Civic. The guarded migration changes only category and subcategory. The coffee trailer, bakery trailer, beverage truck, concession booth trailer and complete Italian ice trailer/business package remain unchanged. Three archived sample cart listings remain archived and unchanged. No existing mini donut machine listing was found in the reviewed results.
+
+Listing entry, guided interview, draft endpoint, category metadata, search pills and assistant search support use the new value. Carts use pickup/delivery and operational readiness, with dimensions and equipment-specific photos. They do not inherit vehicle-year, title or VIN requirements. Sellers should describe the actual item, brand/model, dimensions, power, included ventilation/fire suppression and price; never infer certification or suitability for a building/trailer from wheels or a category choice.
+
+Validation: `src/lib/listings/foodCart.test.ts` exercises metadata, title/year exemption, transport and actual draft schema acceptance. `scripts/test-cart-category-migrations.mjs` verifies enum creation and selective, repeat-safe classification while preserving owner, price and status. Existing Vendi interview tests cover the other categories.

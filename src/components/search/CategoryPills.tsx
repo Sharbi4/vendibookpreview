@@ -15,6 +15,7 @@ interface Category {
 
 const categories: Category[] = [
   { id: 'food_truck', label: 'Food Trucks', icon: Truck },
+  { id: 'food_cart', label: 'Carts & Equipment', icon: ShoppingCart },
   { id: 'food_trailer', label: 'Food Trailers', icon: ShoppingCart },
   { id: 'ghost_kitchen', label: 'Shared Kitchens', icon: Factory },
   { id: 'vendor_space', label: 'Vendor Spaces', icon: MapPin },

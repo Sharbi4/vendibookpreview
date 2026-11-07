@@ -37,7 +37,7 @@ export interface SpecSection {
 }
 
 const MOBILE = ['food_truck', 'food_trailer'];
-const KITCHEN = ['food_truck', 'food_trailer', 'ghost_kitchen'];
+const KITCHEN = ['food_truck', 'food_trailer', 'food_cart', 'ghost_kitchen'];
 const SITE = ['vendor_lot', 'vendor_space', 'ghost_kitchen'];
 const TRUCK = ['food_truck'];
 const TRAILER = ['food_trailer'];

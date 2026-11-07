@@ -278,7 +278,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
 
           <SmartImage
             src={listing.cover_image_url || listing.image_urls[0]}
-            alt={`${listing.title} - ${listing.category === 'food_truck' ? 'Food Truck' : listing.category === 'food_trailer' ? 'Food Trailer' : listing.category === 'ghost_kitchen' ? 'Shared Kitchen' : 'Vendor Space'} ${listing.mode === 'rent' ? 'for Rent' : 'for Sale'}`}
+            alt={`${listing.title} - ${listing.category === 'food_truck' ? 'Food Truck' : listing.category === 'food_trailer' ? 'Food Trailer' : listing.category === 'ghost_kitchen' ? 'Shared Kitchen' : listing.category === 'food_cart' ? 'Carts & Equipment' : 'Vendor Space'} ${listing.mode === 'rent' ? 'for Rent' : 'for Sale'}`}
             aspect="4/3"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             className="group-hover:scale-105 transition-transform duration-500 ease-in-out"

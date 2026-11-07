@@ -4288,7 +4288,7 @@ export const PublishWizard: React.FC = () => {
                   )}
 
                   {/* Item Dimensions - Only for sale listings with mobile assets */}
-                  {listing.mode === 'sale' && (listing.category === 'food_truck' || listing.category === 'food_trailer') && (
+                  {listing.mode === 'sale' && (listing.category === 'food_truck' || listing.category === 'food_trailer' || listing.category === 'food_cart') && (
                     <div className="space-y-4 p-4 rounded-xl border border-border bg-muted/30">
                       <div className="flex items-center gap-2">
                         <Package className="h-5 w-5 text-primary" />

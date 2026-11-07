@@ -35,6 +35,7 @@ interface QuickStartData {
 
 const categoryOptions = [
   { value: 'food_truck' as ListingCategory, label: 'Food Truck', icon: Truck },
+  { value: 'food_cart' as ListingCategory, label: 'Carts & Equipment', icon: Store },
   { value: 'food_trailer' as ListingCategory, label: 'Food Trailer', icon: Truck },
   { value: 'ghost_kitchen' as ListingCategory, label: 'Shared Kitchen', icon: Building2 },
   { value: 'vendor_lot' as ListingCategory, label: 'Vendor Space', icon: MapPin }];
