@@ -416,7 +416,7 @@
 
 .bm-scene {
   --bm-dur: 13s;
-  position: relative; height: 290px; margin: 0 -20px; overflow: hidden; pointer-events: none;
+  position: relative; height: 320px; margin: 0 -20px; overflow: hidden; pointer-events: none;
   -webkit-mask-image: linear-gradient(180deg, transparent 0, hsl(0 0% 0%) 16%, hsl(0 0% 0%) 100%);
           mask-image: linear-gradient(180deg, transparent 0, hsl(0 0% 0%) 16%, hsl(0 0% 0%) 100%);
 }
@@ -433,7 +433,7 @@
 .bm-bar-title { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; color: hsl(var(--v2h-ink)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bm-bar-title svg { width: 13px; height: 13px; color: hsl(var(--v2h-stone)); }
 .bm-example { margin-left: auto; padding: 2px 8px; border-radius: 999px; font-size: 9.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: hsl(var(--v2h-stone)); border: 1px solid hsl(var(--v2h-line)); background: hsl(0 0% 100%); }
-.bm-viewport { position: relative; height: 290px; overflow: hidden; padding: 10px; }
+.bm-viewport { position: relative; height: 262px; overflow: hidden; padding: 10px; }
 .bm-track { display: grid; gap: 10px; will-change: transform; }
 .bm-post { border-radius: 14px; border: 1px solid hsl(var(--v2h-line)); background: hsl(0 0% 100%); padding: 10px; }
 .bm-filler { height: 150px; display: grid; grid-template-rows: auto 1fr; gap: 8px; }
@@ -539,6 +539,7 @@
     -webkit-mask-image: linear-gradient(90deg, transparent 0, hsl(0 0% 0%) 26%);
             mask-image: linear-gradient(90deg, transparent 0, hsl(0 0% 0%) 26%);
   }
+  .bm-viewport { height: 300px; }
   .bm-window { left: auto; right: 48px; top: 50%; width: 360px; transform: translateY(-46%) rotate(-3deg); }
 }
 
