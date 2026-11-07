@@ -43,6 +43,7 @@ import { quoteRentalPeriod } from '@/lib/listings/rentalPricing';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { useCheckoutFunnel } from '@/hooks/useCheckoutFunnel';
 import { saveBookingDraftForRecovery, markBookingDraftCompleted } from '@/lib/bookingDraftRecovery';
+import GuestCheckoutEmailCapture from '@/components/checkout/GuestCheckoutEmailCapture';
 import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
 
 import CheckoutOrderSummary, { type OrderSummaryLine } from '@/components/checkout/CheckoutOrderSummary';
@@ -1344,6 +1345,29 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                 </button>
               </section>
             </OrderReviewStage>
+          ) : null}
+
+          {step === 1 && !user && listingId ? (
+            <div className="mt-6">
+              <GuestCheckoutEmailCapture
+                getDraft={() => {
+                  const start = startDate ? format(startDate, 'yyyy-MM-dd') : null;
+                  const end = endDate ? format(endDate, 'yyyy-MM-dd') : null;
+                  const params = new URLSearchParams();
+                  if (start) params.set('start', start);
+                  if (end) params.set('end', end);
+                  const qs = params.toString();
+                  return {
+                    flow: 'rental',
+                    listingId,
+                    totalPrice: totalChargedToday || null,
+                    startDate: start,
+                    endDate: end,
+                    resumePath: `${checkoutBasePath}/${listingId}${qs ? `?${qs}` : ''}`,
+                  };
+                }}
+              />
+            </div>
           ) : null}
 
           {step === 1 ? (
