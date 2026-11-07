@@ -1,3 +1,4 @@
+import { ApproveApplicationButton } from '@/components/financing/ApproveApplicationButton';
 import { ApproveFinancingLogo } from '@/components/brand/ProviderLogos';
 import { useSaleActionState } from '@/hooks/useSaleActionState';
 import { PurchaseProtectionCard } from './PurchaseProtectionCard';
@@ -17,7 +18,6 @@ import {
   Loader2,
   ShieldCheck,
   Banknote,
-  ExternalLink,
   Lock,
   Star,
 } from 'lucide-react';
@@ -36,8 +36,7 @@ import { getPublicDisplayName } from '@/lib/displayName';
 import { formatLastActive } from '@/hooks/useActivityTracker';
 import { deliveryRateLabel } from '@/lib/fulfillment/delivery';
 import { trackCTAClick } from '@/lib/analytics';
-import { trackFinancingLearnMoreClick, type FinancingSource } from '@/lib/analytics';
-import { useFinancingHandoff } from '@/hooks/useFinancingHandoff';
+import { trackFinancingLearnMoreClick } from '@/lib/analytics';
 import { formatCurrency } from '@/lib/commissions';
 import PayPalVerifiedSellerTrust from '@/components/payments/PayPalVerifiedSellerTrust';
 import PayPalPayLaterMessage from '@/components/payments/PayPalPayLaterMessage';
@@ -107,7 +106,6 @@ export const SalePurchaseCard = ({
   const { user } = useAuth();
   const saleActions = useSaleActionState(listing?.id);
   const financingEnabled = useEquinoxFinancingEnabled(listing);
-  const { startFinancingApply } = useFinancingHandoff();
 
   const [showOffer, setShowOffer] = useState(false);
   const [showAuthGate, setShowAuthGate] = useState(false);
@@ -192,11 +190,6 @@ export const SalePurchaseCard = ({
   };
 
 
-  // Every financing entry point on this card runs through the shared handoff:
-  // placement tracking → Vendibook lead capture → APPROVE.
-  const handleApplyFinancing = (source: FinancingSource) => {
-    startFinancingApply(source, listing.id);
-  };
 
 
   if (isOwner) {
@@ -276,10 +269,7 @@ export const SalePurchaseCard = ({
                 </span>
               </div>
               <div className="mt-2.5 flex flex-wrap gap-2">
-                <Button size="sm" variant="outline" className="approve-premium-cta" onClick={() => handleApplyFinancing('listing_price_line')}>
-                  Apply with <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />
-                  <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
-                </Button>
+                <ApproveApplicationButton listing={listing} />
                 <Button size="sm" variant="ghost" asChild>
                   <Link
                     to={financingCalculatorUrl(Number(priceSale), listing.id)}
