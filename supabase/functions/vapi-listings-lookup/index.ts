@@ -45,6 +45,9 @@ Deno.serve(async (req) => {
     console.log('Vapi request:', JSON.stringify(body).substring(0, 500));
     // Outbound messages (booking link) require Vapi's shared tool credential.
     const trusted = hasVapiSecret(req);
+    // The live call's own customer number (Vapi sets it); booking-link texts
+    // may only go to that number.
+    const callCustomerNumber: string = String(body?.message?.call?.customer?.number ?? '');
     
     // Handle Vapi tool-calls format
     const message = body.message;
@@ -84,7 +87,7 @@ Deno.serve(async (req) => {
         case 'get_required_documents':
         case 'lookup_document_help':
         case 'send_booking_link':
-          result = await handleToolCall(supabase, fnName, args, trusted);
+          result = await handleToolCall(supabase, fnName, args, trusted, callCustomerNumber);
           break;
         default:
           result = { error: `Unknown function: ${fnName}` };
@@ -111,7 +114,7 @@ Deno.serve(async (req) => {
 
 // --- Helper: route tool calls ---
 
-async function handleToolCall(supabase: any, fnName: string, args: any, trusted = false) {
+async function handleToolCall(supabase: any, fnName: string, args: any, trusted = false, callCustomerNumber = '') {
   switch (fnName) {
     case 'search_listings':
       return await searchListings(supabase, args);
@@ -132,7 +135,7 @@ async function handleToolCall(supabase: any, fnName: string, args: any, trusted 
     case 'lookup_document_help':
       return await lookupDocumentHelp(args);
     case 'send_booking_link':
-      return await sendBookingLink(supabase, args, trusted);
+      return await sendBookingLink(supabase, args, trusted, callCustomerNumber);
     default:
       return { error: `Unknown function: ${fnName}` };
   }
@@ -738,9 +741,17 @@ function hasVapiSecret(req: Request): boolean {
   return !!secret && presented === secret;
 }
 
-async function sendBookingLink(supabase: any, args: any, trusted: boolean) {
+async function sendBookingLink(supabase: any, args: any, trusted: boolean, callCustomerNumber = '') {
   if (!trusted) return { error: 'Booking links can only be sent during a verified Vendibook call.' };
-  const { listing_id, phone, email, name, start_date, end_date } = args;
+  const { listing_id, name, start_date, end_date } = args;
+  let { phone, email } = args;
+  // Texts only go to the number the caller is actually calling from.
+  const digits = (v: unknown) => String(v ?? '').replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
+  if (phone && (!callCustomerNumber || digits(phone) !== digits(callCustomerNumber))) phone = undefined;
+  // One plain, validated email address per request.
+  email = typeof email === 'string' && /^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]{2,}$/.test(email.trim()) && email.trim().length <= 254
+    ? email.trim()
+    : undefined;
   
   if (!listing_id) return { error: 'listing_id is required' };
   if (!phone && !email) return { error: 'At least a phone number or email is required to send the booking link' };
