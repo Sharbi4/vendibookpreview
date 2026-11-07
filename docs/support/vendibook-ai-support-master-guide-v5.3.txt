@@ -22,8 +22,8 @@ VENDIBOOK / AI SUPPORT AGENT MASTER GUIDE
      must be completed through Vendibook’s supported checkout or invoice process; no direct/pay-in-person
      payment option. Build Studio manufacturer fee: 6.5% under its separate program. Rental fees remain
      separately configured (12.9% host / 12.9% renter; active Pro rental-host fee benefit applies). Vendibook Pro:
-     $79/month with BuyerMatch AI; financing referrals through Equinox and optional FLIP insurance are separate
-     third-party services, subject to eligibility and actual campaign activation. Never describe unfinished invoice,
+     $79/month with BuyerMatch AI; financing through APPROVE (sole financing partner, owner 2026-11-05) and optional
+     FLIP insurance are separate third-party services, subject to eligibility and actual campaign activation. Never describe unfinished invoice,
      delayed-disbursement, or BuyerMatch integrations as universally live.
 
 
@@ -726,44 +726,44 @@ Internal operations | Version 5.3 | October 14, 2026                            
 
     12. Financing, FLIP insurance, optional identity and Build
     Studio
-    Equipment financing - current consumer pathway
-    Vendibook helps eligible buyers explore third-party equipment financing for food trucks, food trailers, carts, and
-    qualifying custom builds or conversions. The current public financing page and listing-level referral link route
-    interested applicants to Equinox Funding. The application is completed with Equinox, not with the Vendibook
-    support agent. Vendibook is not the lender, does not guarantee approval, and does not set APR, payments, down
-    payments, rates, fees or term lengths.
+    Equipment financing - current consumer pathway (updated 2026-11-07: APPROVE only)
+     APPROVE is Vendibook's sole financing partner. It replaces Equinox Funding and PayPal Pay Later / PayPal
+     installment offers, which are no longer offered. ClickLease is not offered. Vendibook helps eligible buyers
+     explore third-party equipment financing for food trucks, food trailers, carts, and qualifying custom builds or
+     conversions. Vendibook is not the lender, does not guarantee approval, and does not set eligibility, APR,
+     payments, down payments, rates, fees, timing or term lengths. Lenders in APPROVE's network decide those.
 
-     • Start on an eligible equipment listing or https://vendibook.com/financing, choose Check financing
-       options/Apply with Equinox Funding, and complete the financing application on the provider's own secure
-       site.
+     • Customers apply on APPROVE's own hosted application at https://financing.approvepayments.com/vendibook
+       or with the "Apply with APPROVE" button on an eligible listing. There is no Vendibook form to complete
+       first, and the support agent never completes the application for the customer.
 
      • The lender may request business and owner information, equipment details, credit consent and supporting
-       records. Customers provide those only to the authorized lender, not in a Vendibook public chat, voice call or
-       seller message.
+       records. Customers provide those only on APPROVE's application, not in a Vendibook public chat, voice call or
+       seller message. Never collect credit, bank or Social Security details.
 
-     • Equinox determines prequalification, approval, offer terms, supporting documents, credit checks, funding
-       timing and whether a startup, an established business, zero/low down payment, custom build or shipping
-       costs may qualify.
+     • Payment estimates and offers are provided by APPROVE and its lenders, not by Vendibook listing pages or
+       the support agent. Do not quote monthly payments, rates or down payments.
 
-     • The public financing page says many decisions arrive within 24-48 hours and describes a broad program size
-       range; this is illustrative partner information, not a guaranteed decision window or available
-       minimum/maximum for a particular applicant.
+     • Never promise approval for any credit score (for example 550), a 24-hour or 48-hour decision, guaranteed
+       approval, or any former partner's terms or program sizes. Eligibility and decision timing vary by lender.
 
      • An equipment listing financing pro forma is a preliminary price and equipment summary usable for an
        application. It is NOT a final seller-approved payable invoice, purchase agreement, financing approval, or
        evidence of funded money.
 
-     • If an applicant is approved, explain that lender paperwork and loan/lease obligations are between the
-       customer and the financing provider. The purchase must continue through a Vendibook-recognized, approved
-       financing/transaction pathway; never instruct customers to bypass Vendibook and pay the equipment seller
-       directly.
+     • Financing approval is not payment and does not complete the purchase. If an applicant is approved, lender
+       paperwork and loan/lease obligations are between the customer and the lender. The purchase must continue
+       through a Vendibook-recognized, approved transaction pathway; never instruct customers to bypass Vendibook
+       and pay the equipment seller directly.
 
-     • ClickLease is a secondary financing relationship discussed in Vendibook planning, including some
-       equipment-trailer cases. Do not offer a direct ClickLease link or quote an eligibility threshold until its present
-       referral workflow is confirmed live; send the inquiry to financing operations.
+     • Vendibook cannot currently see a customer's APPROVE application or show its status in the app. Customers
+       check progress with APPROVE directly.
+
+     • Ordinary equipment purchases still use Vendibook's PayPal-powered checkout or invoice; rentals still use
+       Square card checkout. Neither offers PayPal installments or Pay Later.
 
      • If approval is delayed or declined, do not speculate about credit-score causes or promise another lender will
-       approve. Refer the applicant to their financing specialist and, where relevant, discuss another equipment
+       approve. Refer the applicant to APPROVE and, where relevant, discuss another equipment
        budget without making financial recommendations.
 
 
@@ -777,7 +777,7 @@ Internal operations | Version 5.3 | October 14, 2026                            
 
     Financing and checkout - critical separation
 
-     Financing is NOT a Pay in Person exception. An application submitted to Equinox does not mark a Vendibook
+     Financing is NOT a Pay in Person exception. An application submitted to APPROVE does not mark a Vendibook
      order paid. A lender may describe its own funding/disbursement process, but support must not direct a buyer
      or lender to settle the equipment sale outside Vendibook. Operations must reconcile any older public wording
      about direct seller payment with the owner-approved requirement for Vendibook-handled transactions before
@@ -953,7 +953,7 @@ Internal operations | Version 5.3 | October 14, 2026                            
                                      actual activity ingestion                                  High if falsely reporting activity
 
 
-      Financing application issue    Confirm eligible listing, external Equinox application     Refer to Equinox; High for
+      Financing application issue    Confirm eligible listing, external APPROVE application     Refer to APPROVE; High for
                                      stage, safe reference and approved financing link          payment-path mismatch
 
 
@@ -1046,6 +1046,7 @@ Internal operations | Version 5.3 | October 14, 2026                            
 
 
       Financing                             https://vendibook.com/financing
+      Apply with APPROVE                    https://financing.approvepayments.com/vendibook
 
 
       Insurance / FLIP                      https://vendibook.com/insurance
@@ -1554,23 +1555,23 @@ Internal operations | Version 5.3 | October 14, 2026                            
     Other services & support
 
     Does Vendibook offer financing?
-    Yes. Eligible food trucks, trailers, carts and some custom builds may qualify for financing through third-party
-    financing partners. Start at https://vendibook.com/financing. Equinox Funding handles the application and
-    underwriting directly; approval and terms are not guaranteed.
+    Yes. Eligible food trucks, trailers, carts and some custom builds may qualify for financing through APPROVE,
+    Vendibook's sole financing partner. Apply at https://financing.approvepayments.com/vendibook or with the
+    "Apply with APPROVE" button on a listing. Vendibook is not the lender; approval and terms are not guaranteed.
 
     How do I apply for equipment financing?
-    Open a for-sale listing or https://vendibook.com/financing, select the Equinox Funding application link and apply
-    directly with the financing provider. If approved, review their offer before accepting any financing obligation.
+    Open https://financing.approvepayments.com/vendibook or select "Apply with APPROVE" on a for-sale listing and
+    complete APPROVE's own application. There is no Vendibook form first. If approved, review the lender's offer
+    before accepting any financing obligation.
 
     Who decides whether I qualify, and how long does it take?
-    Equinox Funding reviews applications, supporting information and credit under its own standards. The financing
-    page says many decisions arrive in 24-48 hours, but actual eligibility and timing vary, and Vendibook cannot
-    guarantee either.
+    Lenders in APPROVE's network review applications, supporting information and credit under their own
+    standards. Eligibility, rates, down payment, timing and terms vary by lender, and Vendibook cannot guarantee
+    approval or a decision time.
 
     Can I finance as a startup or finance freight/custom builds?
-    First-time operators, custom builds and freight costs may qualify in some programs, subject to the financing
-    provider's approval, documentation and specific transaction. Discuss the exact equipment and expenses with
-    Equinox.
+    First-time operators, custom builds and freight costs may qualify in some programs, subject to the lender's
+    approval, documentation and specific transaction. Discuss the exact equipment and expenses with APPROVE.
 
     Can I use a Pro Forma Invoice as proof my order is paid?
     No. A pro forma is a preliminary purchase/equipment summary for lender review; it is not a final approved
@@ -1581,9 +1582,13 @@ Internal operations | Version 5.3 | October 14, 2026                            
     financed payment path through Vendibook and financing operations; never assume a loan approval means the
     equipment sale has been paid.
 
-    What is ClickLease?
-    ClickLease has been discussed as an additional option for some qualifying trailers. We can refer your request to
-    financing operations; do not rely on a ClickLease approval or link until the current program has been confirmed.
+    Do you offer Equinox, ClickLease or PayPal Pay Later financing?
+    No. APPROVE is Vendibook's sole financing partner. Equinox, ClickLease and PayPal Pay Later or installment
+    offers are not available. Apply at https://financing.approvepayments.com/vendibook.
+
+    Can Vendibook tell me the status of my financing application?
+    Not yet. Vendibook cannot see APPROVE applications or show their status in the app. Check with APPROVE
+    directly. Financing approval is not payment and does not complete your purchase.
 
 
 
@@ -1810,8 +1815,7 @@ Internal operations | Version 5.3 | October 14, 2026                            
      • Verify the Dashboard → Account closure email button, registered-email verification, subscriber cancellation as
        a separate action, pending transaction/retention review and access/privacy request handling.
 
-     • Confirm Equinox referral and finalized financed-sale settlement stay inside approved Vendibook workflow;
-       clarify ClickLease routing before advertising it.
+     • Confirm APPROVE referral and finalized financed-sale settlement stay inside approved Vendibook workflow.
 
      • Confirm FLIP referral link works, COI documents meet host requirements, and no customer page implies
        automatically included insurance or guaranteed vehicle damage/driving coverage.
