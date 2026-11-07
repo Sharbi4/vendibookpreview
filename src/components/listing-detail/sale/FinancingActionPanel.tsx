@@ -8,6 +8,7 @@ import { SaleCard } from '@/components/listing-detail/sale/SaleCard';
 import { generateFinancingPurchaseSheet } from '@/lib/financing/purchaseSheet';
 import { FinancingAvailableBadge } from '@/components/financing/FinancingAvailableBadge';
 import { useEquinoxFinancingEnabled } from '@/hooks/useListingFinancing';
+import { useFinancingHandoff } from '@/hooks/useFinancingHandoff';
 import { ApproveApplicationButton } from '@/components/financing/ApproveApplicationButton';
 import { isFinanceableSaleListing } from '@/lib/financing/disclosure';
 import { financingCalculatorUrl, illustrativeFinancingNote, illustrativeMonthlyPayment } from '@/lib/financing/calculator';
