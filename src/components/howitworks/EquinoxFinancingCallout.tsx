@@ -98,7 +98,7 @@ const EquinoxFinancingCallout = ({
                 },
               ].map((f) => (
                 <li
-                  key=<ApproveBrandText>{f.title}</ApproveBrandText>
+                  key={f.title}
                   className="flex gap-3 rounded-2xl border border-border bg-background/60 p-4"
                 >
                   <f.icon className="h-4 w-4 text-primary shrink-0 mt-0.5" aria-hidden="true" />

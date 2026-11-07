@@ -145,7 +145,7 @@ const Index = () => {
         canonical="/"
       />
       <JsonLd schema={[generateOrganizationSchema(), generateWebSiteSchema()]} />
-      <Header />
+      <Header overlay />
 
       <main className="flex-1">
         <HeroPremium showGoogleSignIn={false} showRotator={false} guaranteeHref={`#${GUARANTEE_ID}`} />
