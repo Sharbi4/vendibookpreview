@@ -18,13 +18,7 @@
  * - Every insert is idempotent on MessageSid.
  */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import {
-  classifyKeyword,
-  normalizeNanpToE164,
-  SMS_POLICY_VERSION,
-  SMS_TEMPLATES,
-} from '../_shared/smsConsent.ts';
-import { routeSupportText } from '../_shared/supportTexts.ts';
+import { processInboundText } from '../_shared/inboundText.ts';
 
 const TWILIO_AUTH_TOKEN = Deno.env.get('TWILIO_AUTH_TOKEN') ?? '';
 const SKIP_SIG_VERIFY =
@@ -96,124 +90,7 @@ Deno.serve(async (req) => {
       return new Response('invalid signature', { status: 403 });
     }
 
-    const from = normalizeNanpToE164(params.From) ?? String(params.From ?? '');
-    const to = String(params.To ?? '');
-    const body = String(params.Body ?? '').trim();
-    const sid = String(params.MessageSid ?? '');
-
-    // Idempotency: if this SID was already processed, replay the recorded
-    // reply (empty by default) rather than mutating consent twice.
-    if (sid) {
-      const { data: existing } = await supabase
-        .from('sms_inbound_messages')
-        .select('id, action_taken')
-        .eq('twilio_message_sid', sid)
-        .maybeSingle();
-      if (existing) {
-        return twiml(null);
-      }
-    }
-
-    const kind = classifyKeyword(body);
-    let action: string | null = null;
-    let reply: string | null = null;
-
-    if (kind === 'opt_out') {
-      action = 'opt_out';
-      // Number-level suppression — applies across every account that
-      // shares this phone number.
-      await supabase.from('sms_suppressions').insert({
-        phone_e164: from,
-        sender_or_program: 'vendibook_transactional',
-        reason: 'user_stop_keyword',
-        source: 'provider_webhook',
-        provider_message_sid: sid || null,
-      });
-      await supabase
-        .from('sms_preferences')
-        .update({
-          transactional_status: 'opted_out',
-          opted_out_at: new Date().toISOString(),
-          consent_source: 'keyword',
-        })
-        .eq('phone_e164', from);
-      await supabase.from('sms_consent_events').insert({
-        phone_e164: from,
-        event_type: 'opt_out',
-        source: 'provider_webhook',
-        disclosure_version: SMS_POLICY_VERSION,
-        provider_message_sid: sid || null,
-      });
-      reply = SMS_TEMPLATES.opt_out_confirmation;
-    } else if (kind === 'opt_in') {
-      action = 'opt_in';
-      // Release any active suppression, then record a NEW consent event.
-      const { data: pref } = await supabase
-        .from('sms_preferences')
-        .select('id, user_id')
-        .eq('phone_e164', from)
-        .maybeSingle();
-      const { data: evt } = await supabase
-        .from('sms_consent_events')
-        .insert({
-          user_id: pref?.user_id ?? null,
-          phone_e164: from,
-          event_type: 're_opt_in',
-          source: 'provider_webhook',
-          disclosure_version: SMS_POLICY_VERSION,
-          provider_message_sid: sid || null,
-        })
-        .select('id')
-        .single();
-      await supabase
-        .from('sms_suppressions')
-        .update({ released_at: new Date().toISOString(), released_by_event_id: evt?.id ?? null })
-        .eq('phone_e164', from)
-        .is('released_at', null);
-      if (pref) {
-        await supabase
-          .from('sms_preferences')
-          .update({
-            transactional_status: 'opted_in',
-            opted_in_at: new Date().toISOString(),
-            opted_out_at: null,
-            consent_source: 'keyword',
-            consent_version: SMS_POLICY_VERSION,
-          })
-          .eq('id', pref.id);
-      } else {
-        await supabase.from('sms_preferences').insert({
-          phone_e164: from,
-          transactional_status: 'opted_in',
-          opted_in_at: new Date().toISOString(),
-          consent_source: 'keyword',
-          consent_version: SMS_POLICY_VERSION,
-        });
-      }
-      reply = SMS_TEMPLATES.enrollment_confirmation;
-    } else if (kind === 'help') {
-      action = 'help';
-      reply = SMS_TEMPLATES.help_reply;
-    }
-
-    const { data: saved } = await supabase.from('sms_inbound_messages').insert({
-      from_phone: from,
-      to_phone: to,
-      body,
-      twilio_message_sid: sid || null,
-      action_taken: action ?? 'support_text',
-      raw_payload: params,
-    }).select('id').maybeSingle();
-
-    // Anything that isn't STOP/START/HELP is a message for the support team.
-    if (!action && from.startsWith('+')) {
-      try {
-        reply = await routeSupportText(supabase, { from, body, media: Number(params.NumMedia ?? 0) || 0, inboundId: saved?.id ?? null });
-      } catch (e) {
-        console.error('twilio-inbound-webhook: support routing failed', e);
-      }
-    }
-
+    const { reply } = await processInboundText(supabase, params);
     return twiml(reply);
   } catch (e) {
     console.error('twilio-inbound-webhook error:', e);
