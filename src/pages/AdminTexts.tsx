@@ -39,19 +39,29 @@ const AdminTexts = () => {
   }, []);
 
   useEffect(() => { void loadThreads(); const t = window.setInterval(loadThreads, 30000); return () => window.clearInterval(t); }, [loadThreads]);
-  useEffect(() => { setDetail(null); setNotice(""); if (selected) void loadThread(selected); }, [selected, loadThread]);
+  useEffect(() => {
+    setDetail(null); setNotice("");
+    if (!selected) return;
+    void loadThread(selected);
+    // Keep the open conversation fresh so replies appear without clicking Refresh.
+    const t = window.setInterval(() => void loadThread(selected), 20000);
+    return () => window.clearInterval(t);
+  }, [selected, loadThread]);
 
   const waiting = useMemo(() => threads?.filter((t) => t.needs_reply).length ?? 0, [threads]);
 
   const send = async (e: FormEvent) => {
     e.preventDefault();
     if (!selected || draft.trim().length < 2) return;
+    const text = draft.trim();
     setSending(true); setNotice("");
+    // Show the text in the thread straight away while it sends.
+    setDetail((d) => d ? { ...d, messages: [...d.messages, { from: "vendibook", text, at: new Date().toISOString(), status: "sending…" }] } : d);
     const { data, error: err } = await invokeEdge<{ message: string }>("admin-phone-actions", {
-      body: { action: "text", to_phone: selected, ticket_id: detail?.ticket?.id, message: draft.trim(), idempotency_key: crypto.randomUUID() },
+      body: { action: "text", to_phone: selected, ticket_id: detail?.ticket?.id, message: text, idempotency_key: crypto.randomUUID() },
     }, { retries: 0 });
     setSending(false);
-    if (err) { setNotice(err); return; }
+    if (err) { setNotice(err); await loadThread(selected); return; }
     setDraft(""); setNotice(data?.message ?? "Sent.");
     await Promise.all([loadThread(selected), loadThreads()]);
   };
