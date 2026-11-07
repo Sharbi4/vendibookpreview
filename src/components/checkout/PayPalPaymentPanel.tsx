@@ -97,7 +97,6 @@ const PayPalPaymentPanel = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const paypalButtonRef = useRef<HTMLDivElement>(null);
   const venmoButtonRef = useRef<HTMLDivElement>(null);
-  const payLaterButtonRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<PanelState>('loading');
   const [error, setError] = useState<{ title: string; detail: string } | null>(null);
   const [walletsAvailable, setWalletsAvailable] = useState(false);
@@ -683,7 +682,6 @@ const PayPalPaymentPanel = ({
                       <div className="paypal-funding-stack" aria-busy={state === 'loading'}>
                         <div ref={paypalButtonRef} data-funding-source="PayPal" />
                         <div ref={venmoButtonRef} data-funding-source="Venmo" />
-                        <div ref={payLaterButtonRef} data-funding-source="Pay Later" />
 
                       </div>
                     </div>

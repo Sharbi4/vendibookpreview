@@ -15,3 +15,6 @@ export function useEquinoxFinancingEnabled(listing: any): boolean {
   const flagOn = usePublicFeatureFlag(EQUINOX_FLAG_KEY);
   return flagOn && isFinanceableSaleListing(listing);
 }
+
+/** APPROVE name for new consumers; legacy callers retain compatibility. */
+export const useApproveFinancingEnabled = useEquinoxFinancingEnabled;

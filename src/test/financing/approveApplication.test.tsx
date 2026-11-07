@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { approveApplicationUrl } from '@/lib/financing/approveApplication';
 import { ApproveApplicationButton } from '@/components/financing/ApproveApplicationButton';
 vi.mock('@/lib/analytics', () => ({ trackFinancingApplyClick: vi.fn() }));
@@ -19,7 +19,7 @@ describe('APPROVE hosted application', () => {
   it('renders a real application link with the official logo, no handoff form', () => {
     render(<ApproveApplicationButton listing={listing} />);
     expect(screen.getByRole('link', { name: /Apply with APPROVE/ })).toHaveAttribute('href', approveApplicationUrl(listing));
-    expect(screen.getByRole('img', { name: 'APPROVE' })).toHaveAttribute('src', '/brand/approve-logo-primary.svg');
+    expect(within(screen.getByRole('link', { name: /Apply with APPROVE/ })).getByRole('img', { name: 'APPROVE' })).toHaveAttribute('src', '/brand/approve-logo-primary.svg');
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 });

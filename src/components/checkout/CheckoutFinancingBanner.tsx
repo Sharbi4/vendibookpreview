@@ -1,13 +1,11 @@
 import { useState } from 'react';
-import { EQUINOX_APPLY_URL } from '@/lib/financing/disclosure';
-import { ExternalLink, FileDown, Loader2 } from 'lucide-react';
+import { FileDown, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { ApproveFinancingLogo } from '@/components/brand/ProviderLogos';
-import { useEquinoxFinancingEnabled } from '@/hooks/useListingFinancing';
-import { useFinancingHandoff } from '@/hooks/useFinancingHandoff';
+import { ApproveApplicationButton } from '@/components/financing/ApproveApplicationButton';
+import { useApproveFinancingEnabled } from '@/hooks/useListingFinancing';
 import { generateFinancingPurchaseSheet } from '@/lib/financing/purchaseSheet';
-import { trackFinancingLearnMoreClick, trackFinancingSheetDownloaded } from '@/lib/analytics';
+import { trackFinancingSheetDownloaded } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
 
 interface CheckoutFinancingBannerProps {
@@ -27,8 +25,7 @@ const CheckoutFinancingBanner = ({
   variant = 'banner',
   className,
 }: CheckoutFinancingBannerProps) => {
-  const enabled = useEquinoxFinancingEnabled(listing);
-  const { startFinancingApply } = useFinancingHandoff();
+  const enabled = useApproveFinancingEnabled(listing);
   const [busy, setBusy] = useState(false);
 
   if (!enabled) return null;
@@ -50,50 +47,22 @@ const CheckoutFinancingBanner = ({
     }
   };
 
-  if (variant === 'compact') {
-    return (
-      <div className={cn('checkout-financing-compact', className)}>
-        <ApproveFinancingLogo className="h-4" />
-        <p>Equipment financing available</p>
-        <a
-          href={EQUINOX_APPLY_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => trackFinancingLearnMoreClick('listing_panel', listing.id)}
-        >
-          Explore →
-        </a>      </div>
-    );
-  }
-
+  const equipment = { id: listing.id, title: typeof listing.title === 'string' ? listing.title : undefined,
+    price_sale: typeof listing.price_sale === 'number' ? listing.price_sale : undefined,
+    condition: typeof listing.condition === 'string' ? listing.condition : null };
   return (
-    <aside className={cn('checkout-financing-banner', className)}>
-      <div className="checkout-financing-mark">
-        <ApproveFinancingLogo className="h-6" />
+    <aside className={cn('sale-financing-panel checkout-approve-panel', className)}>
+      <h3 className="text-sm font-semibold text-slate-900">Apply for financing</h3>
+      <p className="mt-1 text-sm">Easy online application. Review estimates and offers with the financing provider.</p>
+      <div className="mt-4">
+        <ApproveApplicationButton listing={equipment} source="checkout_banner" showBanner={variant !== 'compact'} />
       </div>
-      <div className="checkout-financing-copy">
-        <span>Financing available</span>
-        <strong>Need financing for this equipment?</strong>
-        <p>Explore equipment financing through <ApproveFinancingLogo className="approve-logo-inline" /> before completing your purchase.</p>
-      </div>
-      <div className="checkout-financing-actions">
-        <button
-          type="button"
-          className="checkout-financing-cta"
-          onClick={() => startFinancingApply('checkout_banner', listing.id)}
-        >
-          Explore financing <ExternalLink aria-hidden />
-        </button>
-        <button type="button" className="checkout-financing-link" onClick={() => void downloadSheet()} disabled={busy}>
-          {busy ? <Loader2 className="animate-spin" aria-hidden /> : <FileDown aria-hidden />}
-          Download purchase sheet
-        </button>
-      </div>
-      <p className="checkout-financing-note">
-        Third-party financing. Approval and terms are determined by <ApproveFinancingLogo className="approve-logo-inline" /> and/or its funding providers.
-        Vendibook is not a lender.
-      </p>    </aside>
+      {variant !== 'compact' && <button type="button" className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-medium text-slate-700 underline underline-offset-4" onClick={() => void downloadSheet()} disabled={busy}>
+        {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <FileDown className="h-4 w-4" aria-hidden />}
+        Download purchase sheet
+      </button>}
+      <p className="mt-3 text-xs leading-relaxed">Lenders determine approval, rates and terms. Vendibook is not a lender. Financing approval does not complete your purchase.</p>
+    </aside>
   );
 };
-
 export default CheckoutFinancingBanner;
