@@ -32,7 +32,7 @@ const handler = async (req: Request): Promise<Response> => {
     // The object path is server-chosen: a single safe file name (no folders,
     // no traversal) under the dedicated "uploads/" prefix, image extension only.
     const baseName = String(requestedName ?? "").trim().split(/[\\/]/).pop() ?? "";
-    const SAFE_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]{0,99}\.(png|jpe?g|gif|webp|svg)$/i;
+    const SAFE_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]{0,99}\.(png|jpe?g|gif|webp)$/i;
     if (!SAFE_NAME.test(baseName) || baseName.includes("..")) {
       return new Response(
         JSON.stringify({ error: "fileName must be a plain image file name like logo.png" }),
@@ -67,7 +67,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const contentType = imageResponse.headers.get("content-type") || "image/png";
     
-    if (!contentType.toLowerCase().includes("image/")) {
+    if (!/^image\/(png|jpeg|gif|webp)\b/i.test(contentType)) {
       throw new Error(`Invalid content type: ${contentType}`);
     }
 
