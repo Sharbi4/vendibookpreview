@@ -213,6 +213,7 @@ function supabaseForUser3(ctx) {
 var MOBILE_VEHICLE_CATEGORIES = ["food_truck"];
 var TOWABLE_CATEGORIES = ["food_trailer"];
 function getCategoryBasics(category) {
+  if (category === "food_cart") return { modelYear: false, kitchenBuildYear: false, dimensions: true, titled: false, readiness: "operational" };
   if (MOBILE_VEHICLE_CATEGORIES.includes(category)) {
     return {
       modelYear: true,
@@ -242,7 +243,7 @@ function getCategoryBasics(category) {
 function isTitledAsset(category, mode) {
   return mode === "sale" && getCategoryBasics(category).titled;
 }
-var DIMENSION_REQUIRED_CATEGORIES = ["food_truck", "food_trailer"];
+var DIMENSION_REQUIRED_CATEGORIES = ["food_truck", "food_trailer", "food_cart"];
 var requiresSaleDimensions = (mode, category) => mode === "sale" && DIMENSION_REQUIRED_CATEGORIES.includes(category);
 function getStageRequirements(input) {
   const basics = getCategoryBasics(input.category);
