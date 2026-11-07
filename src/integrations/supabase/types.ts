@@ -16301,6 +16301,7 @@ export type Database = {
       dispatch_native_push_jobs: { Args: never; Returns: undefined }
       dispatch_reddit_scheduled_posts: { Args: never; Returns: undefined }
       dispatch_square_reconcile: { Args: never; Returns: undefined }
+      dispatch_support_text_sync: { Args: never; Returns: undefined }
       equipment_reservation_status: {
         Args: { _listings: string[] }
         Returns: {
