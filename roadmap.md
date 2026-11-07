@@ -1,5 +1,8 @@
 # Roadmap
 
+- [done] Charlotte 2024 food trailer (3b6f1f77) featured free until 2026-12-07 (hourly expiry job ends it); branded email with 3.7x views highlight sent to the seller.
+- [done] Homepage BuyerMatch band: animation centred in the right half, side-by-side from tablet width up, band shorter. Preview only.
+
 - [done] Report APPROVE financing clicks, checkout activity and whether follow-up emails go out (read-only).
 - [done] Site fonts (Archivo headings, Plus Jakarta Sans body) applied to all emails; 124 email senders deployed, all 75 live template previews carry both fonts, 17 email tests pass.
 - [done] Report whether featured listings get more views than non-featured (read-only).
