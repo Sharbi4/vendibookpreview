@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { CATEGORY_LABELS, SUBCATEGORIES_BY_CATEGORY, AMENITIES_BY_CATEGORY, LISTING_TAGS, isMobileAsset, isStaticLocation } from '@/types/listing';
 import { DEFAULT_DOCUMENTS_BY_CATEGORY } from '@/types/documents';
 import { getCategoryBasics, isTitledAsset, getPhotoPrompts, requiresSaleDimensions } from './stages';
+import { buildEquipmentSummary } from './publicSummary';
 import { CATEGORY_OPTIONS, QUESTIONS, buildListingPayload } from '@/lib/vendi-listing/script';
 
 describe('Carts & Equipment listing category',()=>{
@@ -21,6 +22,8 @@ describe('Carts & Equipment listing category',()=>{
   expect(isMobileAsset('food_cart')).toBe(true);
   expect(isStaticLocation('food_cart')).toBe(false);
   expect(getPhotoPrompts('food_cart')[0]).toContain('standalone equipment');
+  const rows=buildEquipmentSummary({category:'food_cart',mode:'sale',values:{},confirmedSections:[],ownershipPublic:{title_summary:'Clear'}});
+  expect(rows.some(row=>/title status|trailer year|vehicle year|kitchen build year/i.test(row.label))).toBe(false);
  });
  it('supports a real cart in the guided listing flow with pickup instead of on-site access',()=>{
   expect(CATEGORY_OPTIONS.some(o=>o.value==='food_cart')).toBe(true);

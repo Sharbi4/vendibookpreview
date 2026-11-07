@@ -66,7 +66,7 @@ export const buildEquipmentSummary = ({
 
   push('Operational status', str(condition.operational_status));
 
-  if (mode === 'sale' && ownershipPublic && Object.keys(ownershipPublic).length > 0) {
+  if (mode === 'sale' && category !== 'food_cart' && ownershipPublic && Object.keys(ownershipPublic).length > 0) {
     push('Title status', str(ownershipPublic.title_summary));
   }
 
@@ -74,7 +74,7 @@ export const buildEquipmentSummary = ({
     const year = str(vehicle.year) ?? str(trailer.year);
     push(category === 'food_truck' ? 'Vehicle year' : 'Trailer year', year);
   }
-  if (KITCHEN.includes(category ?? '')) {
+  if (KITCHEN.includes(category ?? '') && category !== 'food_cart') {
     push('Kitchen build year', str(dimensions.kitchen_build_year));
   }
 

@@ -47,7 +47,7 @@ export type VendorSpaceSubcategory =
 export type CartEquipmentSubcategory = 'food_cart' | 'ice_cream_dessert' | 'coffee_beverage' | 'cooking_equipment' | 'refrigeration' | 'other_equipment';
 
 export type ListingSubcategory =
-  | CartEquipmentSubcategory 
+  | CartEquipmentSubcategory
   | FoodTruckSubcategory 
   | FoodTrailerSubcategory 
   | GhostKitchenSubcategory 
