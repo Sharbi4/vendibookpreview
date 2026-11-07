@@ -8,6 +8,13 @@ import { buildEquipmentSummary } from './publicSummary';
 import { CATEGORY_OPTIONS, QUESTIONS, buildListingPayload } from '@/lib/vendi-listing/script';
 
 describe('Carts & Equipment listing category',()=>{
+ it('exposes carts in phone search and draft creation tool schemas',()=>{
+  const tools=JSON.parse(readFileSync('docs/atlas/phone-agent-tools.json','utf8'));
+  for(const name of ['search_listings','start_listing_draft']){
+   const tool=tools.find((tool: {name:string})=>tool.name===name);
+   expect(tool.api_schema.request_body_schema.properties.category.enum).toContain('food_cart');
+  }
+ });
  it('has complete category metadata and dessert equipment types',()=>{
   expect(CATEGORY_LABELS.food_cart).toBe('Carts & Equipment');
   expect(SUBCATEGORIES_BY_CATEGORY.food_cart.map(s=>s.value)).toContain('ice_cream_dessert');
