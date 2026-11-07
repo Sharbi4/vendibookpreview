@@ -12,7 +12,7 @@ import {
   VENDIBOOK_BASE_URL,
 } from "../_shared/marketing-templates/constants.ts";
 import { MK, FONT, radius, brandHeadHtml, ctaButtonHtml } from "../_shared/marketing-templates/brand.ts";
-import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
+import { isAdminOrBackendCaller, forbiddenResponse, maskEmail } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -221,7 +221,7 @@ serve(async (req) => {
       });
       const result = await r.json();
       if (!r.ok) {
-        console.error("Resend referral test failed", to, result);
+        console.error("Resend referral test failed", { to: maskEmail(to), status: r.status });
         results.push({ to, ok: false, error: result?.message || `HTTP ${r.status}` });
       } else {
         results.push({ to, ok: true, id: result.id });

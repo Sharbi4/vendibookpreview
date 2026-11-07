@@ -1,4 +1,4 @@
-import { isAllowedTestRecipient } from "../_shared/callerGuard.ts";
+import { isAllowedTestRecipient, maskEmail } from "../_shared/callerGuard.ts";
 // Admin-only test harness for every registered transactional template.
 //
 // Safety design:
@@ -159,7 +159,7 @@ Deno.serve(async (req) => {
   const { data, error } = await invokeTransactionalEmail({ templateName, recipientEmail: to, idempotencyKey, templateData })
 
   if (error) {
-    console.error('[admin-send-test-email] send failed', { templateName, to, error })
+    console.error('[admin-send-test-email] send failed', { templateName, to: maskEmail(to), error: (error as any)?.message ?? 'send_failed' })
     return json({ error: (error as any)?.message || String(error) }, 500)
   }
 

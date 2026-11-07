@@ -16,6 +16,7 @@ import {
   SITE_URL,
 } from "../_shared/marketing-templates/brand.ts";
 import { unsubToken } from "../_shared/unsubscribeToken.ts";
+import { isAllowedTestRecipient } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -294,6 +295,7 @@ Deno.serve(async (req) => {
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey);
 
     let actorId: string | null = null;
+    let actorEmail: string | null = null;
     if (!opsAuthorized && token !== serviceKey) {
 
       const { data: userData, error: userErr } = await supabase.auth.getUser(token);
@@ -302,6 +304,7 @@ Deno.serve(async (req) => {
       const { data: isAdmin } = await supabase.rpc("is_admin", { user_id: user.id });
       if (!isAdmin) return json({ success: false, error: "Admin access required." }, 403);
       actorId = user.id;
+      actorEmail = user.email ?? null;
     }
 
 
@@ -419,6 +422,11 @@ Deno.serve(async (req) => {
     const testEmail = String(body?.email || "").trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(testEmail)) {
       return json({ success: false, error: "Enter a valid test email address." }, 400);
+    }
+    // Test sends may only go to the requesting admin's own address or a
+    // Vendibook staff mailbox, never to arbitrary people.
+    if (!isAllowedTestRecipient(testEmail, actorEmail)) {
+      return json({ success: false, error: "Test emails can only go to your own address or a @vendibook.com inbox." }, 403);
     }
     const RESEND_KEY = Deno.env.get("RESEND_API_KEY");
     if (!RESEND_KEY) throw new Error("RESEND_API_KEY not configured");
