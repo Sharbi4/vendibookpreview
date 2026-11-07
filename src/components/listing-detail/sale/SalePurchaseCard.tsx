@@ -1,3 +1,4 @@
+import { ApproveFinancingLogo } from '@/components/brand/ProviderLogos';
 import { useSaleActionState } from '@/hooks/useSaleActionState';
 import { PurchaseProtectionCard } from './PurchaseProtectionCard';
 import SaleAvailabilityNote from '@/components/commerce/SaleAvailabilityNote';
@@ -275,8 +276,8 @@ export const SalePurchaseCard = ({
                 </span>
               </div>
               <div className="mt-2.5 flex flex-wrap gap-2">
-                <Button size="sm" variant="outline" onClick={() => handleApplyFinancing('listing_price_line')}>
-                  Apply with APPROVE
+                <Button size="sm" variant="outline" className="approve-premium-cta" onClick={() => handleApplyFinancing('listing_price_line')}>
+                  Apply with <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />
                   <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
                 </Button>
                 <Button size="sm" variant="ghost" asChild>
@@ -290,7 +291,7 @@ export const SalePurchaseCard = ({
               </div>
               <p className="mt-2.5 text-[11px] leading-snug text-muted-foreground">
                 {illustrativeMonthlyPayment(priceSale) !== null && <>{illustrativeFinancingNote} </>}
-                Through APPROVE. Vendibook is not a lender.
+                Through <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />. Vendibook is not a lender.
               </p>
             </div>
           )}

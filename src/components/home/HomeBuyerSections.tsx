@@ -1,3 +1,4 @@
+import { ApproveBrandText } from '@/components/brand/ProviderLogos';
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
@@ -278,7 +279,7 @@ export function HomeFeaturedCards() {
                 <img src={card.img} alt="" width={800} height={1000} loading="lazy" decoding="async" />
                 <span className="hb-card-text">
                   <strong>{card.title}<ArrowUpRight aria-hidden="true" /></strong>
-                  <small>{card.sub}</small>
+                  <small><ApproveBrandText>{card.sub}</ApproveBrandText></small>
                   <span className="hb-card-cta" aria-hidden="true">{card.cta}<ArrowRight /></span>
                 </span>
               </Link>

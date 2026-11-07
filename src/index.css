@@ -3673,3 +3673,25 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 @media (prefers-reduced-motion: reduce) {
   .upgrade-dimensional-icon { animation: none; transform: none; }
 }
+
+/* Official APPROVE artwork stays black on its own white brand panel. */
+.approve-premium-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .75rem;
+  min-height: 3.5rem;
+  padding: .875rem 1.25rem;
+  border: 1px solid #414454;
+  border-radius: .875rem;
+  background: linear-gradient(125deg, #141725, #30374c);
+  color: #fff;
+  font-size: .875rem;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgb(17 24 39 / .16), inset 0 1px 0 rgb(255 255 255 / .12);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+.approve-premium-cta img { height: 1.75rem !important; padding: .3rem .45rem !important; border-radius: .25rem; }
+.approve-premium-cta:hover { background: linear-gradient(125deg, #22283c, #404b68); color: #fff; transform: translateY(-1px); box-shadow: 0 12px 28px rgb(17 24 39 / .24); }
+.approve-premium-cta:focus-visible { outline: 3px solid #638aff; outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .approve-premium-cta { transition: none; } .approve-premium-cta:hover { transform: none; } }

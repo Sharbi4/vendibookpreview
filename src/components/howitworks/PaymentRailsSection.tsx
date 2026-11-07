@@ -1,3 +1,4 @@
+import { ApproveBrandText } from '@/components/brand/ProviderLogos';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -201,8 +202,8 @@ export const PaymentRailsSection = ({ audience }: { audience: RailsAudience }) =
               className="text-left rounded-2xl border border-border bg-background p-5 transition-all hover:border-foreground/30 hover:shadow-lg"
             >
               <div className="h-8 flex items-center mb-3">{rail.logo}</div>
-              <h3 className="text-base font-semibold text-foreground mb-1.5">{rail.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-3">{rail.summary}</p>
+              <h3 className="text-base font-semibold text-foreground mb-1.5"><ApproveBrandText>{rail.title}</ApproveBrandText></h3>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-3"><ApproveBrandText>{rail.summary}</ApproveBrandText></p>
               <span className="inline-flex items-center gap-1.5 text-xs font-medium text-foreground/70">
                 <Info className="w-3.5 h-3.5" /> See the steps
               </span>
@@ -221,9 +222,9 @@ export const PaymentRailsSection = ({ audience }: { audience: RailsAudience }) =
             <>
               <DialogHeader>
                 <div className="h-8 flex items-center mb-1">{open.logo}</div>
-                <DialogTitle className="text-foreground">{open.detailTitle}</DialogTitle>
+                <DialogTitle className="text-foreground"><ApproveBrandText>{open.detailTitle}</ApproveBrandText></DialogTitle>
                 <DialogDescription className="text-muted-foreground">
-                  {open.summary}
+                  <ApproveBrandText>{open.summary}</ApproveBrandText>
                 </DialogDescription>
               </DialogHeader>
               <ol className="space-y-3 mt-1">
@@ -232,12 +233,12 @@ export const PaymentRailsSection = ({ audience }: { audience: RailsAudience }) =
                     <span className="shrink-0 w-6 h-6 rounded-full bg-foreground/8 border border-border grid place-items-center font-mono text-[11px] text-foreground/70">
                       {i + 1}
                     </span>
-                    <span className="leading-relaxed">{s}</span>
+                    <span className="leading-relaxed"><ApproveBrandText>{s}</ApproveBrandText></span>
                   </li>
                 ))}
               </ol>
               <p className="mt-3 text-xs text-muted-foreground leading-relaxed border-t border-border pt-3">
-                {open.detailNote}
+                <ApproveBrandText>{open.detailNote}</ApproveBrandText>
               </p>
               <div className="mt-1 grid gap-2">
                 {open.flowLink && (
@@ -271,7 +272,7 @@ export const ProviderTrustStrip = ({ showAPPROVE = true }: { showAPPROVE?: boole
     </span>
     {showAPPROVE && (
       <span className="inline-flex items-center gap-2">
-        <ApproveFinancingLogo className="h-5" /> Financing by APPROVE
+        Financing by <ApproveFinancingLogo className="h-5" />
       </span>
     )}
     <span className="inline-flex items-center gap-2">
@@ -332,7 +333,7 @@ export const KeepExploring = ({ current }: { current: 'overview' | 'seller' | 'h
               >
                 <Icon className="w-5 h-5 text-foreground/70 mb-3" />
                 <h3 className="text-base font-semibold text-foreground mb-1">{c.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed mb-3">{c.body}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-3"><ApproveBrandText>{c.body}</ApproveBrandText></p>
                 <span className="inline-flex items-center gap-1 text-xs font-medium text-foreground">
                   Open <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
                 </span>

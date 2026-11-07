@@ -74,7 +74,7 @@ const CheckoutFinancingBanner = ({
       <div className="checkout-financing-copy">
         <span>Financing available</span>
         <strong>Need financing for this equipment?</strong>
-        <p>Explore equipment financing through APPROVE before completing your purchase.</p>
+        <p>Explore equipment financing through <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" /> before completing your purchase.</p>
       </div>
       <div className="checkout-financing-actions">
         <button
@@ -90,7 +90,7 @@ const CheckoutFinancingBanner = ({
         </button>
       </div>
       <p className="checkout-financing-note">
-        Third-party financing. Approval and terms are determined by APPROVE and/or its funding providers.
+        Third-party financing. Approval and terms are determined by <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" /> and/or its funding providers.
         Vendibook is not a lender.
       </p>    </aside>
   );

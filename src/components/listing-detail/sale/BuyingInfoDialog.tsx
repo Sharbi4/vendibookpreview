@@ -1,3 +1,4 @@
+import { ApproveFinancingLogo } from '@/components/brand/ProviderLogos';
 import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { FreightLink } from '@/components/shared/FreightLink';
@@ -94,7 +95,7 @@ export const BuyingInfoDialog = ({
           </Row>
           {financingEnabled && (
             <Row icon={Banknote} title="Equipment financing">
-              Financing is offered through APPROVE.{' '}
+              Financing is offered through <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />.{' '}
               <Link
                 to={'https://financing.approvepayments.com/vendibook'}
                 className="underline underline-offset-2"

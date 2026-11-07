@@ -1,3 +1,4 @@
+import { ApproveFinancingLogo } from '@/components/brand/ProviderLogos';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 
@@ -30,7 +31,7 @@ export function ApproveApplicationButton({ listing }: {
         if (!attachedApplications.has(application)) {
           application.add_listener((message) => {
             if (message?.action === 'app_submitted') {
-              toast.success('Application submitted to APPROVE. Watch for updates from your financing provider.');
+              toast.success(<>Application submitted to <ApproveFinancingLogo className="h-4" />. Watch for updates from your financing provider.</>);
             }
           });
           attachedApplications.add(application);
@@ -56,11 +57,11 @@ export function ApproveApplicationButton({ listing }: {
       approve-qty={hasEquipment ? '1' : undefined}
       approve-item-type={type}
       style={{ display: 'none' }}
-      className="finance-cta rounded-md px-4 py-3 text-sm font-semibold"
-    >Apply with APPROVE</button>
+      className="approve-premium-cta"
+    >Apply with <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" /></button>
     <a href={EQUINOX_APPLY_URL} target="_blank" rel="noopener noreferrer"
-      className="finance-cta-outline rounded-md px-4 py-3 text-center text-sm font-semibold">
-      Apply on APPROVE’s website
+      className="approve-premium-cta">
+      Apply on <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />’s website
     </a>
   </div>;
 }

@@ -1,3 +1,4 @@
+import { ApproveBrandText } from '@/components/brand/ProviderLogos';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ExternalLink, Loader2, ShieldCheck } from 'lucide-react';
@@ -136,7 +137,7 @@ export default function ListingPaymentsFinancing() {
               <h2 className="text-base font-semibold">Buyer financing is included</h2>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Every published for-sale listing on Vendibook shows financing options through APPROVE
+              Every published for-sale listing on Vendibook shows financing options through <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />
               Funding — there is nothing to switch on. Buyers see a financing badge, an{' '}
               <a
                 href={EQUINOX_APPLY_URL}
@@ -144,7 +145,7 @@ export default function ListingPaymentsFinancing() {
                 rel="noopener noreferrer"
                 className="underline underline-offset-2"
               >
-                Apply with APPROVE
+                Apply with <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />
                 <ExternalLink className="inline h-3 w-3 ml-0.5" />
               </a>{' '}
               link, and a downloadable pro forma purchase summary. Financing never changes how or
@@ -160,7 +161,7 @@ export default function ListingPaymentsFinancing() {
                 <span className="text-xs font-semibold uppercase tracking-wide">Good to know</span>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                {EQUINOX_DISCLOSURE_TEXT}
+                <ApproveBrandText>{EQUINOX_DISCLOSURE_TEXT}</ApproveBrandText>
               </p>
             </div>
             {flagOn ? (

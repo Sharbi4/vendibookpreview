@@ -1,3 +1,4 @@
+import { ApproveListingBanner } from '@/components/financing/ApproveListingBanner';
 import { Link } from 'react-router-dom';
 import {
   ChevronRight,
@@ -193,6 +194,7 @@ export const SaleListingLayout = ({
             ratingData={ratingData}
             instanceId="mobile"
           />
+          <ApproveListingBanner />
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6 lg:gap-12">
@@ -254,6 +256,7 @@ export const SaleListingLayout = ({
                 paypalMerchantId={paypalMerchantId}
                 ratingData={ratingData}
               />
+              <ApproveListingBanner />
             </div>
           </div>
         </div>

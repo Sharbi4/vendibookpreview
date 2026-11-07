@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Children, useState, type ReactNode } from 'react';
 import paypalWordmarkWhite from '@/assets/brand/paypal-wordmark-white.png.asset.json';
 import paypalMonogram from '@/assets/brand/paypal-monogram-color.png.asset.json';
 import plaidLogoWhite from '@/assets/brand/plaid-logo-white.png.asset.json';
@@ -84,21 +84,15 @@ export function PlaidLogo({
   );
 }
 
+/** Owner-supplied official APPROVE artwork, hosted locally. */
 export function ApproveFinancingLogo({ className }: { className?: string }) {
-  const [failed, setFailed] = useState(false);
-  if (failed) {
-    return (
-      <span className={cn('text-sm font-semibold tracking-tight', className)}>APPROVE</span>
-    );
-  }
-  return (
-    <img
-      src="https://assets.approvepayments.com/images/approve_logo_primary.svg"
-      alt="APPROVE"
-      loading="eager"
-      decoding="async"
-      onError={() => setFailed(true)}
-      className={cn('h-6 w-auto', className)}
-    />
-  );
+  return <img src="/brand/approve-logo-primary.svg" alt="APPROVE" width={614} height={129}
+    className={cn('inline-block h-6 w-auto max-w-full object-contain rounded-sm bg-white px-1 py-0.5 align-middle', className)} />;
+}
+
+/** Keep readable inline copy while displaying the official financing wordmark. */
+export function ApproveBrandText({ children }: { children: ReactNode }) {
+  return <>{Children.map(children, child => typeof child !== 'string' ? child : child.split(/(APPROVE)/g).map((part, i) => part === 'APPROVE'
+    ? <ApproveFinancingLogo key={i} className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />
+    : part))}</>;
 }

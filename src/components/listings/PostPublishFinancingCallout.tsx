@@ -1,3 +1,4 @@
+import { ApproveFinancingLogo } from '@/components/brand/ProviderLogos';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Landmark, ArrowRight } from 'lucide-react';
@@ -23,9 +24,9 @@ export const PostPublishFinancingCallout: React.FC<{ listingId?: string; classNa
           Buyers can finance this listing
         </p>
         <p className="mt-1 text-xs leading-relaxed text-neutral-600">
-          Qualified buyers can apply for equipment financing through APPROVE right from your
+          Qualified buyers can apply for equipment financing through <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" /> right from your
           listing — nothing to set up. Your asking price doesn&apos;t change, and you&apos;re paid the
-          full sale price when the purchase closes. Financing is provided by APPROVE, not
+          full sale price when the purchase closes. Financing is provided by <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />, not
           Vendibook.
         </p>
         <Link

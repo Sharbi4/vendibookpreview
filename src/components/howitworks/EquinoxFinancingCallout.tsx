@@ -1,3 +1,4 @@
+import { ApproveBrandText } from '@/components/brand/ProviderLogos';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Landmark, FileText, BadgeCheck } from 'lucide-react';
@@ -36,18 +37,18 @@ const EquinoxFinancingCallout = ({
                 id="equinox-financing-heading"
                 className="text-2xl md:text-3xl font-bold text-foreground mb-3"
               >
-                {isSeller
+                <ApproveBrandText>{isSeller
                   ? 'Add APPROVE to your listing'
-                  : 'Finance your purchase with APPROVE'}
+                  : 'Finance your purchase with APPROVE'}</ApproveBrandText>
               </h2>
               <p className="text-sm md:text-base text-muted-foreground leading-relaxed mb-4">
                 {isSeller ? (
                   <>
                     On eligible for-sale trucks, trailers, and carts you can switch on the optional
-                    APPROVE add-on. Buyers see a financing option on your listing, can apply
+                    <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" /> add-on. Buyers see a financing option on your listing, can apply
                     directly, and can download a pro forma purchase sheet — which widens your buyer
                     pool beyond cash-in-hand shoppers. An 8.7% platform fee applies to an
-                    APPROVE-financed Vendibook sale.{' '}
+                    <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />-financed Vendibook sale.{' '}
                     <Link to="https://financing.approvepayments.com/vendibook" className="font-medium text-foreground underline underline-offset-4 hover:text-primary">
                       Learn about financing
                     </Link>
@@ -55,9 +56,9 @@ const EquinoxFinancingCallout = ({
                   </>
                 ) : (
                   <>
-                    On eligible for-sale listings you can apply with APPROVE and download a
+                    On eligible for-sale listings you can apply with <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" /> and download a
                     pro forma purchase sheet to move faster on the truck or trailer you want.
-                    Financing is offered by APPROVE, not Vendibook, and is subject to credit
+                    Financing is offered by <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />, not Vendibook, and is subject to credit
                     approval.{' '}
                     <Link to="https://financing.approvepayments.com/vendibook" className="font-medium text-foreground underline underline-offset-4 hover:text-primary">
                       Learn about financing
@@ -67,7 +68,7 @@ const EquinoxFinancingCallout = ({
                 )}
               </p>
               <p className="text-xs text-muted-foreground leading-relaxed mb-6">
-                Vendibook is not a lender. Approval, rates, and terms are determined by APPROVE
+                Vendibook is not a lender. Approval, rates, and terms are determined by <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />
                 Funding LLC and/or its funding providers.
               </p>
               <Link
@@ -97,13 +98,13 @@ const EquinoxFinancingCallout = ({
                 },
               ].map((f) => (
                 <li
-                  key={f.title}
+                  key=<ApproveBrandText>{f.title}</ApproveBrandText>
                   className="flex gap-3 rounded-2xl border border-border bg-background/60 p-4"
                 >
                   <f.icon className="h-4 w-4 text-primary shrink-0 mt-0.5" aria-hidden="true" />
                   <div>
-                    <div className="text-sm font-semibold text-foreground">{f.title}</div>
-                    <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">{f.body}</p>
+                    <div className="text-sm font-semibold text-foreground"><ApproveBrandText>{f.title}</ApproveBrandText></div>
+                    <p className="text-xs text-muted-foreground leading-relaxed mt-0.5"><ApproveBrandText>{f.body}</ApproveBrandText></p>
                   </div>
                 </li>
               ))}

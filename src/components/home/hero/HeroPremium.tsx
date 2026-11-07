@@ -1,3 +1,4 @@
+import { ApproveFinancingLogo } from '@/components/brand/ProviderLogos';
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
@@ -90,7 +91,7 @@ const HeroPremium = ({ showGoogleSignIn = true, showRotator = true, guaranteeHre
               data-cta-location="home_hero_financing"
               onClick={() => trackLeadEvent('hero_financing_clicked', { source: 'home_hero', destination: 'https://financing.approvepayments.com/vendibook' })}
             >
-              APPROVE
+              <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />
             </Link>
             .
           </motion.p>

@@ -95,8 +95,8 @@ export const FinancingActionPanel = ({
           </div>
           <h3 className="text-base font-semibold">Financing options for this equipment</h3>
           <p className="text-xs text-muted-foreground leading-relaxed mt-1">
-            This seller offers financing options through APPROVE. Apply directly with
-            APPROVE, or download a pro forma purchase summary to share with a financing provider.
+            This seller offers financing options through <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />. Apply directly with
+            <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />, or download a pro forma purchase summary to share with a financing provider.
           </p>
         </div>
       </div>
@@ -110,7 +110,7 @@ export const FinancingActionPanel = ({
             <span className="text-muted-foreground">/mo*</span>
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            APPROVE: 0–10% typical down · decisions usually in 24–48 hours · startups considered.
+            Illustrative estimate only. Lenders determine eligibility, down payment, rates and timing.
           </p>
           <Link
             to={financingCalculatorUrl(salePrice, listing.id)}
@@ -153,7 +153,7 @@ export const FinancingActionPanel = ({
 
       <p className="text-[11px] text-muted-foreground/80 mt-3 leading-relaxed">
         The purchase summary is a pro forma document, not proof of sale, ownership, or financing
-        approval. Financing is subject to APPROVE and/or its funding providers&rsquo;
+        approval. Financing is subject to <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" /> and/or its funding providers&rsquo;
         approval and terms. Vendibook is not a lender.
         {estimate !== null && <> {illustrativeFinancingNote}</>}
       </p>    </SaleCard>

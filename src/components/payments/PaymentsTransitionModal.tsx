@@ -86,7 +86,7 @@ export function PaymentsTransitionModal() {
           </DialogTitle>
           <DialogDescription className="text-center text-sm leading-relaxed">
             Your listings stay live exactly as they are. All checkout runs through PayPal.
-            Financing is provided by APPROVE’s lender network.
+            Financing is provided by <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />’s lender network.
           </DialogDescription>
         </DialogHeader>
 
@@ -169,7 +169,7 @@ export function PaymentsTransitionModal() {
                   Offer financing on your equipment listings
                 </p>
                 <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                  APPROVE connects equipment financing applications with its lender network. Add a financing option to eligible sale listings.
+                  <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" /> connects equipment financing applications with its lender network. Add a financing option to eligible sale listings.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Button size="sm" variant="glass-cta" asChild className="rounded-md">

@@ -1,3 +1,4 @@
+import { ApproveBrandText } from '@/components/brand/ProviderLogos';
 import { Link } from 'react-router-dom';
 import { linkifyFreight } from '@/components/shared/FreightLink';
 import {
@@ -125,7 +126,7 @@ const SellerPaymentsExplainer = ({
                   <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
                 </div>
                 <h3 className="text-base font-semibold text-foreground">{s.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{linkifyFreight(s.body)}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed"><ApproveBrandText>{linkifyFreight(s.body)}</ApproveBrandText></p>
               </li>
             );
           })}
@@ -187,12 +188,12 @@ const SellerPaymentsExplainer = ({
               Optional buyer financing
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              APPROVE is an optional per-listing add-on for eligible for-sale trucks,
+              <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" /> is an optional per-listing add-on for eligible for-sale trucks,
               trailers, and carts. When enabled, buyers can apply and download the financing
-              purchase sheet. An 8.7% platform fee applies to an APPROVE-financed Vendibook sale.
+              purchase sheet. An 8.7% platform fee applies to an <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />-financed Vendibook sale.
             </p>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Vendibook is not a lender. Approval and terms are determined by APPROVE and/or its
+              Vendibook is not a lender. Approval and terms are determined by <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" /> and/or its
               funding providers.
             </p>
             <Link
