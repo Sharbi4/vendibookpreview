@@ -281,6 +281,13 @@
       "when": 1794015725594,
       "tag": "0039_carts_equipment_category",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1794015737572,
+      "tag": "0040_reclassify_verified_charcuterie_cart",
+      "breakpoints": true
     }
   ]
 }
