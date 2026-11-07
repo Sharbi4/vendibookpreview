@@ -22,7 +22,7 @@
     },
     {
       "topic": "rent rental booking Square documents insurance",
-      "answer": "Rentals use Square card checkout only. Host listing rates and required documents come from the actual listing and dates; platform fees are separate. Guide through listing, review, details, required documents and payment. Only request documents the host requires. Do not upload or accept agreements for the customer. Never suggest PayPal installments for rentals.",
+      "answer": "Rentals use Square card checkout only. Host listing rates and required documents come from the actual listing and dates; platform fees are separate. Guide through listing, review, details, required documents and payment. Only request documents the host requires. Do not upload or accept agreements for the customer. PayPal installments and Pay Later are not offered on rentals or purchases.",
       "source": "src/data/pricingFaq.ts; owner instructions",
       "page": "search"
     },
@@ -70,7 +70,7 @@
     },
     {
       "topic": "financing approval insurance FLIP",
-      "answer": "Open financing or insurance and explain the actual displayed provider terms. Vendibook is not a lender or insurer. Do not guarantee approval, price, coverage or a deadline. Rental checkout remains Square. Insurance eligibility and policy requirements depend on the provider and host.",
+      "answer": "APPROVE is Vendibook’s sole financing partner; Equinox, ClickLease and PayPal Pay Later or installments are not offered. Customers apply on APPROVE’s hosted application at https://financing.approvepayments.com/vendibook or with a listing’s Apply with APPROVE button; there is no Vendibook form first. Never collect credit or bank details. Lenders decide eligibility, rates, down payment, timing and terms; estimates and offers come from APPROVE, not listing pages. Never promise approval for any credit score, a 24- or 48-hour decision or guaranteed approval. Vendibook is not the lender; financing approval is not payment and does not complete the purchase. Vendibook cannot see APPROVE applications or show their status yet. For insurance, explain the actual displayed provider terms; Vendibook is not an insurer. Do not guarantee price, coverage or a deadline. Purchases use PayPal checkout or invoice; rental checkout remains Square. Insurance eligibility and policy requirements depend on the provider and host.",
       "source": "src/data/pricingFaq.ts; src/lib/atlas/allisonConfig.ts",
       "page": "financing"
     },
@@ -431,7 +431,7 @@
     {
       "category": "Other services & support",
       "question": "Does Vendibook offer financing?",
-      "answer": "Yes. Eligible food trucks, trailers, carts and some custom builds may qualify for financing through third-party financing partners. Start at https://vendibook.com/financing. APPROVE connects applications with its lender network; approval and terms are not guaranteed."
+      "answer": "Yes. Eligible food trucks, trailers, carts and some custom builds may qualify for financing through APPROVE, Vendibook’s financing partner. Start at https://vendibook.com/financing. APPROVE connects applications with its lender network; approval and terms are not guaranteed."
     },
     {
       "category": "Other services & support",
@@ -461,7 +461,7 @@
     {
       "category": "Other services & support",
       "question": "What is ClickLease?",
-      "answer": "ClickLease has been discussed as an additional option for some qualifying trailers. We can refer your request to financing operations; do not rely on a ClickLease approval or link until the current program has been confirmed."
+      "answer": "APPROVE is Vendibook’s sole financing partner. Do not offer ClickLease, Equinox or PayPal installment financing; direct applicants to https://financing.approvepayments.com/vendibook."
     },
     {
       "category": "Other services & support",
