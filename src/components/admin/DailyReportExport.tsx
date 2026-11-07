@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Download, FileSpreadsheet, Loader2, Calendar, TrendingUp, Users, Mail, FileText, Eye, Timer, Zap } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { safeSpreadsheetRows } from '@/lib/spreadsheetSafe';
 import { useAdminDailyReport, DailyReportData } from '@/hooks/useAdminDailyReport';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -204,7 +205,8 @@ const DailyReportExport = () => {
       });
 
       const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(excelData);
+      // Listing titles and names are user-entered; neutralize formula-looking text.
+      const ws = XLSX.utils.json_to_sheet(safeSpreadsheetRows(excelData));
 
       ws['!cols'] = [
         { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 15 },
