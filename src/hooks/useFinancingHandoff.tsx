@@ -1,16 +1,6 @@
-import { useCallback, useRef, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useCallback } from 'react';
 import { EQUINOX_APPLY_URL } from '@/lib/financing/disclosure';
-import {
-  trackFinancingApplyClick,
-  trackFinancingLeadCaptured,
-  type FinancingSource,
-} from '@/lib/analytics';
-import {
-  FinancingLeadDialog,
-  type FinancingLeadValues,
-} from '@/components/financing/FinancingLeadDialog';
+import { trackFinancingApplyClick, type FinancingSource } from '@/lib/analytics';
 
 /**
  * Open the APPROVE tab synchronously inside the click so popup blockers allow
@@ -30,108 +20,13 @@ const openBlankTab = (): Window | null => {
   return win;
 };
 
-interface Pending {
-  source: FinancingSource;
-  listingId?: string;
-}
-
-/**
- * Single entry point for every "apply for financing" action.
- *
- * Order of operations: track the placement click, capture the lead for
- * Vendibook (silently when signed in, via a skippable form when not), then
- * hand off to APPROVE. Lead capture is best-effort and never blocks handoff.
- */
+/** Open APPROVE directly for guests and members, without a lead capture form. */
 export function useFinancingHandoff() {
-  const { user } = useAuth();
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const pending = useRef<Pending | null>(null);
-
-  const saveLead = useCallback(
-    async (values: FinancingLeadValues, ctx: Pending, mode: 'signed_in' | 'form') => {
-      try {
-        // Server-side capture: saves the lead, emails the applicant a follow-up
-        // with next steps + a link to book a 30-minute customer success call,
-        // and notifies the team. Best-effort — never blocks the handoff.
-        const { error } = await supabase.functions.invoke('send-financing-followup', {
-          body: {
-            name: values.name || undefined,
-            email: values.email,
-            listingId: ctx.listingId,
-            source: ctx.source,
-            userId: user?.id,
-          },
-        });
-        if (error) throw error;
-        trackFinancingLeadCaptured(ctx.source, ctx.listingId, mode);
-      } catch (err) {
-        // Never block the handoff on lead capture.
-        console.warn('[financing] lead capture failed', err);
-      }
-    },
-    [user?.id],
-  );
-
-  const openApply = useCallback(async (_ctx: Pending, win: Window | null) => {
-    // The public portal needs no API lookup. A failed Vendibook service must
-    // not prevent the buyer from reaching APPROVE.
-    const url = EQUINOX_APPLY_URL;
-    if (win && !win.closed) win.location.href = url;
-    // Popup blocked: keep the applicant moving in this tab.
-    else window.location.assign(url);
+  const startFinancingApply = useCallback((source: FinancingSource, listingId?: string) => {
+    const win = openBlankTab();
+    if (win && !win.closed) win.location.href = EQUINOX_APPLY_URL;
+    else window.location.assign(EQUINOX_APPLY_URL);
+    trackFinancingApplyClick(source, listingId);
   }, []);
-
-  /** Call directly from the click handler so the popup is not blocked. */
-  const startFinancingApply = useCallback(
-    (source: FinancingSource, listingId?: string) => {
-      const ctx: Pending = { source, listingId };
-      trackFinancingApplyClick(source, listingId);
-
-      if (user?.email) {
-        const win = openBlankTab();
-        const name =
-          (user.user_metadata as any)?.full_name ?? (user.user_metadata as any)?.name ?? '';
-        void saveLead({ name, email: user.email }, ctx, 'signed_in');
-        void openApply(ctx, win);
-        return;
-      }
-
-      pending.current = ctx;
-      setDialogOpen(true);
-    },
-    [user, saveLead, openApply],
-  );
-
-  const handleContinue = useCallback(
-    async (values: FinancingLeadValues | null) => {
-      const ctx = pending.current;
-      if (!ctx) return;
-      const win = openBlankTab();
-      setSubmitting(true);
-      try {
-        if (values?.email) void saveLead(values, ctx, 'form');
-        await openApply(ctx, win);
-      } finally {
-        setSubmitting(false);
-        setDialogOpen(false);
-        pending.current = null;
-      }
-    },
-    [saveLead, openApply],
-  );
-
-  const financingLeadDialog = (
-    <FinancingLeadDialog
-      open={dialogOpen}
-      onOpenChange={(open) => {
-        setDialogOpen(open);
-        if (!open) pending.current = null;
-      }}
-      onContinue={handleContinue}
-      submitting={submitting}
-    />
-  );
-
-  return { startFinancingApply, financingLeadDialog };
+  return { startFinancingApply };
 }

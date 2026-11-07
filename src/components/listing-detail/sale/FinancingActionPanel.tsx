@@ -41,7 +41,7 @@ export const FinancingActionPanel = ({
   showPaymentLockup = false,
 }: FinancingActionPanelProps) => {
   const [busy, setBusy] = useState(false);
-  const { startFinancingApply, financingLeadDialog } = useFinancingHandoff();
+  const { startFinancingApply } = useFinancingHandoff();
   const enabled = useEquinoxFinancingEnabled(listing);
 
   if (!enabled) return null;
@@ -156,9 +156,7 @@ export const FinancingActionPanel = ({
         approval. Financing is subject to APPROVE and/or its funding providers&rsquo;
         approval and terms. Vendibook is not a lender.
         {estimate !== null && <> {illustrativeFinancingNote}</>}
-      </p>
-      {financingLeadDialog}
-    </SaleCard>
+      </p>    </SaleCard>
   );
 };
 

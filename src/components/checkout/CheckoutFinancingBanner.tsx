@@ -28,7 +28,7 @@ const CheckoutFinancingBanner = ({
   className,
 }: CheckoutFinancingBannerProps) => {
   const enabled = useEquinoxFinancingEnabled(listing);
-  const { startFinancingApply, financingLeadDialog } = useFinancingHandoff();
+  const { startFinancingApply } = useFinancingHandoff();
   const [busy, setBusy] = useState(false);
 
   if (!enabled) return null;
@@ -62,9 +62,7 @@ const CheckoutFinancingBanner = ({
           onClick={() => trackFinancingLearnMoreClick('listing_panel', listing.id)}
         >
           Explore →
-        </a>
-        {financingLeadDialog}
-      </div>
+        </a>      </div>
     );
   }
 
@@ -94,9 +92,7 @@ const CheckoutFinancingBanner = ({
       <p className="checkout-financing-note">
         Third-party financing. Approval and terms are determined by APPROVE and/or its funding providers.
         Vendibook is not a lender.
-      </p>
-      {financingLeadDialog}
-    </aside>
+      </p>    </aside>
   );
 };
 

@@ -9,7 +9,7 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 vi.mock('@/contexts/AuthContext', () => ({
-  useAuth: () => ({ user: { id: 'u1', email: 'buyer@example.test', user_metadata: {} } }),
+  useAuth: () => ({ user: null }),
 }));
 vi.mock('@/lib/analytics', () => ({
   trackFinancingApplyClick: vi.fn(),
@@ -32,7 +32,7 @@ describe('financing apply opens APPROVE in a new tab', () => {
   });
   afterEach(() => { open.mockRestore(); assign.mockReset(); invoke.mockReset(); });
 
-  it('sends the new tab to APPROVE, cuts the opener and leaves this page alone', async () => {
+  it('sends guests directly to APPROVE without a form, cuts the opener and leaves this page alone', async () => {
     const { result } = renderHook(() => useFinancingHandoff());
     await act(async () => { result.current.startFinancingApply('financing_page_hero' as never); });
     // No 'noopener' feature: that makes window.open return null.
@@ -47,7 +47,7 @@ describe('financing apply opens APPROVE in a new tab', () => {
     const { result } = renderHook(() => useFinancingHandoff());
     await act(async () => { result.current.startFinancingApply('listing_detail' as never, 'l1'); });
     expect(tab.location.href).toBe('https://financing.approvepayments.com/vendibook');
-    expect(invoke.mock.calls.some(([name]) => name === 'financing-apply-link')).toBe(false);
+    expect(invoke).not.toHaveBeenCalled();
     expect(tab.close).not.toHaveBeenCalled();
     expect(assign).not.toHaveBeenCalled();
   });

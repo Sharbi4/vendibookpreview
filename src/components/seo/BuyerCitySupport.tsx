@@ -18,7 +18,7 @@ export function BuyerCitySupport({ city, path, category }: { city: string; path:
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [receipt, setReceipt] = useState<{ reference_code: string; follow_up_by: string } | null>(null);
-  const { startFinancingApply, financingLeadDialog } = useFinancingHandoff();
+  const { startFinancingApply } = useFinancingHandoff();
   const financing = useEquinoxFinancingEnabled({ mode: 'sale', status: 'published' });
   const track = (ctaId: string, destination: string) => trackBuyerSeoCta({ landingPage: path, ctaId, destination, ctaLocation: 'buyer_help', category });
   async function requestMeeting(event: React.FormEvent<HTMLFormElement>) {
@@ -60,9 +60,7 @@ export function BuyerCitySupport({ city, path, category }: { city: string; path:
         <Button className="mt-6 w-full" variant="outline" onClick={() => { track('city_sales_meeting', '/contact'); setOpen(true); }}>Request a sales meeting</Button>
         <p className="mt-4 text-xs leading-5 text-muted-foreground">Follow-up within 2 business hours, Monday–Friday, 8 AM–8 PM Eastern. Meeting time is confirmed with you.</p>
       </article>
-    </div>
-    {financingLeadDialog}
-    <Dialog open={open} onOpenChange={setOpen}><DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg"><DialogHeader><DialogTitle>Meet with the Vendibook sales team</DialogTitle><DialogDescription>Tell us how to reach you. We’ll reply to arrange a time.</DialogDescription></DialogHeader>
+    </div>    <Dialog open={open} onOpenChange={setOpen}><DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg"><DialogHeader><DialogTitle>Meet with the Vendibook sales team</DialogTitle><DialogDescription>Tell us how to reach you. We’ll reply to arrange a time.</DialogDescription></DialogHeader>
       {receipt ? <div role="status" className="space-y-3 py-5"><CheckCircle2 className="h-9 w-9 text-green-700" /><h3 className="font-semibold">Your request is with our team.</h3><p className="text-sm">Follow-up by {receipt.follow_up_by}. Your meeting time will be confirmed by email.</p><p className="text-xs text-muted-foreground">Reference: {receipt.reference_code}</p></div> : <form onSubmit={requestMeeting} className="space-y-4">
         <div><Label htmlFor="buyer-sales-name">Name</Label><Input id="buyer-sales-name" name="name" required minLength={2} maxLength={80} autoComplete="name" className="text-base" /></div>
         <div><Label htmlFor="buyer-sales-email">Email</Label><Input id="buyer-sales-email" name="email" type="email" required maxLength={120} autoComplete="email" className="text-base" /></div>

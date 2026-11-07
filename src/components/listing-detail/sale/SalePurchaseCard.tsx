@@ -106,7 +106,7 @@ export const SalePurchaseCard = ({
   const { user } = useAuth();
   const saleActions = useSaleActionState(listing?.id);
   const financingEnabled = useEquinoxFinancingEnabled(listing);
-  const { startFinancingApply, financingLeadDialog } = useFinancingHandoff();
+  const { startFinancingApply } = useFinancingHandoff();
 
   const [showOffer, setShowOffer] = useState(false);
   const [showAuthGate, setShowAuthGate] = useState(false);
@@ -500,9 +500,7 @@ export const SalePurchaseCard = ({
           listingTitle={listing.title}
           askingPrice={priceSale}
         />
-      )}
-      {financingLeadDialog}
-    </>
+      )}    </>
 
   );
 };
