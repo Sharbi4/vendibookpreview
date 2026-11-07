@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { assertListingPurchasable } from "../_shared/listingGuard.ts";
+import { trustedSiteOrigin } from "../_shared/trustedOrigin.ts";
 
 /**
  * Protected Sale deposit checkout.
@@ -49,7 +50,7 @@ serve(async (req) => {
       if (blocked) return blocked;
     }
 
-    const origin = req.headers.get("origin") ?? "https://vendibook.com";
+    const origin = trustedSiteOrigin(req);
     const success = `/sale/${ps.sale_transaction_id}/protection?deposit=success`;
     const cancel = `/sale/${ps.sale_transaction_id}/protection?deposit=cancelled`;
     const url = `${origin}/checkout/pay?kind=protected_sale_deposit&id=${encodeURIComponent(ps.id)}` +

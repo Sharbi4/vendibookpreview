@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { assertListingPurchasable } from "../_shared/listingGuard.ts";
+import { trustedSiteOrigin } from "../_shared/trustedOrigin.ts";
 
 /**
  * Freight checkout for a for-sale transaction.
@@ -57,7 +58,7 @@ serve(async (req) => {
     const amountCents = Math.round(Number(tx.freight_cost ?? 0) * 100);
     if (amountCents <= 0) return jsonError(400, "invalid_amount", "There's no freight amount due.");
 
-    const origin = req.headers.get("origin") ?? "https://vendibook.com";
+    const origin = trustedSiteOrigin(req);
     const success = `/order-tracking/${transactionId}?freight_paid=true`;
     const cancel = `/order-tracking/${transactionId}?freight_cancelled=true`;
     const url = `${origin}/checkout/pay?kind=freight&id=${encodeURIComponent(transactionId)}` +
