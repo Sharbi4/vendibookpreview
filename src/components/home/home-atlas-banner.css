@@ -44,7 +44,6 @@
 .home-atlas-conversation-actions button:hover { background: #fff; color: #70220e; }
 .home-atlas-conversation-actions button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
 .home-atlas-conversation-actions svg { width: 16px; height: 16px; flex-shrink: 0; }
-.home-atlas-conversation-note { margin-top: 12px; color: #ffe3d4; font-size: 10px; line-height: 1.5; }
 .home-atlas-conversation + .home-atlas-explore { margin-top: 16px; }
 .home-atlas-explore {
   display: inline-flex; justify-content: center; align-items: center; gap: 32px;
