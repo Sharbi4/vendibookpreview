@@ -1,5 +1,4 @@
 import { useCallback, useRef, useState } from 'react';
-import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { EQUINOX_APPLY_URL } from '@/lib/financing/disclosure';
@@ -74,21 +73,10 @@ export function useFinancingHandoff() {
     [user?.id],
   );
 
-  const openApply = useCallback(async (ctx: Pending, win: Window | null) => {
-    let url = EQUINOX_APPLY_URL;
-    if (ctx.listingId) {
-      try {
-        const { data, error } = await supabase.functions.invoke('financing-apply-link', {
-          body: { listingId: ctx.listingId },
-        });
-        if (error || !data?.applyUrl) throw new Error('apply_unavailable');
-        url = EQUINOX_APPLY_URL; // Current approved destination wins over cached provider responses.
-      } catch {
-        win?.close();
-        toast.error('Could not open the financing application. Please try again.');
-        return;
-      }
-    }
+  const openApply = useCallback(async (_ctx: Pending, win: Window | null) => {
+    // The public portal needs no API lookup. A failed Vendibook service must
+    // not prevent the buyer from reaching APPROVE.
+    const url = EQUINOX_APPLY_URL;
     if (win && !win.closed) win.location.href = url;
     // Popup blocked: keep the applicant moving in this tab.
     else window.location.assign(url);
@@ -122,7 +110,7 @@ export function useFinancingHandoff() {
       const win = openBlankTab();
       setSubmitting(true);
       try {
-        if (values?.email) await saveLead(values, ctx, 'form');
+        if (values?.email) void saveLead(values, ctx, 'form');
         await openApply(ctx, win);
       } finally {
         setSubmitting(false);

@@ -42,11 +42,13 @@ describe('financing apply opens APPROVE in a new tab', () => {
     expect(assign).not.toHaveBeenCalled();
   });
 
-  it('keeps the approved portal destination after listing eligibility verification', async () => {
-    invoke.mockResolvedValue({ data: { applyUrl: 'https://financing.approvepayments.com/vendibook?ref=l1' }, error: null });
+  it('opens APPROVE despite a failed lead service without an apply-link dependency', async () => {
+    invoke.mockRejectedValue(new Error('Request failed with status code 502'));
     const { result } = renderHook(() => useFinancingHandoff());
     await act(async () => { result.current.startFinancingApply('listing_detail' as never, 'l1'); });
     expect(tab.location.href).toBe('https://financing.approvepayments.com/vendibook');
+    expect(invoke.mock.calls.some(([name]) => name === 'financing-apply-link')).toBe(false);
+    expect(tab.close).not.toHaveBeenCalled();
     expect(assign).not.toHaveBeenCalled();
   });
 
