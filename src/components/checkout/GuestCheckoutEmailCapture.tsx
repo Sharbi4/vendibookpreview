@@ -22,11 +22,11 @@ const GuestCheckoutEmailCapture = ({ getDraft }: Props) => {
     setError(null);
     setStatus('saving');
     const result = await saveGuestCheckoutDraft({ ...getDraft(), email });
-    if (result.ok) {
-      setStatus('saved');
-    } else {
+    if (result.ok === false) {
       setStatus('idle');
       setError(result.message);
+    } else {
+      setStatus('saved');
     }
   };
 
