@@ -345,7 +345,12 @@ const PermitPath = () => {
         return;
       }
       setResult(adapted);
-      if ((response?.result as any)?.fallback) {
+      if ((response?.result as any)?.live_research === 'sign_in_required') {
+        toast({
+          title: 'Showing the standard checklist',
+          description: 'Sign in to get live local research for your city. Verify each item locally.',
+        });
+      } else if ((response?.result as any)?.fallback) {
         toast({
           title: 'Showing baseline checklist',
           description: 'Live research was thin — we rendered the standard checklist for this business type. Verify each item locally.',
