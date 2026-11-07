@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { getCaller, isBackendCaller } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -63,6 +64,8 @@ const ALLOWED_EVENTS = new Set([
   "Purchase", "InitiateCheckout", "Lead", "ViewContent", "AddToWishlist",
   "Search", "CompleteRegistration", "Contact", "PageView",
 ]);
+// Browsing signals a signed-out visitor may send (no purchases/checkouts/registrations).
+const ANON_EVENTS = new Set(["ViewContent", "Search", "PageView", "AddToWishlist", "Lead", "Contact"]);
 const ALLOWED_HOSTS = /^(?:www\.)?vendibook\.com$|\.lovable\.app$/;
 const str = (v: unknown, max = 200) =>
   typeof v === "string" && v.trim() ? v.trim().slice(0, max) : undefined;
@@ -136,6 +139,34 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
       });
+    }
+    // Who is sending this? Backend jobs are trusted as-is. Signed-in members
+    // have their identity taken from their verified account, never the body.
+    // Signed-out visitors may only send browsing signals: no conversion
+    // events, no money values and no personal identifiers.
+    if (!(await isBackendCaller(req))) {
+      const caller = await getCaller(req);
+      if (caller) {
+        eventData.user_data = {
+          ...eventData.user_data,
+          email: caller.email ?? undefined,
+          external_id: caller.id,
+        };
+      } else {
+        if (!ANON_EVENTS.has(eventData.event_name)) {
+          return new Response(JSON.stringify({ success: false, skipped: true, reason: "sign_in_required" }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          });
+        }
+        eventData.user_data = { fbc: eventData.user_data?.fbc, fbp: eventData.user_data?.fbp };
+        if (eventData.custom_data) {
+          delete eventData.custom_data.value;
+          delete eventData.custom_data.currency;
+          delete eventData.custom_data.contents;
+          delete eventData.custom_data.num_items;
+        }
+      }
     }
     logStep("Received event", { event_name: eventData.event_name });
 
@@ -262,7 +293,6 @@ serve(async (req) => {
       success: false,
       skipped: true,
       reason: "unexpected_error",
-      error: errorMessage,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
