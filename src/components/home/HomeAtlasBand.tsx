@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, Check } from 'lucide-react';
+import { ArrowUpRight, Check, MessageCircle, Phone } from 'lucide-react';
+import { isAtlasEnabled, startAtlas } from '@/lib/atlas/atlasFlag';
 import './home-atlas-banner.css';
 
 const FEATURES = [
@@ -21,6 +22,23 @@ export default function HomeAtlasBand() {
             <p className="home-atlas-eyebrow">Your AI sales assistant</p>
             <h2 id="home-atlas-title">Your next move.<br />Made easier with Atlas.</h2>
             <p className="home-atlas-description">From finding the right equipment to planning what comes next. Get a little guidance at every step.</p>
+            {isAtlasEnabled() && (
+              <div className="home-atlas-conversation" data-atlas-ui role="group" aria-label="Talk or chat with Atlas">
+                <div className="home-atlas-conversation-heading">
+                  <span className="home-atlas-conversation-orb" aria-hidden="true" />
+                  <div><strong>Meet Atlas</strong><p>Your AI sales assistant</p></div>
+                </div>
+                <div className="home-atlas-conversation-actions">
+                  <button type="button" onClick={() => startAtlas({ mode: 'voice' })}>
+                    <Phone aria-hidden="true" /> Talk to Atlas
+                  </button>
+                  <button type="button" onClick={() => startAtlas({ mode: 'text' })}>
+                    <MessageCircle aria-hidden="true" /> Chat
+                  </button>
+                </div>
+                <p className="home-atlas-conversation-note">Voice or text. Powered by ElevenLabs.</p>
+              </div>
+            )}
             <Link to="/atlas" className="home-atlas-explore" data-cta-location="home_atlas_band_more">
               Explore Atlas <ArrowUpRight aria-hidden="true" />
             </Link>
