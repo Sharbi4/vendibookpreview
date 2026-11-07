@@ -3,7 +3,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 import { checkRateLimit, clientIp } from '../_shared/rateLimit.ts';
-import { getCaller, isBackendCaller } from '../_shared/callerGuard.ts';
+import { getCaller, isBackendCaller, serviceRoleClient } from '../_shared/callerGuard.ts';
 
 const VAPI_PRIVATE_KEY = Deno.env.get('VAPI_PRIVATE_KEY');
 const VAPI_PHONE_NUMBER_ID = Deno.env.get('VAPI_PHONE_NUMBER_ID');
@@ -24,7 +24,9 @@ Deno.serve(async (req) => {
 
     // Members only (owner decision 2026-10-15): signed-in users, or other
     // backend functions that already gated their own callers.
-    if (!(await isBackendCaller(req)) && !(await getCaller(req))) {
+    const backend = await isBackendCaller(req);
+    const caller = backend ? null : await getCaller(req);
+    if (!backend && !caller) {
       return new Response(JSON.stringify({ error: 'Please sign in to request a call.' }), {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -52,6 +54,28 @@ Deno.serve(async (req) => {
       : digits.length === 10
         ? `+1${digits}`
         : `+${digits}`;
+
+    // Members can only have Vendibook call a number they have verified on
+    // their own account, so a session can't be used to dial someone else.
+    if (caller) {
+      const { data: verified, error: verifyErr } = await serviceRoleClient()
+        .from('signup_phone_verifications')
+        .select('phone_e164')
+        .eq('user_id', caller.id)
+        .eq('phone_e164', e164)
+        .maybeSingle();
+      if (verifyErr) {
+        return new Response(JSON.stringify({ error: 'We could not check your phone number. Please call or text (866) 690-6227.' }), {
+          status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      if (!verified) {
+        return new Response(JSON.stringify({
+          error: 'For your security, we can only call the verified phone number on your account. Call or text (866) 690-6227 instead.',
+          code: 'phone_not_verified',
+        }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    }
 
     // Abuse protection: this endpoint is intentionally public (visitors can
     // request a call back), so cap attempts per phone number and per visitor.
