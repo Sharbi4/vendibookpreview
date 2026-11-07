@@ -22,7 +22,7 @@ export default function MembershipPlans({ annual, onAnnualChange, proPrice, feat
       <button aria-pressed={!annual} onClick={() => onAnnualChange(false)}>Monthly</button>
       <button aria-pressed={annual} onClick={() => onAnnualChange(true)}>Annual <span>2 months free</span></button>
     </div>
-    <p className="membership-period-note">Save $158 a year with annual Pro. Featured stays monthly.</p>
+    <p className="membership-period-note">Save $158 a year with annual Pro. Featured renews every 30 days.</p>
     <div className="membership-grid">
       <article className="membership-card">
         <header><h3>Starter</h3><p>For getting your listing online</p></header>
@@ -48,9 +48,9 @@ export default function MembershipPlans({ annual, onAnnualChange, proPrice, feat
       <article className="membership-card">
         <header><h3><FeaturedBadge variant="card" size="md" force/><span className="sr-only"> listing</span></h3><p>A spotlight for one listing</p></header>
         <div className="membership-body">
-          <p className="membership-price">{featuredPrice}<small>/month</small></p>
-          <p className="membership-billing">A monthly subscription for the listing you choose.</p>
-          {checks(['Featured visibility for your listing', 'A highlighted listing card', 'Manage renewal from your account'])}
+          <p className="membership-price">{featuredPrice}<small>/30 days</small></p>
+          <p className="membership-billing">Square subscription for one listing. Charged now and every 30 days until canceled.</p>
+          {checks(['Featured visibility for your listing', 'A highlighted listing card', 'Cancel renewal online from your account'])}
           <p className="membership-exclusions">Cancel anytime. Automatically cancels when the listing is marked sold. Rental listings renew until you cancel. No annual option.</p>
           <Link className="membership-featured-action" to="/dashboard/listings">Make a listing Featured <ArrowRight aria-hidden="true"/></Link>
         </div>

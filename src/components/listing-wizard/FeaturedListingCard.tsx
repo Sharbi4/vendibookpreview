@@ -15,8 +15,7 @@ export const FeaturedListingCard: React.FC<FeaturedListingCardProps> = ({
   enabled,
   onEnabledChange}) => {
   // Price and duration come from the monetization catalog (the amount PayPal charges).
-  const boostPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.featuredBoost);
-  const durationDays = boostPrice.durationDays ?? 30;
+  const boostPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.featuredSubscription);
   return (
     <div
       className={`relative overflow-hidden rounded-2xl border transition-all ${
@@ -78,7 +77,7 @@ export const FeaturedListingCard: React.FC<FeaturedListingCardProps> = ({
         <div className="mt-5 flex items-baseline gap-2">
           <span className="text-3xl font-bold text-foreground">{boostPrice.label}</span>
           <span className="text-sm text-muted-foreground">
-            one-time · {durationDays} days · no auto-renew
+            every 30 days · auto-renews until canceled
           </span>
         </div>
 
@@ -87,7 +86,7 @@ export const FeaturedListingCard: React.FC<FeaturedListingCardProps> = ({
           <Benefit
             icon={<Star className="w-4 h-4 text-amber-500" />}
             title="Top of search & homepage"
-            desc="Pinned above standard listings everywhere shoppers browse."
+            desc="Eligible for rotating Featured placement alongside other Featured listings."
           />
           <Benefit
             icon={<Star className="w-4 h-4 text-amber-500" />}
@@ -102,7 +101,7 @@ export const FeaturedListingCard: React.FC<FeaturedListingCardProps> = ({
           <Benefit
             icon={<BarChart3 className="w-4 h-4 text-amber-500" />}
             title="Weekly boost report"
-            desc="See exactly how many extra views and inquiries you got."
+            desc="Review available listing views and inquiries in your dashboard."
           />
         </div>
 
@@ -112,13 +111,13 @@ export const FeaturedListingCard: React.FC<FeaturedListingCardProps> = ({
             <TrendingUp className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
             <div className="text-sm text-amber-700 dark:text-amber-300">
               <strong>Great choice.</strong> You'll be redirected to secure checkout after you tap{' '}
-              <span className="font-semibold">Publish</span>. Your listing goes live the moment payment clears.
+              <span className="font-semibold">Publish</span>. Featured placement starts after payment is confirmed.
             </div>
           </div>
         )}
 
         <p className="mt-4 text-xs text-muted-foreground">
-          Secure PayPal checkout · Cancel or skip anytime before publishing.
+          Square subscription · Applicable tax shown at checkout. Cancel renewal online from Account → Membership & billing.
         </p>
       </div>
     </div>

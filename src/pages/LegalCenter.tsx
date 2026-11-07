@@ -36,7 +36,7 @@ const FURTHER_POLICIES = [
   { href: '/legal/pay-in-person-terms', title: 'Pay-in-Person Acknowledgment', summary: 'What Vendibook does — and doesn’t — cover when you pay in cash.' },
   { href: '/legal/subscription-terms', title: 'Subscription & Paid Add-On Terms', summary: 'Recurring billing, renewal, cancellation, and refunds.' },
   { href: '/legal/refund-cancellation-policy', title: 'Refund & Cancellation Policy', summary: 'When platform fees and payments are refundable.' },
-  { href: '/legal/featured-listing-terms', title: 'Featured Listing Terms', summary: 'Placement, duration, and refund rules for boosts.' },
+  { href: '/legal/featured-listing-terms', title: 'Featured Listing Terms', summary: 'Recurring Featured billing, placement, cancellation and legacy Boost credits.' },
   { href: '/legal/sms', title: 'SMS Terms', summary: 'Consent, keywords, frequency, and how to stop messages.' },
   { href: '/legal/marketplace-updates', title: 'Marketplace Updates & Marketing SMS', summary: 'Optional email and marketing text subscriptions, consent, frequency, and opt-out.' },
   { href: '/insurance', title: 'Insurance information', summary: 'What Vendibook does and does not underwrite.' },

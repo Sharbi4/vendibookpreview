@@ -2,7 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { corsHeaders, jsonResponse, jsonError } from '../_shared/jsonError.ts';
 import { squareConfig, squareRequest, catalogPrice } from '../_shared/square.ts';
 import { reconcileSquareAddonPayment, reconcileSquareAddonByPaymentId } from '../_shared/squareAddonReconciliation.ts';
-import { validateSquarePlan } from '../_shared/squarePlan.ts';
+import { validateSquarePlan, FEATURED_CADENCE, FEATURED_DISCLOSURE_VERSION } from '../_shared/squarePlan.ts';
 import { syncSquareSubscription } from '../_shared/squareSubscription.ts';
 import { normalizeUsState, quoteSalesTax } from '../_shared/tax.ts';
 import { findActiveExemption } from '../_shared/taxExemption.ts';
@@ -29,7 +29,7 @@ Deno.serve(async req => {
       const classification = classifyProduct(product);
       const tier = classification.grantsTier || product.slug;
       const featured = product.slug === 'featured_listing_monthly';
-      if (featured && (!body.listing_id || (body.billing_interval && body.billing_interval !== 'monthly'))) return jsonError(400,'featured_terms','Featured requires a listing and monthly billing.');
+      if (featured && (!body.listing_id || (body.billing_interval && body.billing_interval !== 'monthly'))) return jsonError(400,'featured_terms','Featured requires a listing and its configured 30-day billing option.');
       if (featured && check(await admin.rpc('featured_listing_sold',{p_listing:body.listing_id}))) return jsonError(409,'sold','This listing has already sold.');
       let plan: any = null;
       let consent: any = null;
@@ -37,6 +37,7 @@ Deno.serve(async req => {
       if (recurring) {
         consent = check(await admin.from('user_consents').select('id,user_id,revoked_at,related_ids').eq('id',body.consent_id || '00000000-0000-0000-0000-000000000000').maybeSingle());
         if (!consent || consent.user_id !== user.id || consent.revoked_at || consent.related_ids?.product_slug !== product.slug) return jsonError(400,'consent','Accept recurring billing terms before subscribing.');
+        if (featured && (consent.related_ids?.billing_cadence !== FEATURED_CADENCE || consent.related_ids?.disclosure_version !== FEATURED_DISCLOSURE_VERSION)) return jsonError(409,'consent','Review and accept the current 30-day Featured subscription terms.');
         if (!featured) {
         const active = check(await admin.from('host_subscriptions').select('id').eq('user_id',user.id).in('status',['active','trialing','past_due','unpaid']).limit(1));
         if (active?.length) return jsonError(409,'existing_subscription','You already have a membership. Manage it before starting another subscription.');
@@ -52,7 +53,7 @@ Deno.serve(async req => {
         if (!plan) return jsonError(409,'plan_unavailable','This billing option is not configured yet.');
         if(Number(consent.related_ids?.price_cents_shown)!==plan.price_cents) return jsonError(409,'consent_price','The plan price changed. Review the current billing terms again.');
         const catalog = await squareRequest('/v2/catalog/object/'+encodeURIComponent(plan.variation_id));
-        validateSquarePlan(catalog.object, plan);
+        validateSquarePlan(catalog.object, plan, product.slug);
       }
       if (body.listing_id) {
         const listing = check(await admin.from('listings').select('id,host_id,category').eq('id',body.listing_id).maybeSingle());
@@ -93,10 +94,10 @@ Deno.serve(async req => {
       }
       if (attempt && (attempt.amount_cents !== amount || attempt.tax_cents !== tax.taxCents || attempt.variation_id !== (plan?.variation_id || null))) return jsonError(409,'pending_checkout','An earlier checkout must be resolved before changing this billing option.');
       if (attempt?.status === 'pending') {
-        attempt = check(await admin.from('square_billing_attempts').update({tax_snapshot:taxSnapshot}).eq('id',attempt.id).eq('status','pending').select().single());
+        attempt = check(await admin.from('square_billing_attempts').update({tax_snapshot:taxSnapshot,...(recurring?{consent_id:body.consent_id}:{})}).eq('id',attempt.id).eq('status','pending').select().single());
       }
       if (!attempt) attempt = check(await admin.from('square_billing_attempts').insert({user_id:user.id,product_id:product.id,listing_id:body.listing_id || null,environment:config.environment,kind:recurring?'subscription':'addon',tier,tax_snapshot:taxSnapshot,amount_cents:amount,tax_cents:tax.taxCents,tax_exemption_id:tax.exemptionId ?? null,currency,billing_interval:recurring?interval:null,variation_id:plan?.variation_id || null,consent_id:recurring?body.consent_id:null}).select().single());
-      return jsonResponse(200,{attempt_id:attempt.id,application_id:config.applicationId,location_id:config.locationId,environment:config.environment,name:product.name,amount_cents:attempt.amount_cents,tax_cents:attempt.tax_cents,tax_label:tax.label,tax_rate_pct:tax.ratePct,tax_state:tax.state,tax_source:tax.source,tax_exempt:tax.source==='exempt',currency,recurring,billing_interval:interval,billing_contact:{givenName:profile.first_name,familyName:profile.last_name,email:user.email,countryCode:'US',state:profile.state,city:profile.city,postalCode:profile.zip_code}});
+      return jsonResponse(200,{attempt_id:attempt.id,application_id:config.applicationId,location_id:config.locationId,environment:config.environment,name:product.name,amount_cents:attempt.amount_cents,tax_cents:attempt.tax_cents,tax_label:tax.label,tax_rate_pct:tax.ratePct,tax_state:tax.state,tax_source:tax.source,tax_exempt:tax.source==='exempt',currency,recurring,billing_interval:interval,billing_cadence:featured?FEATURED_CADENCE:undefined,billing_contact:{givenName:profile.first_name,familyName:profile.last_name,email:user.email,countryCode:'US',state:profile.state,city:profile.city,postalCode:profile.zip_code}});
     }
     const a = check(await admin.from('square_billing_attempts').select('*').eq('id',body.attempt_id).eq('user_id',user.id).eq('environment',config.environment).single());
     if (action === 'status') {
@@ -122,8 +123,13 @@ Deno.serve(async req => {
     check(await admin.from('square_billing_attempts').update({status:'processing'}).eq('id',a.id));
     if (a.kind === 'subscription') {
       if (a.tier === 'featured_listing_monthly' && check(await admin.rpc('featured_listing_sold',{p_listing:a.listing_id}))) return jsonError(409,'sold','This listing has already sold.');
-      const consent=check(await admin.from('user_consents').select('user_id,revoked_at').eq('id',a.consent_id).single());
+      const consent=check(await admin.from('user_consents').select('user_id,revoked_at,related_ids').eq('id',a.consent_id).single());
       if(consent.user_id!==user.id || consent.revoked_at) return jsonError(400,'consent','Renew your billing consent before paying.');
+      if (a.tier === 'featured_listing_monthly') {
+        if (consent.related_ids?.billing_cadence !== FEATURED_CADENCE || consent.related_ids?.disclosure_version !== FEATURED_DISCLOSURE_VERSION || Number(consent.related_ids?.price_cents_shown) !== a.amount_cents) return jsonError(409,'consent','Review and accept the current Featured subscription terms.');
+        const { object } = await squareRequest('/v2/catalog/object/'+encodeURIComponent(a.variation_id));
+        validateSquarePlan(object,{billing_interval:a.billing_interval,price_cents:a.amount_cents,currency:a.currency},a.tier);
+      }
       if (!a.customer_id) {
         const result = await squareRequest('/v2/customers',{idempotency_key:a.id,email_address:user.email,reference_id:user.id});
         a.customer_id=result.customer.id;

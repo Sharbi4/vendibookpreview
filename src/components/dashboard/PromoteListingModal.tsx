@@ -19,8 +19,8 @@ export const PromoteListingModal = ({open,onOpenChange,listingId,listingTitle}:P
  const [error,setError]=useState('');
  return <><Dialog open={open} onOpenChange={onOpenChange}><DialogContent className="sale-light max-h-[85dvh] w-[calc(100%-1.5rem)] overflow-y-auto rounded-3xl bg-white p-6 sm:max-w-lg sm:p-8">
   <DialogHeader><DialogTitle className="flex items-center gap-2"><FeaturedBadge variant="card" size="md" force/><span className="sr-only">Featured listing</span></DialogTitle><DialogDescription className="pt-3">Give {listingTitle} a spotlight.</DialogDescription></DialogHeader>
-  <p className="text-4xl font-semibold tracking-tight">{product?formatUsd(effectivePriceCents(product)):loading?'Loading…':'Unavailable'}<span className="text-sm font-normal text-stone-500"> /month</span></p>
-  <p className="text-sm leading-6 text-stone-600">Featured visibility and a highlighted listing card. This is a monthly subscription for this listing, with applicable tax shown at checkout.</p>
+  <p className="text-4xl font-semibold tracking-tight">{product?formatUsd(effectivePriceCents(product)):loading?'Loading…':'Unavailable'}<span className="text-sm font-normal text-stone-500"> /30 days</span></p>
+  <p className="text-sm leading-6 text-stone-600">Featured visibility and a highlighted listing card. This is an automatically renewing 30-day subscription for this listing, with applicable tax shown at checkout.</p>
   <p className="text-xs leading-5 text-stone-500">Cancel anytime. Automatically cancels when marked sold. Rental listings renew until cancelled. No annual option or guaranteed views, inquiries or sales.</p>
   {error&&<p role="alert" className="text-sm text-red-700">{error}</p>}
   <Button variant="cta" disabled={!product||!!pendingSlug||redeem.isPending} onClick={()=>product&&void requestCheckout(product,{listingId,interval:'monthly',successPath:'/dashboard/listings?purchase=success',cancelPath:'/dashboard/listings'})}>Make this listing Featured</Button>

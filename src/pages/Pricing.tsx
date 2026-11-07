@@ -65,7 +65,7 @@ const ADDON_DETAILS: Record<
   string,
   { summary: string; included: string[]; bestFor: string; billing: string; finePrint: string[] }
 > = {
-  [ACTIVE_PRODUCT_SLUGS.featuredBoost]: {
+  [ACTIVE_PRODUCT_SLUGS.featuredSubscription]: {
     summary: 'Put one listing at the top of search results and give it a highlighted card for 30 days.',
     included: [
       'Priority placement at the top of matching search results',
@@ -74,9 +74,9 @@ const ADDON_DETAILS: Record<
       'Runs for 30 days from activation',
     ],
     bestFor: 'A listing that is ready to sell or rent and needs more eyes this month.',
-    billing: 'One-time charge. Does not renew.',
+    billing: 'Renews every 30 days through Square until canceled.',
     finePrint: [
-      '30-day duration · non-recurring — buy again to extend.',
+      'Charged when you subscribe and every 30 days, plus applicable tax.',
       'Applies to one listing you select.',
       'Vendibook Pro members receive 1 boost credit per billing period.',
     ],
@@ -101,7 +101,7 @@ const ADDON_DETAILS: Record<
 
 /** Short benefit copy per active add-on. Falls back to the DB description. */
 const ONE_LINERS: Record<string, string> = {
-  [ACTIVE_PRODUCT_SLUGS.featuredBoost]: 'Top of search and a highlighted card for 30 days.',
+  [ACTIVE_PRODUCT_SLUGS.featuredSubscription]: 'Top of search and a highlighted card for 30 days.',
   [ACTIVE_PRODUCT_SLUGS.permitPathPlus]: 'Save roadmaps, track permits, store documents, export PDFs.',
 };
 
@@ -152,7 +152,7 @@ function AddOnCard({
   };
 
   const cadenceLabel = recurring
-    ? '/mo'
+    ? product.slug === 'featured_listing_monthly' ? '/30 days' : '/mo'
     : product.duration_days
       ? ` · ${product.duration_days} days`
       : ' one-time';

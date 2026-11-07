@@ -413,7 +413,7 @@ export const PublishWizard: React.FC = () => {
   const [acceptPayPalCheckout, setAcceptPayPalCheckout] = useState(true);
   const [acceptCashPayment, setAcceptCashPayment] = useState(false);
   const [featuredEnabled, setFeaturedEnabled] = useState(false);
-  const featuredBoostPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.featuredBoost);
+  const featuredBoostPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.featuredSubscription);
 
   // ─── Buyer financing is automatic on every published for-sale listing ───
   // (no seller opt-in, no disclosure checkbox)
@@ -2573,14 +2573,14 @@ export const PublishWizard: React.FC = () => {
           }
         }
 
-        const checkoutUrl = productCheckoutUrl(ACTIVE_PRODUCT_SLUGS.featuredBoost, listing.id, {
+        const checkoutUrl = productCheckoutUrl(ACTIVE_PRODUCT_SLUGS.featuredSubscription, listing.id, {
           success: `${publishedUrl}&featured_paid=true`,
           cancel: `${publishedUrl}&featured_cancelled=true`,
         });
 
         toast({
           title: 'Your listing is live 🎉',
-          description: 'Finish the Featured boost checkout to pin it to the top of search.',
+          description: 'Review recurring terms and complete Square checkout for Featured placement.',
         });
 
         window.location.href = checkoutUrl;
@@ -5410,7 +5410,7 @@ export const PublishWizard: React.FC = () => {
                     <div>
                       You'll be redirected to PayPal to pay{' '}
                       <strong>{featuredBoostPrice.label}</strong> for the Featured add-on
-                      ({featuredBoostPrice.durationDays ?? 30} days).
+                      every 30 days through Square until canceled, plus applicable tax.
                       Your listing publishes automatically the moment payment clears.
                     </div>
                   </div>

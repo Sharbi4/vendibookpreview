@@ -17,6 +17,7 @@ export const ACTIVE_PRODUCT_SLUGS = {
   permitPathPlus: 'permit_path_plus_monthly',
   proListing: 'pro_listing_30',
   featuredBoost: 'boost-featured-30',
+  featuredSubscription: 'featured_listing_monthly',
   listingRewrite: 'listing_rewrite',
   pricePilot: 'tool_pricepilot',
 } as const;

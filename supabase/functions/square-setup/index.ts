@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { squareConfig, squareRequest } from '../_shared/square.ts';
-import { validateSquarePlan } from '../_shared/squarePlan.ts';
+import { validateSquarePlan, squarePlanCadence } from '../_shared/squarePlan.ts';
 
 // Operator-only provisioning. Never creates customers, cards, subscriptions or charges.
 Deno.serve(async req => {
@@ -14,7 +14,8 @@ Deno.serve(async req => {
   if (req.method !== 'POST') return new Response('POST required', { status: 405 });
   try {
     const config = squareConfig();
-    const { apply = false, product_slugs } = await req.json();
+    const { apply = false, product_slugs, replace_featured_monthly = false } = await req.json();
+    if (replace_featured_monthly && (product_slugs?.length !== 1 || product_slugs[0] !== 'featured_listing_monthly')) throw new Error('Featured cadence migration must target only Featured');
     const admin = createClient(Deno.env.get('SUPABASE_URL')!, serviceKey);
     const check = (r: any) => { if (r.error) throw new Error('Billing database operation failed'); return r.data; };
     const { location } = await squareRequest('/v2/locations/' + encodeURIComponent(config.locationId));
@@ -41,16 +42,23 @@ Deno.serve(async req => {
         unique.set(plan.billing_interval, plan);
       }
       for (const plan of unique.values()) {
+        const cadence = squarePlanCadence(plan, p.slug);
         const existing = check(await admin.from('square_billing_plans').select('*').eq('product_id', p.id).eq('environment', config.environment).eq('billing_interval', plan.billing_interval).maybeSingle());
+        let replacing = false;
         if (existing) {
           const { object } = await squareRequest('/v2/catalog/object/' + encodeURIComponent(existing.variation_id));
-          validateSquarePlan(object, plan);
+          if (replace_featured_monthly && object?.subscription_plan_variation_data?.phases?.[0]?.cadence === 'MONTHLY') {
+            validateSquarePlan(object, plan); // Verify the old plan before replacing only its new-sale mapping.
+            replacing = true;
+          } else validateSquarePlan(object, plan, p.slug);
           if (existing.price_cents !== plan.price_cents || existing.currency !== plan.currency) throw new Error('Stored Square plan mapping differs from approved price');
-          results.push({ slug: p.slug, ...plan, variation_id: existing.variation_id, status: 'verified' });
-          continue;
+          if (!replacing) {
+            results.push({ slug: p.slug, ...plan, cadence, variation_id: existing.variation_id, status: 'verified' });
+            continue;
+          }
         }
-        if (!apply) { results.push({ slug: p.slug, ...plan, status: 'needs_creation' }); continue; }
-        const fingerprint = JSON.stringify({ ...plan, name: p.name });
+        if (!apply) { results.push({ slug: p.slug, ...plan, cadence, status: replacing ? 'needs_new_featured_variation' : 'needs_creation' }); continue; }
+        const fingerprint = JSON.stringify({ ...plan, cadence, name: p.name });
         const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(fingerprint));
         const key = Array.from(new Uint8Array(digest), x => x.toString(16).padStart(2, '0')).join('');
         const result = await squareRequest('/v2/catalog/batch-upsert', {
@@ -59,16 +67,20 @@ Deno.serve(async req => {
             { type: 'SUBSCRIPTION_PLAN', id: '#plan', present_at_all_locations: true, subscription_plan_data: { name: `${p.name} (${plan.billing_interval})`, all_items: true } },
             { type: 'SUBSCRIPTION_PLAN_VARIATION', id: '#variation', present_at_all_locations: true, subscription_plan_variation_data: {
               name: `${p.name} · ${plan.billing_interval}`, subscription_plan_id: '#plan',
-              phases: [{ ordinal: 0, cadence: { monthly: 'MONTHLY', quarterly: 'QUARTERLY', annual: 'ANNUAL' }[plan.billing_interval], pricing: { type: 'STATIC', price: { amount: plan.price_cents, currency: plan.currency } } }],
+              phases: [{ ordinal: 0, cadence, pricing: { type: 'STATIC', price: { amount: plan.price_cents, currency: plan.currency } } }],
             } },
           ] }],
         });
         const variationId = result.id_mappings?.find((m: any) => m.client_object_id === '#variation')?.object_id;
         if (!variationId) throw new Error('Square did not return a plan variation ID');
         const { object } = await squareRequest('/v2/catalog/object/' + encodeURIComponent(variationId));
-        validateSquarePlan(object, plan);
+        validateSquarePlan(object, plan, p.slug);
         // Ignore a concurrent identical insert; never replace a mapped price silently.
-        check(await admin.from('square_billing_plans').upsert({ ...plan, variation_id: variationId }, { onConflict: 'product_id,environment,billing_interval', ignoreDuplicates: true }));
+        if (replacing) {
+          // Existing subscriptions/attempts retain their original variation IDs and accepted terms.
+          const changed = check(await admin.from('square_billing_plans').update({variation_id:variationId}).eq('product_id',p.id).eq('environment',config.environment).eq('billing_interval',plan.billing_interval).eq('variation_id',existing.variation_id).select('variation_id'));
+          if (changed.length !== 1) throw new Error('Concurrent Featured mapping change needs review');
+        } else check(await admin.from('square_billing_plans').upsert({ ...plan, variation_id: variationId }, { onConflict: 'product_id,environment,billing_interval', ignoreDuplicates: true }));
         const mapped = check(await admin.from('square_billing_plans').select('*').eq('product_id', p.id).eq('environment', config.environment).eq('billing_interval', plan.billing_interval).single());
         if (mapped.variation_id !== variationId) throw new Error('Concurrent plan setup needs review');
         results.push({ slug: p.slug, ...plan, variation_id: variationId, status: 'created' });

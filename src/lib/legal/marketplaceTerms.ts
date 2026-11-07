@@ -19,8 +19,8 @@ export const TERMS_VENUE = 'Pima County, Arizona';
 export const TERMS_LEGAL_EMAIL = 'legal@vendibook.com';
 export const TERMS_SUPPORT_EMAIL = 'support@vendibook.com';
 export const TERMS_PRIVACY_EMAIL = 'privacy@vendibook.com';
-export const MARKETPLACE_TERMS_VERSION = '2026-10-13';
-export const MARKETPLACE_TERMS_EFFECTIVE = 'October 13, 2026';
+export const MARKETPLACE_TERMS_VERSION = '2026-11-07';
+export const MARKETPLACE_TERMS_EFFECTIVE = 'November 7, 2026';
 
 const SALE_FEE = `${FEE_CONFIG.saleSellerFeePct}%`;
 const RENTER_FEE = `${FEE_CONFIG.rentalRenterFeePct}%`;
@@ -60,7 +60,7 @@ const SITE_USAGE: TermsTab = {
       'We send service notices, transaction updates and legal notices to the email address on your account. You can turn off marketing messages in your settings, but not messages about your transactions or your account.'),
     s('su-3', '3. How the marketplace works',
       'Listings are created by sellers and hosts, not by Vendibook. A sale or rental agreement is formed directly between the buyer or renter and the seller or host. Vendibook provides the marketplace and the tools around the transaction: listings, messaging, purchase requests and offers, invoices, checkout, sales tax, signed agreements, video walkthroughs, handoff records, payment protection and support. Vendibook is not the seller, buyer, owner, broker, dealer or agent of any party, and does not take title to equipment.',
-      'Vendibook also sells its own products, such as Vendibook Pro, BuyerMatch AI outreach, listing boosts and listing services. Those purchases are between you and Vendibook and are covered by these Site Terms and the terms shown at checkout.'),
+      'Vendibook also sells its own products, such as Vendibook Pro, BuyerMatch AI outreach, listing boosts and listing services. Those purchases are between you and Vendibook and are covered by these Site Terms and the terms shown at checkout. New paid Featured Listing subscriptions renew every 30 days through Square for one selected listing. The price and applicable tax are disclosed before payment, and recurring charges require your affirmative consent. Cancel renewal before the next charge from Account → Membership & billing → Featured listing subscriptions. Cancellation preserves the remaining paid period, subject to listing eligibility; activated periods are nonrefundable except where required by law. Marking a listing sold stops renewal; rentals renew until canceled. Earlier subscriptions keep their accepted billing schedule. Included Pro Boost credits and legacy one-time boosts do not create a subscription. Featured placement rotates and does not guarantee results. The Featured Listing Terms and Subscription Terms provide the full service terms.'),
     s('su-4', '4. Rules for using the Services',
       'You agree not to, and not to help anyone else to:',
       list(

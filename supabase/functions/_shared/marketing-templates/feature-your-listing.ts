@@ -194,7 +194,7 @@ export function buildFeatureYourListingHtml(opts: {
         ${benefitRow("Priority placement in discovery", "Featured listings are ordered first across search and category browsing.")}
         ${benefitRow("Homepage Featured rail eligibility", "Your listing becomes eligible for the Featured placement buyers see first.")}
         ${benefitRow("The Featured badge", "The same gold badge shown above appears on your marketplace cards and listing page.")}
-        ${benefitRow("30 days of Featured exposure", `One-time ${price} — no subscription, no auto-renew.`)}
+        ${benefitRow("30 days of Featured exposure", `${price} plus applicable tax every 30 days through Square. Renews until canceled.`)}
       </table>
     </div>
   </td></tr>`;
@@ -244,7 +244,7 @@ export function buildFeatureYourListingText(opts: {
     "- Priority placement across search and category browsing",
     "- Eligibility for the homepage Featured placement",
     "- The Featured badge on your marketplace cards and listing page",
-    `- 30 days of Featured exposure for a one-time ${price} (no auto-renew)`,
+    `- 30 days of Featured exposure for ${price} plus applicable tax every 30 days (automatically renews until canceled)`,
     "",
     `Feature my listing: ${ctaUrl}`,
     "",

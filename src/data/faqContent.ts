@@ -797,7 +797,7 @@ export const faqCategories: FaqCategory[] = [
         id: "featured-boost",
         question: "What is Featured Boost?",
         answer:
-          "Featured Boost ({{price:boost-featured-30}}, 30 days) gives one eligible listing a Featured badge and priority placement for 30 days. Featured slots rotate so no one listing dominates every page load. It's a one-time purchase that does not auto-renew, and it's nonrefundable once active. Vendibook Pro includes one Featured Boost credit each billing period; unused credits don't roll over.",
+          "Featured Listing ({{price:featured_listing_monthly}} plus applicable tax every 30 days) is a Square subscription for one eligible listing. The first charge is due when you subscribe and renewal is automatic until canceled. Featured slots rotate; no number of views, inquiries, bookings or sales is guaranteed. Cancel renewal before the next charge from Account → Membership & billing → Featured listing subscriptions. Access continues through the paid period, subject to listing eligibility. Activated periods are nonrefundable except where required by law. Marking the listing sold stops renewal; rentals renew until canceled. Earlier monthly subscriptions keep their agreed schedule. Pro’s included 30-day Boost credit and previously purchased one-time boosts remain separate and never enroll you in a paid subscription.",
         actions: [{ label: "Buy Featured Boost", href: "/pricing?product=featured-boost", requiresAuth: true }],
       },
       {
@@ -818,7 +818,7 @@ export const faqCategories: FaqCategory[] = [
         id: "addon-differences",
         question: "What's the difference between Featured Boost, Pro Listing, and Vendibook Pro?",
         answer:
-          "Featured Boost buys featured visibility for one listing for 30 days. Pro Listing is an enhanced-presentation upgrade for one listing for 30 days. Vendibook Pro is an account-level monthly membership: unlimited eligible listings, eligible BuyerMatch AI support (activation required), Premium Tools, PermitPath Plus, a Featured Boost credit each billing period. Pro does not change the 8.7% equipment-sale commission.",
+          "Featured Listing is a recurring Square subscription for one listing, renewing every 30 days. Included Pro Boost credits are non-renewing 30-day benefits. Pro Listing is an enhanced-presentation upgrade for one listing for 30 days. Vendibook Pro is an account-level monthly membership: unlimited eligible listings, eligible BuyerMatch AI support (activation required), Premium Tools, PermitPath Plus, a Featured Boost credit each billing period. Pro does not change the 8.7% equipment-sale commission.",
         actions: [A.pricing],
       },
       {

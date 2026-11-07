@@ -23,7 +23,7 @@
 export const LEGAL_EFFECTIVE_DATE = 'September 18, 2026';
 
 /** Individual document versions. Referenced everywhere; never inlined. */
-export const TERMS_OF_SERVICE_VERSION = '2026-10-13';
+export const TERMS_OF_SERVICE_VERSION = '2026-11-07';
 export const PRIVACY_POLICY_VERSION = '2026-09-18';
 export const PAYMENTS_TERMS_VERSION = '2026-10-13';
 export const SELLER_PAYMENT_TERMS_VERSION = '2026-09-18c';
