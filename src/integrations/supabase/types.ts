@@ -17303,6 +17303,7 @@ export type Database = {
         | "ghost_kitchen"
         | "vendor_lot"
         | "vendor_space"
+        | "food_cart"
       listing_mode: "rent" | "sale"
       listing_promo_type:
         | "featured_7"
@@ -17601,6 +17602,7 @@ export const Constants = {
         "ghost_kitchen",
         "vendor_lot",
         "vendor_space",
+        "food_cart",
       ],
       listing_mode: ["rent", "sale"],
       listing_promo_type: [

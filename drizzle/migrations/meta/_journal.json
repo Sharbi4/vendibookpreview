@@ -274,6 +274,13 @@
       "when": 1793818002093,
       "tag": "0038_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1794015725594,
+      "tag": "0039_carts_equipment_category",
+      "breakpoints": true
     }
   ]
 }
