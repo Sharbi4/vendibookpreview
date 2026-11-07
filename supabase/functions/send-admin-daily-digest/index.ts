@@ -2,6 +2,8 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
+import { brandHeadHtml } from '../_shared/email-brand/bulletproof.ts'
+import { FONT_STACK } from '../_shared/email-brand/tokens.ts'
 
 
 const corsHeaders = {
@@ -285,16 +287,9 @@ const handler = async (req: Request): Promise<Response> => {
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <style>
-          @font-face {
-            font-family: 'Sofia Pro Soft';
-            src: url('https://vendibook-docs.s3.us-east-1.amazonaws.com/documents/sofiaprosoftlight-webfont.woff') format('woff');
-            font-weight: 300;
-            font-style: normal;
-          }
-        </style>
+        ${brandHeadHtml({ meta: false })}
       </head>
-      <body style="font-family: 'Sofia Pro Soft', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
+      <body style="font-family: ${FONT_STACK}; margin: 0; padding: 0; background-color: #f9fafb;">
         <div style="max-width: 700px; margin: 0 auto; padding: 40px 20px;">
           <!-- Logo Header -->
           <div style="text-align: center; margin-bottom: 24px;">
