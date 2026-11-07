@@ -3,6 +3,10 @@
 .hp-hero {
   position: relative; isolation: isolate; overflow: hidden;
   background: hsl(24 14% 8%); color: hsl(40 30% 97%);
+  /* Slides under the homepage's transparent header (Header overlay sets
+     --site-header-h; 0 everywhere else) so the video runs to the top. */
+  margin-top: calc(-1 * var(--site-header-h, 0px));
+  padding-top: var(--site-header-h, 0px);
 }
 .hp-hero-photo {
   position: absolute; inset: 0; z-index: -2;
@@ -12,7 +16,8 @@
   position: absolute; inset: 0; z-index: -1;
   background:
     linear-gradient(90deg, hsl(24 18% 6% / .93) 0%, hsl(24 18% 6% / .8) 42%, hsl(24 18% 6% / .42) 72%, hsl(24 18% 6% / .5) 100%),
-    linear-gradient(0deg, hsl(24 18% 6% / .58) 0%, transparent 40%);
+    linear-gradient(0deg, hsl(24 18% 6% / .58) 0%, transparent 40%),
+    linear-gradient(180deg, hsl(24 18% 6% / .5) 0%, transparent calc(var(--site-header-h, 0px) + 60px));
 }
 .hp-hero-inner {
   margin: 0 auto; display: grid; gap: 28px; max-width: 1240px;
