@@ -353,7 +353,7 @@ const Header = ({ hideSearch = false, overlay = false }: HeaderProps) => {
         // and causes flicker / graphic tearing during scroll on many GPUs.
         // Overlay mode at the top: a soft dark fade so the hero video shows through.
         background: transparent
-          ? 'linear-gradient(180deg, hsl(0 0% 4% / .55) 0%, hsl(0 0% 4% / .18) 70%, transparent 100%)'
+          ? 'linear-gradient(180deg, hsl(0 0% 4% / .55) 0%, hsl(0 0% 4% / .18) 70%, transparent 100%) border-box'
           : 'hsl(0, 0%, 4%)',
         // Promote to its own compositor layer so scroll repaints don't drag the header.
         transform: 'translateZ(0)',
