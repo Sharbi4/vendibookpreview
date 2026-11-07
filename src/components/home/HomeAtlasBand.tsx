@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, Check, MessageCircle, Phone } from 'lucide-react';
 import { isAtlasEnabled, startAtlas } from '@/lib/atlas/atlasFlag';
+import AtlasOrb from '@/components/atlas/AtlasOrb';
 import './home-atlas-banner.css';
 
 const FEATURES = [
@@ -25,7 +26,7 @@ export default function HomeAtlasBand() {
             {isAtlasEnabled() && (
               <div className="home-atlas-conversation" data-atlas-ui role="group" aria-label="Talk or chat with Atlas">
                 <div className="home-atlas-conversation-heading">
-                  <span className="home-atlas-conversation-orb" aria-hidden="true" />
+                  <AtlasOrb size={56} />
                   <div><strong>Meet Atlas</strong><p>Your AI sales assistant</p></div>
                 </div>
                 <div className="home-atlas-conversation-actions">

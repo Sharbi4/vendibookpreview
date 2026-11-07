@@ -31,11 +31,7 @@
 .home-atlas-conversation-heading { display: flex; align-items: center; gap: 12px; }
 .home-atlas-conversation-heading strong { font-size: 16px; color: #fff; }
 .home-atlas-conversation-heading p { margin: 2px 0 0; font-size: 12px; color: #ffe3d4; }
-.home-atlas-conversation-orb {
-  width: 46px; height: 46px; flex-shrink: 0; border-radius: 50%;
-  background: radial-gradient(circle at 28% 24%, #fff3ce, transparent 45%), conic-gradient(from 40deg, #ffb64b, #fc551e, #b83413, #ff8b40, #ffb64b);
-  box-shadow: inset -3px -4px 10px rgba(97,25,3,.25), 0 0 22px rgba(255,173,100,.38);
-}
+.home-atlas-conversation-heading .atlas-orb { flex-shrink: 0; }
 .home-atlas-conversation-actions { display: flex; gap: 8px; margin-top: 16px; }
 .home-atlas-conversation-actions button {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;

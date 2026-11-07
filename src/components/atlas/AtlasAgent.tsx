@@ -18,6 +18,7 @@ import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
 import MessageHostForm from '@/components/messaging/MessageHostForm';
 import AtlasBuyerFollowUp, { type AtlasFollowUpDraft } from './AtlasBuyerFollowUp';
 import AtlasMenuPreview from './AtlasMenuPreview';
+import AtlasOrb from './AtlasOrb';
 import type { AtlasMenuConcept } from '@/lib/atlas/atlasMenu';
 import { sendBuyerMessage } from '@/lib/atlas/atlasMessaging';
 import { trackHostContacted } from '@/lib/analytics';
@@ -684,7 +685,3 @@ export default function AtlasAgent() {
   );
 }
 
-/** Animated flame-colored orb: Atlas's face on the widget and call card. */
-function AtlasOrb({ size, active = false }: { size: number; active?: boolean }) {
-  return <span className={cn('atlas-orb', active && 'is-active')} style={{ width: size, height: size }} aria-hidden="true" />;
-}
