@@ -278,8 +278,10 @@ Deno.serve(async (req) => {
       ok: true,
       status: transactionalStatus,
       requires_verification: !verifiedPhone,
-      was_suppressed: isReOptIn,
-      still_suppressed: isReOptIn && !verifiedPhone,
+      // Unverified callers always get the same neutral shape, so the response
+      // never reveals whether a number is registered or previously suppressed.
+      was_suppressed: verifiedPhone ? isReOptIn : false,
+      still_suppressed: false,
     }),
     { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
   );
