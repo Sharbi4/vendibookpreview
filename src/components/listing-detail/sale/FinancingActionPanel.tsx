@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Link } from 'react-router-dom';
 import { Banknote, FileDown, Loader2, Lock } from 'lucide-react';
 import { PayPalMonogram, PayPalWordmark, ApproveFinancingLogo } from '@/components/brand/ProviderLogos';
 import { Button } from '@/components/ui/button';
@@ -8,14 +7,10 @@ import { SaleCard } from '@/components/listing-detail/sale/SaleCard';
 import { generateFinancingPurchaseSheet } from '@/lib/financing/purchaseSheet';
 import { FinancingAvailableBadge } from '@/components/financing/FinancingAvailableBadge';
 import { useEquinoxFinancingEnabled } from '@/hooks/useListingFinancing';
-import { useFinancingHandoff } from '@/hooks/useFinancingHandoff';
 import { ApproveApplicationButton } from '@/components/financing/ApproveApplicationButton';
 import { isFinanceableSaleListing } from '@/lib/financing/disclosure';
-import { financingCalculatorUrl, illustrativeFinancingNote, illustrativeMonthlyPayment } from '@/lib/financing/calculator';
 import { toast } from 'sonner';
 import {
-  trackFinancingApplyClick,
-  trackFinancingLearnMoreClick,
   trackFinancingSheetDownloaded,
 } from '@/lib/analytics';
 
@@ -41,22 +36,16 @@ export const FinancingActionPanel = ({
   showPaymentLockup = false,
 }: FinancingActionPanelProps) => {
   const [busy, setBusy] = useState(false);
-  const { startFinancingApply } = useFinancingHandoff();
   const enabled = useEquinoxFinancingEnabled(listing);
 
   if (!enabled) return null;
 
-  const salePrice = Number(listing?.price_sale);
-  const estimate = illustrativeMonthlyPayment(salePrice);
 
   const financingBlockedMessage = (error: any, data: any) =>
     (error?.context?.body?.code ?? data?.code) === 'financing_not_available'
       ? 'Financing is not enabled for this listing.'
       : null;
 
-  // Handoff runs through the shared flow: placement tracking, Vendibook lead
-  // capture, then the server-issued APPROVE apply URL.
-  const handleApply = () => startFinancingApply('listing_panel', listing.id);
 
   const handleDownload = async () => {
     setBusy(true);
@@ -93,34 +82,12 @@ export const FinancingActionPanel = ({
             <FinancingAvailableBadge listingId={listing.id} />
             <ApproveFinancingLogo className="h-5" />
           </div>
-          <h3 className="text-base font-semibold">Financing options for this equipment</h3>
+          <h3 className="text-base font-semibold">Apply for financing</h3>
           <p className="text-xs text-muted-foreground leading-relaxed mt-1">
-            This seller offers financing options through <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />. Apply directly with
-            <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />, or download a pro forma purchase summary to share with a financing provider.
+            Easy online application. Explore your financing options directly with the provider.
           </p>
         </div>
       </div>
-
-      {estimate !== null && (
-        <div className="mb-4 rounded-2xl border border-border bg-muted/30 px-4 py-3">
-          <p className="text-sm">
-            <span className="text-2xl font-bold tabular-nums">
-              {estimate.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}
-            </span>
-            <span className="text-muted-foreground">/mo*</span>
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Illustrative estimate only. Lenders determine eligibility, down payment, rates and timing.
-          </p>
-          <Link
-            to={financingCalculatorUrl(salePrice, listing.id)}
-            className="mt-1 inline-block text-xs font-semibold underline underline-offset-2"
-            onClick={() => trackFinancingLearnMoreClick('listing_price_line', listing.id)}
-          >
-            Adjust the estimate
-          </Link>
-        </div>
-      )}
 
       <div className="grid gap-2 sm:grid-cols-2">
         <ApproveApplicationButton listing={listing} />
@@ -155,7 +122,6 @@ export const FinancingActionPanel = ({
         The purchase summary is a pro forma document, not proof of sale, ownership, or financing
         approval. Financing is subject to <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" /> and/or its funding providers&rsquo;
         approval and terms. Vendibook is not a lender.
-        {estimate !== null && <> {illustrativeFinancingNote}</>}
       </p>    </SaleCard>
   );
 };

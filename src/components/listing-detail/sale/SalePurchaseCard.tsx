@@ -3,7 +3,6 @@ import { ApproveFinancingLogo } from '@/components/brand/ProviderLogos';
 import { useSaleActionState } from '@/hooks/useSaleActionState';
 import { PurchaseProtectionCard } from './PurchaseProtectionCard';
 import SaleAvailabilityNote from '@/components/commerce/SaleAvailabilityNote';
-import { financingCalculatorUrl, illustrativeFinancingNote, illustrativeMonthlyPayment } from '@/lib/financing/calculator';
 import { useCategoryPriceCheck } from '@/hooks/useCategoryPriceCheck';
 import { useCallback, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -36,7 +35,6 @@ import { getPublicDisplayName } from '@/lib/displayName';
 import { formatLastActive } from '@/hooks/useActivityTracker';
 import { deliveryRateLabel } from '@/lib/fulfillment/delivery';
 import { trackCTAClick } from '@/lib/analytics';
-import { trackFinancingLearnMoreClick } from '@/lib/analytics';
 import { formatCurrency } from '@/lib/commissions';
 import PayPalVerifiedSellerTrust from '@/components/payments/PayPalVerifiedSellerTrust';
 import PayPalPayLaterMessage from '@/components/payments/PayPalPayLaterMessage';
@@ -210,11 +208,6 @@ export const SalePurchaseCard = ({
 
   const sellerName = getPublicDisplayName(host, 'Seller');
   const zipInputId = `sale-delivery-zip-${instanceId}`;
-  const financingNoun = String(listing?.category ?? '').includes('trailer')
-    ? 'trailer'
-    : String(listing?.category ?? '').includes('truck')
-      ? 'truck'
-      : 'equipment';
   const deliveryNote = radius
     ? `${rateLabel ? `${rateLabel} · ` : ''}within ${radius} mi of ${originLabel}`
     : rateLabel || null;
@@ -255,32 +248,18 @@ export const SalePurchaseCard = ({
             className="mt-3"
           />
 
-          {/* The single financing entry point, under the price. The estimate
-              uses the shared assumptions in illustrativeFinancingNote. */}
+          {/* Apply directly; financing estimates are provided by APPROVE. */}
           {financingEnabled && (
             <div className="mt-3 rounded-xl border border-border px-3.5 py-3">
               <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                 <Banknote className="h-4 w-4 shrink-0" aria-hidden />
-                <span>
-                  Financing available for this {financingNoun}
-                  {illustrativeMonthlyPayment(priceSale) !== null && (
-                    <> · est. {Math.round(illustrativeMonthlyPayment(priceSale)!).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}/mo*</>
-                  )}
-                </span>
+                <span>Apply for financing</span>
               </div>
+              <p className="mt-1 text-xs text-muted-foreground">Easy online application.</p>
               <div className="mt-2.5 flex flex-wrap gap-2">
                 <ApproveApplicationButton listing={listing} />
-                <Button size="sm" variant="ghost" asChild>
-                  <Link
-                    to={financingCalculatorUrl(Number(priceSale), listing.id)}
-                    onClick={() => trackFinancingLearnMoreClick('listing_price_line', listing.id)}
-                  >
-                    Estimate payments
-                  </Link>
-                </Button>
               </div>
               <p className="mt-2.5 text-[11px] leading-snug text-muted-foreground">
-                {illustrativeMonthlyPayment(priceSale) !== null && <>{illustrativeFinancingNote} </>}
                 Through <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />. Vendibook is not a lender.
               </p>
             </div>
