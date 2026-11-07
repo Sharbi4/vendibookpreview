@@ -7,7 +7,7 @@ import { trackFinancingApplyClick } from '@/lib/analytics';
 /** A native link opens the hosted application even if the plugin is unavailable. */
 export function ApproveApplicationButton({ listing }: { listing: ApproveEquipment }) {
   return (
-    <div className="flex w-full flex-col items-center gap-3 sm:col-span-2">
+    <div className="approve-application-stack sm:col-span-2">
     <a href={approveApplicationUrl(listing)} target="_blank" rel="noopener noreferrer"
       aria-label="Apply with APPROVE — opens financing application in a new tab"
       className="approve-premium-cta"

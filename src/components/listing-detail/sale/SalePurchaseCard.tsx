@@ -1,5 +1,4 @@
 import { ApproveApplicationButton } from '@/components/financing/ApproveApplicationButton';
-import { ApproveFinancingLogo } from '@/components/brand/ProviderLogos';
 import { useSaleActionState } from '@/hooks/useSaleActionState';
 import { PurchaseProtectionCard } from './PurchaseProtectionCard';
 import SaleAvailabilityNote from '@/components/commerce/SaleAvailabilityNote';
@@ -250,17 +249,17 @@ export const SalePurchaseCard = ({
 
           {/* Apply directly; financing estimates are provided by APPROVE. */}
           {financingEnabled && (
-            <div className="mt-3 rounded-xl border border-border px-3.5 py-3">
+            <div className="sale-financing-panel">
               <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                 <Banknote className="h-4 w-4 shrink-0" aria-hidden />
                 <span>Apply for financing</span>
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">Easy online application.</p>
-              <div className="mt-2.5 flex flex-wrap gap-2">
+              <p className="mt-1 text-sm text-muted-foreground">Easy online application.</p>
+              <div className="mt-4">
                 <ApproveApplicationButton listing={listing} />
               </div>
               <p className="mt-2.5 text-[11px] leading-snug text-muted-foreground">
-                Through <ApproveFinancingLogo className="mx-0.5 !h-[1em] !w-auto !px-0.5 !py-0 align-baseline" />. Vendibook is not a lender.
+                Approval and terms are set by lenders. Vendibook is not a lender.
               </p>
             </div>
           )}

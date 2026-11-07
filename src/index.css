@@ -3715,3 +3715,55 @@ a.approve-premium-cta:focus-visible { outline: 3px solid #3276fa; outline-offset
   a.approve-premium-cta:hover { transform: none; }
   a.approve-premium-cta::before { display: none; }
 }
+
+/* Purchase-card financing: one aligned stack, including narrow desktop rails. */
+.sale-financing-panel {
+  margin-top: 1.25rem;
+  padding: 1rem;
+  border: 1px solid #e3e9f2;
+  border-radius: 1rem;
+  background: linear-gradient(160deg, #f8faff, #fff 65%);
+}
+.approve-application-stack {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+  width: 100%;
+  min-width: 0;
+}
+.approve-application-stack a.approve-premium-cta {
+  width: 100%; min-width: 0; min-height: 3.5rem;
+  gap: .625rem; padding: .875rem 1rem; border-radius: .75rem;
+  box-shadow: inset 0 1px 0 #fff, 0 3px 10px rgba(37,73,130,.07);
+}
+.approve-application-stack a.approve-premium-cta .approve-cta-logo {
+  height: 1.35rem !important; max-width: 6.5rem;
+}
+.approve-listing-banner {
+  display: block; width: 100%; overflow: hidden; border-radius: .75rem;
+  border: 1px solid #dce5f3; text-decoration: none !important;
+}
+.approve-banner-art { display: block; width: 100%; height: auto; }
+.approve-banner-compact { display: none; }
+.approve-listing-banner:focus-visible { outline: 3px solid #3276fa; outline-offset: 3px; }
+@container (max-width: 440px) {
+  .approve-banner-art { display: none; }
+  .approve-banner-compact {
+    display: flex; align-items: center; justify-content: space-between; gap: .75rem;
+    min-height: 5rem; padding: .875rem;
+    background: linear-gradient(120deg, #edf3ff, #f7faff);
+    color: #15294b;
+  }
+  .approve-banner-message { display: flex; flex-direction: column; gap: .375rem; min-width: 0; }
+  .approve-banner-message strong { font-size: .8125rem; line-height: 1.45; font-weight: 600; }
+  .approve-banner-message > span { display: flex; align-items: center; gap: .25rem; font-size: .75rem; color: #245bc2; }
+  .approve-banner-compact .approve-banner-logo { width: 4.75rem; height: auto; padding: 0; background: transparent; flex-shrink: 0; }
+}
+@media (max-width: 380px) {
+  .sale-financing-panel { padding: .75rem; }
+  .approve-application-stack a.approve-premium-cta { gap: .5rem; padding-inline: .625rem; }
+}
+.sale-financing-panel { color: #17243b; }
+.sale-financing-panel > div:first-child, .sale-financing-panel > h3 { color: #17243b; }
+.sale-financing-panel > p { color: #5c687c; }
