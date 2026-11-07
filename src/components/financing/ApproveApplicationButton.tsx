@@ -1,4 +1,7 @@
 import { useEffect } from 'react';
+import { toast } from 'sonner';
+
+const attachedApplications = new WeakSet<object>();
 import { APPROVE_LOADER_URL } from '@/lib/financing/approveFrame';
 import { EQUINOX_APPLY_URL } from '@/lib/financing/disclosure';
 import { isUsedCondition } from '@/lib/listings/condition';
@@ -18,6 +21,25 @@ export function ApproveApplicationButton({ listing }: {
       script.dataset.vendibookApprove = 'true';
       document.body.appendChild(script);
     }
+    let attempts = 0;
+    const timer = window.setInterval(() => {
+      const provider = (window as unknown as { kwipped_approve?: { embedded_app?: { app_reference?: { add_listener: (listener: (message: { action?: string }) => void) => void } } } }).kwipped_approve;
+      const application = provider?.embedded_app?.app_reference;
+      if (application && typeof application.add_listener === 'function') {
+        window.clearInterval(timer);
+        if (!attachedApplications.has(application)) {
+          application.add_listener((message) => {
+            if (message?.action === 'app_submitted') {
+              toast.success('Application submitted to APPROVE. Watch for updates from your financing provider.');
+            }
+          });
+          attachedApplications.add(application);
+        }
+      } else if (++attempts >= 300) {
+        window.clearInterval(timer);
+      }
+    }, 100);
+    return () => window.clearInterval(timer);
   }, []);
 
   const type = listing.condition === 'new' ? 'new_product'

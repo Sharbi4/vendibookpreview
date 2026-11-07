@@ -450,3 +450,6 @@ verify_jwt = false
 
 [functions.integration-health]
 verify_jwt = false
+
+[functions.approve-webhook]
+verify_jwt = false
