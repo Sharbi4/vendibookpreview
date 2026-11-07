@@ -531,7 +531,7 @@
   .bm-status { opacity: 1; transform: translate(-50%, 0); }
 }
 
-@media (min-width: 960px) {
+@media (min-width: 768px) {
   .hb-ai--compact { padding: 48px 0; }
   .hb-ai--compact .hb-ai-compact-panel { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: 0; padding: 30px 40px; align-items: center; }
   .hb-ai--compact .hb-ai-copy { padding-right: 12px; }
