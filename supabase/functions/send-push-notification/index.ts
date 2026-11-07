@@ -183,12 +183,20 @@ Deno.serve(async (req) => {
 
     const { user_id, title, body, url, tag } = await req.json() as PushNotificationRequest;
 
-    // Backend jobs/triggers may push to anyone; members only to themselves
-    // (the "send test notification" button).
-    if (!(await isBackendCaller(req))) {
+    // Backend jobs/triggers may push to anyone; signed-in people (admins
+    // included) only to themselves — the "send test notification" button.
+    // Admin roles do not unlock free-text pushes to other members.
+    const backend = await isBackendCaller(req);
+    if (!backend) {
       const caller = await getCaller(req);
       if (!caller) return unauthorizedResponse(corsHeaders);
-      if (caller.id !== user_id && !(await isAdminUser(caller.id))) return forbiddenResponse(corsHeaders);
+      if (caller.id !== user_id) return forbiddenResponse(corsHeaders);
+    }
+    // Browser callers may only link inside the site.
+    if (!backend && url && !(typeof url === "string" && url.startsWith("/") && !url.startsWith("//"))) {
+      return new Response(JSON.stringify({ error: "url must be a site path" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
     logStep("Request received", { user_id, title });
 

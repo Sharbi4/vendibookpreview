@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { checkRateLimit, clientIp } from "../_shared/rateLimit.ts";
+import { getCaller } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,9 +18,16 @@ serve(async (req) => {
       throw new Error("ELEVENLABS_API_KEY is not configured");
     }
 
-    // Voice search is available to anonymous visitors, so cap how many paid
-    // single-use tokens any one visitor can mint.
-    const allowed = await checkRateLimit("elevenlabs_scribe_ip", clientIp(req), 20, 60);
+    // Paid speech tokens are for signed-in members only. Signed-out visitors
+    // fall back to the browser's built-in speech recognition.
+    const caller = await getCaller(req);
+    if (!caller) {
+      return new Response(
+        JSON.stringify({ error: "Please sign in to use premium voice input." }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    const allowed = await checkRateLimit("elevenlabs_scribe_user", caller.id, 20, 60);
     if (!allowed) {
       return new Response(
         JSON.stringify({ error: "Too many voice search requests. Please try again shortly." }),
@@ -51,7 +59,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("Scribe token error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: "Voice input is unavailable right now." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

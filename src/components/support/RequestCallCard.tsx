@@ -45,7 +45,11 @@ const RequestCallCard = () => {
       });
     } catch (err: any) {
       console.error('Request call error:', err);
-      const message = 'We couldn\'t place the call right now. Please try again in a moment or email support@vendibook.com.';
+      let message = 'We couldn\'t place the call right now. Please try again in a moment or email support@vendibook.com.';
+      try {
+        const body = await err?.context?.json?.();
+        if (body?.code === 'phone_not_verified' && typeof body.error === 'string') message = body.error;
+      } catch { /* keep the default message */ }
       setError(message);
       toast({
         title: 'Could not place the call',

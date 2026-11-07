@@ -115,6 +115,10 @@ export const useHeroSearch = () => {
     }
 
     try {
+      // Premium voice input needs a signed-in session; signed-out visitors
+      // go straight to the browser's own speech recognition.
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('signed_out');
       const { data, error } = await supabase.functions.invoke('elevenlabs-scribe-token');
       if (error || !data?.token) throw new Error('Failed to get voice token');
       setLocation('');
@@ -167,7 +171,9 @@ export const useHeroSearch = () => {
     }
 
     const wordCount = query.split(/\s+/).length;
-    if (wordCount >= 3) {
+    // Smart parsing is a signed-in feature; signed-out searches use keywords.
+    const { data: { session: searchSession } } = await supabase.auth.getSession();
+    if (wordCount >= 3 && searchSession) {
       setIsAIParsing(true);
       try {
         const { data, error } = await supabase.functions.invoke('ai-search-parse', {

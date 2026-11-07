@@ -249,6 +249,8 @@ const ShipYourFoodTruck = () => {
   const [form, setForm] = useState<QuoteForm>(EMPTY_FORM);
   const [errors, setErrors] = useState<QuoteErrors>({});
   const [submitted, setSubmitted] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   // Guards against stray/double-tap submits: the submit button replaces
   // Continue in the same spot, so a fast second tap could otherwise fire it.
@@ -338,9 +340,9 @@ const ShipYourFoodTruck = () => {
     if (step < 3) goToStep((step + 1) as 1 | 2 | 3);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (step !== 3) return;
+    if (step !== 3 || saving) return;
     if (Date.now() - step3EnteredAt.current < 700) return;
     const next = validate();
     setErrors(next);
@@ -349,23 +351,19 @@ const ShipYourFoodTruck = () => {
       goToStep(1);
       return;
     }
-    setSubmitted(true);
 
-    const dimensions = [
-      form.lengthFt && `${form.lengthFt} ft L`,
-      form.widthFt && `${form.widthFt} ft W`,
-      form.heightFt && `${form.heightFt} ft H`,
-    ]
-      .filter(Boolean)
-      .join(' × ');
     const runsAndDrives =
       form.runsAndDrives === 'yes' ? 'Yes' : form.runsAndDrives === 'no' ? 'No' : '';
 
-    // Persist first so the request is never lost, then notify — neither
-    // blocks the confirmation state.
-    supabase
+    // Save first. The team alert is built server-side from the saved request,
+    // so it only goes out once the request is actually stored.
+    setSaving(true);
+    setSaveError(null);
+    const requestId = crypto.randomUUID();
+    const { error: saveFailed } = await supabase
       .from('freight_requests')
       .insert({
+        id: requestId,
         user_id: user?.id ?? null,
         contact_name: form.contactName.trim(),
         contact_email: form.contactEmail.trim(),
@@ -383,33 +381,20 @@ const ShipYourFoodTruck = () => {
         deliver_by_date: form.deliverByDate || null,
         notes: form.notes.trim() || null,
         source_page: '/ship-your-food-truck',
-      })
-      .then(({ error }) => {
-        if (error) console.error('Freight request save error:', error);
       });
+    setSaving(false);
+    if (saveFailed) {
+      console.error('Freight request save error:', saveFailed.message);
+      setSaveError(
+        "We couldn't save your request. Please try again, or call or text (866) 690-6227 and we'll take it by phone."
+      );
+      return;
+    }
+    setSubmitted(true);
 
     supabase.functions
       .invoke('send-admin-notification', {
-        body: {
-          type: 'freight_quote_request',
-          data: {
-            contact_name: form.contactName.trim(),
-            contact_email: form.contactEmail.trim(),
-            contact_phone: form.contactPhone.trim(),
-            account: user?.id ? `Signed in (${user.email ?? user.id})` : 'Guest (not signed in)',
-            pickup_location: form.pickupLocation.trim(),
-            delivery_location: form.deliveryLocation.trim(),
-            equipment_type: form.equipmentType,
-            year: form.year.trim(),
-            dimensions,
-            weight: form.weightLbs.trim() ? `${form.weightLbs.trim()} lbs` : '',
-            runs_and_drives: runsAndDrives,
-            preferred_pickup: form.pickupDate,
-            deliver_by: form.deliverByDate,
-            notes: form.notes.trim(),
-            source_page: '/ship-your-food-truck',
-          },
-        },
+        body: { type: 'freight_quote_request', data: { freight_request_id: requestId } },
       })
       .catch((err) => console.error('Freight quote notification error:', err));
     requestAnimationFrame(() => {
@@ -1058,11 +1043,17 @@ const ShipYourFoodTruck = () => {
                             variant="cta"
                             size="cta"
                             className="rounded-full w-full sm:w-auto"
+                            disabled={saving}
                           >
-                            Request Transportation Pricing <ArrowRight className="w-4 h-4 ml-1" />
+                            {saving ? 'Saving your request…' : 'Request Transportation Pricing'} <ArrowRight className="w-4 h-4 ml-1" />
                           </Button>
                         )}
                       </div>
+                      {saveError && (
+                        <p role="alert" className="text-sm text-destructive mt-3 text-center sm:text-left">
+                          {saveError}
+                        </p>
+                      )}
                       <p className="text-xs text-muted-foreground leading-relaxed text-center sm:text-left mt-3 px-2">
                         No payment is collected here. Transportation pricing is prepared around your
                         actual shipment.*

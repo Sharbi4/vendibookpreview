@@ -105,6 +105,8 @@ export function useVoiceDictation({ onPartial, onFinal }: Options) {
       return;
     }
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('signed_out');
       const { data, error } = await supabase.functions.invoke('elevenlabs-scribe-token');
       if (error || !data?.token) throw new Error('Failed to get voice token');
       setPartial('');

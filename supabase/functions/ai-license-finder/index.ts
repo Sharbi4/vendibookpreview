@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { getCaller, isBackendCaller } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -604,6 +605,14 @@ serve(async (req) => {
     const locationText = trimmedCity ? `${trimmedCity}, ${trimmedState}` : trimmedState;
     const currentYear = new Date().getUTCFullYear();
     const today = new Date().toISOString().slice(0, 10);
+
+    // Live research (paid web search + AI) is for signed-in members only.
+    // Signed-out visitors still get the free standard checklist.
+    if (!(await isBackendCaller(req)) && !(await getCaller(req))) {
+      return new Response(JSON.stringify({
+        result: { ...baselineChecklist(trimmedState, trimmedCity, trimmedBusinessType, profile), live_research: "sign_in_required" },
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {

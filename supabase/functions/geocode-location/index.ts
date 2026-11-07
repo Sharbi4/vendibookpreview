@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { googleGatewayConfigured, googleGatewayFetch, googleGeocode } from "../_shared/googleGateway.ts";
+import { getCaller, isBackendCaller } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -56,6 +57,51 @@ const lookupZipWithZippopotam = async (zip: string): Promise<GeocodeResult[]> =>
   return [{ id: `zip:${zip}`, placeName: `${city}, ${state} ${zip}`.trim(), center: [lng, lat], text: city || zip, context: state, city, state }];
 };
 
+const STATE_CODES: Record<string, string> = {
+  alabama: "AL", alaska: "AK", arizona: "AZ", arkansas: "AR", california: "CA", colorado: "CO", connecticut: "CT",
+  delaware: "DE", "district of columbia": "DC", florida: "FL", georgia: "GA", hawaii: "HI", idaho: "ID", illinois: "IL",
+  indiana: "IN", iowa: "IA", kansas: "KS", kentucky: "KY", louisiana: "LA", maine: "ME", maryland: "MD",
+  massachusetts: "MA", michigan: "MI", minnesota: "MN", mississippi: "MS", missouri: "MO", montana: "MT",
+  nebraska: "NE", nevada: "NV", "new hampshire": "NH", "new jersey": "NJ", "new mexico": "NM", "new york": "NY",
+  "north carolina": "NC", "north dakota": "ND", ohio: "OH", oklahoma: "OK", oregon: "OR", pennsylvania: "PA",
+  "rhode island": "RI", "south carolina": "SC", "south dakota": "SD", tennessee: "TN", texas: "TX", utah: "UT",
+  vermont: "VT", virginia: "VA", washington: "WA", "west virginia": "WV", wisconsin: "WI", wyoming: "WY",
+  "puerto rico": "PR",
+};
+
+// Free OpenStreetMap-based lookup (Photon) used for signed-out visitors, so
+// paid Google Maps calls only ever run for signed-in members and backend jobs.
+const photonLookup = async (path: string): Promise<GeocodeResult[]> => {
+  const res = await fetch(`https://photon.komoot.io${path}`, {
+    headers: { "User-Agent": "Vendibook/1.0 (support@vendibook.com)" },
+    signal: AbortSignal.timeout(6000),
+  });
+  if (!res.ok) throw new Error(`Photon lookup failed with status ${res.status}`);
+  const payload = await res.json();
+  const features: any[] = Array.isArray(payload?.features) ? payload.features : [];
+  return features
+    .filter((f) => f?.properties?.countrycode === "US" && Array.isArray(f?.geometry?.coordinates))
+    .map((f): GeocodeResult => {
+      const p = f.properties;
+      const [lng, lat] = f.geometry.coordinates as [number, number];
+      const city = p.city || (["city", "town", "village", "locality"].includes(p.type) ? p.name : "") || "";
+      const state = STATE_CODES[String(p.state ?? "").toLowerCase()] || "";
+      const street = [p.housenumber, p.street].filter(Boolean).join(" ") || null;
+      const name = p.name || street || city;
+      const context = [city && city !== name ? city : "", state, p.postcode].filter(Boolean).join(", ");
+      return {
+        id: `osm:${p.osm_type ?? ""}${p.osm_id ?? `${lat},${lng}`}`,
+        placeName: [name, context].filter(Boolean).join(", "),
+        center: [lng, lat],
+        text: name,
+        context: context || undefined,
+        city,
+        state,
+        address: { street, city: city || null, state: state || null, zipCode: p.postcode || null, country: "US" },
+      };
+    });
+};
+
 type NewComponent = { longText?: string; shortText?: string; types?: string[] };
 
 const placeDetails = async (placeId: string, sessionToken: string) => {
@@ -76,7 +122,22 @@ const handler = async (req: Request): Promise<Response> => {
     if (query.trim().length < 2) return buildJsonResponse({ results: [] });
     const trimmedQuery = query.trim().slice(0, MAX_QUERY_LENGTH);
     const zipMatch = trimmedQuery.match(/^(\d{5})$/);
-    const google = googleGatewayConfigured();
+    // Paid Google lookups are only for signed-in members and backend jobs.
+    const member = (await isBackendCaller(req)) || !!(await getCaller(req));
+    const google = member && googleGatewayConfigured();
+
+    if (!member && !zipMatch) {
+      try {
+        const ll = parseLatLngQuery(trimmedQuery);
+        const results = ll
+          ? await photonLookup(`/reverse?lat=${ll.lat}&lon=${ll.lng}&lang=en`)
+          : await photonLookup(`/api/?q=${encodeURIComponent(trimmedQuery)}&limit=${Math.min(limit * 3, 15)}&lang=en&bbox=-179.9,17.5,-64.5,71.5`);
+        return buildJsonResponse({ results: results.slice(0, limit) });
+      } catch (err) {
+        console.error("Free location lookup failed:", String(err));
+        return buildJsonResponse({ results: [], error: "GEOCODING_UNAVAILABLE", fallback: true });
+      }
+    }
 
     if (zipMatch) {
       const zip = zipMatch[1];
