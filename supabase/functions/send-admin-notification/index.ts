@@ -58,7 +58,11 @@ async function loadSavedRecord(type: string, input: Record<string, any>): Promis
       data: {
         contact_name: r.contact_name, contact_email: r.contact_email, contact_phone: r.contact_phone,
         account: r.user_id ? `Signed in (${r.user_id})` : "Guest (not signed in)",
-        pickup_location: r.pickup_location, delivery_location: r.delivery_location,
+        pickup_location: [r.pickup_street, r.pickup_city, r.pickup_state, r.pickup_zip].filter(Boolean).join(", ") || r.pickup_location,
+        pickup_property: r.pickup_property_type,
+        delivery_location: [r.delivery_street, r.delivery_city, r.delivery_state, r.delivery_zip].filter(Boolean).join(", ") || r.delivery_location,
+        delivery_property: r.delivery_property_type,
+        transport: r.transport_type,
         equipment_type: r.equipment_type, year: r.year, dimensions: dims,
         weight: r.weight_lbs ? `${r.weight_lbs} lbs` : "", runs_and_drives: r.runs_and_drives,
         preferred_pickup: r.pickup_date, deliver_by: r.deliver_by_date, notes: r.notes,
