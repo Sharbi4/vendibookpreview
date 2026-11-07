@@ -172,6 +172,8 @@ verify_jwt = false
     verify_jwt = false
   [functions.twilio-inbound-webhook]
     verify_jwt = false
+  [functions.support-text-sync]
+    verify_jwt = false
   [functions.twilio-status-callback]
     verify_jwt = false
   [functions.tawk-webhook]
