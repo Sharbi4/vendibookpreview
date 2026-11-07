@@ -41,6 +41,7 @@ import { getPublicDisplayName } from '@/lib/displayName';
 import { useSellerPaymentReadiness } from '@/hooks/useSellerPaymentReadiness';
 import SaleCheckoutWizard from '@/components/checkout/sale/SaleCheckoutWizard';
 import { saveSaleDraftForRecovery, markSaleDraftCompleted } from '@/lib/saleDraftRecovery';
+import GuestCheckoutEmailCapture from '@/components/checkout/GuestCheckoutEmailCapture';
 import CheckoutAgreementCards from '@/components/checkout/CheckoutAgreementCards';
 import CheckoutFinancingBanner from '@/components/checkout/CheckoutFinancingBanner';
 
@@ -1287,6 +1288,17 @@ const SaleCheckout = ({ requestOnly = true }: { requestOnly?: boolean }) => {
                 backHref={`/listing/${listingId}`}
                 hideActions
               />
+              {!user && listingId ? (
+                <GuestCheckoutEmailCapture
+                  getDraft={() => ({
+                    flow: 'sale',
+                    listingId,
+                    totalPrice,
+                    requestOnly,
+                    resumePath: `${window.location.pathname}${window.location.search}`,
+                  })}
+                />
+              ) : null}
               {financingEligible ? <CheckoutFinancingBanner listing={listing as any} /> : null}
             </div>
           ) : null}
