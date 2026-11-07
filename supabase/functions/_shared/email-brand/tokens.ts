@@ -6,8 +6,9 @@
 // content surface, charcoal type, Vendibook orange accent.
 //
 // Constraints baked in on purpose:
-//   • Poppins (Google Fonts) with a sans-serif fallback stack — never a
-//     serif/Times face; Outlook desktop is forced to Arial (see ./bulletproof.ts)
+//   • the website's faces (Archivo headings, Plus Jakarta Sans text) from
+//     Google Fonts with a sans-serif fallback stack — never a serif/Times
+//     face; Outlook desktop is forced to Arial (see ./bulletproof.ts)
 //   • no Tailwind — inline styles plus one shared <head> block
 //   • 600px max content width
 //   • one primary CTA look everywhere: the site's orange glow pill
@@ -87,13 +88,16 @@ export const color = {
 } as const
 
 // ---- Type ------------------------------------------------------------
-/** Owner request 2026-10-13: modern Poppins (Google Fonts) everywhere. Clients
- * that block web fonts (Gmail, Outlook) get Helvetica/Arial — never a serif. */
+/** Email type matches the website (owner 2026-11-07): Plus Jakarta Sans for
+ * all text, Archivo for headings. Clients that block web fonts (Gmail,
+ * Outlook) get Helvetica/Arial — never a serif. */
 export const FONT_STACK =
-  "Poppins, 'Helvetica Neue', Helvetica, Arial, sans-serif"
+  "'Plus Jakarta Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+export const HEADING_FONT_STACK =
+  "Archivo, 'Helvetica Neue', Helvetica, Arial, sans-serif"
 /** Google Fonts stylesheet loaded by every email <head>. */
 export const GOOGLE_FONTS_HREF =
-  'https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap'
+  'https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap'
 
 /**
  * Primary CTA = the site's orange glow button (`.bg-cta-primary` +
@@ -164,6 +168,7 @@ export const t = {
     margin: '0 0 10px',
   } as const,
   h1: {
+    fontFamily: HEADING_FONT_STACK,
     fontSize: size.h1,
     lineHeight: 1.22,
     fontWeight: 700,
@@ -172,6 +177,7 @@ export const t = {
     letterSpacing: '-0.015em',
   } as const,
   h2: {
+    fontFamily: HEADING_FONT_STACK,
     fontSize: size.h2,
     lineHeight: 1.3,
     fontWeight: 700,

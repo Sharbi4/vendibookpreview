@@ -3,12 +3,12 @@
 // These now mirror the MASTER email design system in
 // `_shared/email-brand/tokens.ts`: warm ivory canvas, white content card,
 // charcoal type, Vendibook orange glow-pill CTA with white text, soft gray
-// hairlines, Poppins with a sans-serif fallback stack, ~600px max width.
+// hairlines, site fonts with a sans-serif fallback stack, ~600px max width.
 // Buttons render through <EmailButton> (bulletproof table + Outlook VML);
 // `button` / `buttonGhost` below only pick the variant and mirror its look.
 //
 // Key names are preserved so the ~50 templates that import `s` keep working.
-import { color, FONT_STACK, LOGO_LIGHT_URL, SITE_URL as BRAND_SITE_URL, t } from '../email-brand/tokens.ts'
+import { color, FONT_STACK, HEADING_FONT_STACK, LOGO_LIGHT_URL, SITE_URL as BRAND_SITE_URL, t } from '../email-brand/tokens.ts'
 
 export const SITE_NAME = 'Vendibook'
 export const SITE_URL = BRAND_SITE_URL
@@ -24,8 +24,8 @@ export const s = {
   brandBar: { padding: '0 0 18px' } as const,
   brandMark: { fontSize: '12px', letterSpacing: '0.28em', color: color.text, fontWeight: 700, margin: 0 } as const,
   card: { backgroundColor: color.surface, color: color.text, borderRadius: '12px', padding: '32px 28px', border: `1px solid ${color.border}` } as const,
-  h1: { fontSize: '28px', lineHeight: 1.22, fontWeight: 700, color: color.text, margin: '0 0 12px', letterSpacing: '-0.015em' } as const,
-  h2: { fontSize: '20px', lineHeight: 1.3, fontWeight: 700, color: color.text, margin: '0 0 10px' } as const,
+  h1: { fontFamily: HEADING_FONT_STACK, fontSize: '28px', lineHeight: 1.22, fontWeight: 700, color: color.text, margin: '0 0 12px', letterSpacing: '-0.015em' } as const,
+  h2: { fontFamily: HEADING_FONT_STACK, fontSize: '20px', lineHeight: 1.3, fontWeight: 700, color: color.text, margin: '0 0 10px' } as const,
   lede: { fontSize: '16px', lineHeight: 1.6, color: color.textSecondary, margin: '0 0 20px' } as const,
   text: { fontSize: '15px', lineHeight: 1.65, color: color.text, margin: '0 0 16px' } as const,
   small: { fontSize: '13px', lineHeight: 1.6, color: color.textMuted, margin: '0 0 10px' } as const,

@@ -1,5 +1,9 @@
 # Roadmap
 
+- [done] Report APPROVE financing clicks, checkout activity and whether follow-up emails go out (read-only).
+- [done] Site fonts (Archivo headings, Plus Jakarta Sans body) applied to all emails; 124 email senders deployed, all 75 live template previews carry both fonts, 17 email tests pass.
+- [done] Report whether featured listings get more views than non-featured (read-only).
+
 - [done] Replace How It Works and Search backgrounds with owner-uploaded videos; Contact uses an 8-second animation of the supplied ice-cream truck photo. Preview only; verify playback and reduced-motion posters.
 
 - [done] Removed the homepage financing band (Financing partner / APPROVE panel) and its dead imports and CSS; homepage verified in the preview with no gap, header Financing link and /financing page still working, 10 financing tests pass under vitest. Preview only; nothing published.
