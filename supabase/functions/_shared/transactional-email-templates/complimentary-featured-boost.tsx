@@ -26,6 +26,7 @@ interface ComplimentaryFeaturedBoostProps {
   listingImageUrl?: string
   expiresAtFormatted?: string
   durationDays?: number
+  viewsMultiplier?: number
 }
 
 const ComplimentaryFeaturedBoostEmail = ({
@@ -35,6 +36,7 @@ const ComplimentaryFeaturedBoostEmail = ({
   listingImageUrl,
   expiresAtFormatted,
   durationDays = 30,
+  viewsMultiplier,
 }: ComplimentaryFeaturedBoostProps) => {
   const title = listingTitle || 'Your listing'
   const listingHref = listingId ? `${SITE_URL}/listing/${listingId}` : SITE_URL
@@ -95,10 +97,10 @@ const ComplimentaryFeaturedBoostEmail = ({
               padding: '18px 20px',
               borderRadius: '12px',
               border: `1px solid ${color.border}`,
-              backgroundColor: color.brandSoft ?? '#FFF4EE',
+              backgroundColor: color.surfaceMuted,
             }}
           >
-            <Text style={{ ...t.h1, margin: '0', color: color.brand }}>{`${viewsMultiplier}x more views`}</Text>
+            <Text style={{ ...t.h1, margin: '0', color: color.primaryDark }}>{`${viewsMultiplier}x more views`}</Text>
             <Text style={{ ...t.small, margin: '4px 0 0' }}>
               Over the last 30 days, Featured listings on {BRAND_NAME} averaged about {viewsMultiplier} times
               the daily views of other listings. Results vary by listing.
@@ -173,5 +175,6 @@ export const template = {
     listingId: 'preview',
     expiresAtFormatted: 'October 19, 2026',
     durationDays: 14,
+    viewsMultiplier: 3.7,
   },
 } satisfies TemplateEntry
