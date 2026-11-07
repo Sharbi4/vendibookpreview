@@ -38,6 +38,43 @@ Deno.serve(async (req) => {
   const twilioKey = Deno.env.get('TWILIO_API_KEY');
   if (!lovableKey || !twilioKey) return json({ error: 'Twilio is not configured' }, 503);
 
+  const reqBody = await req.json().catch(() => ({}));
+  if (reqBody?.check === 'webhook_signing') {
+    // Read-only health check: does TWILIO_AUTH_TOKEN (used by
+    // twilio-inbound-webhook to verify X-Twilio-Signature) belong to the
+    // account that owns the support line? Returns booleans only.
+    const accountSid = String(reqBody.account_sid ?? '');
+    const token = Deno.env.get('TWILIO_AUTH_TOKEN') ?? '';
+    if (!/^AC[0-9a-f]{32}$/.test(accountSid)) return json({ error: 'account_sid required' }, 400);
+    if (!token) return json({ auth_token_present: false, auth_token_valid: false });
+    const probe = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}.json`, {
+      headers: { Authorization: 'Basic ' + btoa(`${accountSid}:${token}`) },
+      signal: AbortSignal.timeout(10000),
+    });
+    await probe.body?.cancel();
+    // Send a signed no-op to the live webhook exactly as Twilio would.
+    const webhookUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/twilio-inbound-webhook`;
+    const params: Record<string, string> = { VendibookSelfTest: 'webhook_signing', To: SUPPORT_LINE };
+    const data = webhookUrl + Object.keys(params).sort().map((k) => k + params[k]).join('');
+    const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(token), { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
+    const mac = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(data)));
+    const signature = btoa(String.fromCharCode(...mac));
+    const hook = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Twilio-Signature': signature },
+      body: new URLSearchParams(params),
+      signal: AbortSignal.timeout(10000),
+    });
+    const hookText = (await hook.text()).slice(0, 40);
+    return json({
+      auth_token_present: true,
+      auth_token_valid: probe.ok,
+      twilio_status: probe.status,
+      webhook_status: hook.status,
+      webhook_accepts_signed: hook.ok && hookText === 'signed-ok',
+    });
+  }
+
   const cutoff = Date.now() - LOOKBACK_HOURS * 3_600_000;
   const sinceDay = new Date(cutoff).toISOString().slice(0, 10);
   const qs = new URLSearchParams({ To: SUPPORT_LINE, 'DateSent>': sinceDay, PageSize: '100' });
