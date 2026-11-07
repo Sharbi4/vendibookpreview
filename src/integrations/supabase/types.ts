@@ -17300,10 +17300,10 @@ export type Database = {
       listing_category:
         | "food_truck"
         | "food_trailer"
-        | "food_cart"
         | "ghost_kitchen"
         | "vendor_lot"
         | "vendor_space"
+        | "food_cart"
       listing_mode: "rent" | "sale"
       listing_promo_type:
         | "featured_7"
@@ -17599,10 +17599,10 @@ export const Constants = {
       listing_category: [
         "food_truck",
         "food_trailer",
-        "food_cart",
         "ghost_kitchen",
         "vendor_lot",
         "vendor_space",
+        "food_cart",
       ],
       listing_mode: ["rent", "sale"],
       listing_promo_type: [
