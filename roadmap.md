@@ -1,5 +1,8 @@
 # Roadmap
 
+- [open] Give the Charlotte 2024 food trailer listing (3b6f1f77) a free 30-day featured spot and email the seller with the branded template, including the 3.7x views highlight.
+- [open] Homepage BuyerMatch band: center the animation in the right half (~50%) and make the band shorter.
+
 - [done] Report APPROVE financing clicks, checkout activity and whether follow-up emails go out (read-only).
 - [done] Site fonts (Archivo headings, Plus Jakarta Sans body) applied to all emails; 124 email senders deployed, all 75 live template previews carry both fonts, 17 email tests pass.
 - [done] Report whether featured listings get more views than non-featured (read-only).
