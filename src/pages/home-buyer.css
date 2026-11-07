@@ -544,9 +544,9 @@
     -webkit-mask-image: linear-gradient(90deg, transparent 0, hsl(0 0% 0%) 12%);
             mask-image: linear-gradient(90deg, transparent 0, hsl(0 0% 0%) 12%);
   }
-  .bm-viewport { height: 232px; }
+  .bm-viewport { height: 300px; }
   .bm-window { left: 50%; right: auto; top: 50%; width: min(360px, 78%); transform: translate(-50%, -50%) rotate(-2deg); }
-  .bm-status { bottom: 10px; }
+  .bm-status { bottom: 12px; }
 }
 
 /* Original-color partner marks with equal breathing room. */
