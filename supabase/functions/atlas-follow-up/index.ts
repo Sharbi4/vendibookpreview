@@ -12,6 +12,7 @@ import { invokeTransactionalEmail } from "../_shared/invokeTransactionalEmail.ts
 import { followUpDueAt, formatEt, inFollowUpHours } from "../_shared/followUpWindow.ts";
 import { buyerFollowUpConsent } from "../_shared/atlasBuyerFollowUp.ts";
 import { adminAlertEmails, adminNoticeKey } from "../_shared/adminRecipients.ts";
+import { normalizeNanpToE164 } from "../_shared/smsConsent.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -97,6 +98,9 @@ serve(async (req) => {
         title: `Atlas follow-up: ${name} — ${topic}`.slice(0, 200),
         description: description.slice(0, 5000),
         reply_email: email || null,
+        // The number the person left for this follow-up, so Admin → Support shows
+        // the call/text buttons (admin-phone-actions reads callback_phone_e164).
+        callback_phone_e164: normalizeNanpToE164(phone) ?? null,
         related_listing_id: listingId,
         page_url: pageUrl || null,
         request_id: `atlas-${crypto.randomUUID()}`,
