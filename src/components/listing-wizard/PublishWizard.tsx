@@ -1,4 +1,5 @@
-import { inchesToFeet, feetToInches, formatDimensionSummary } from '@/lib/listings/dimensions';
+import { formatDimensionSummary } from '@/lib/listings/dimensions';
+import { FeetInput } from './FeetInput';
 import { productCheckoutUrl, hostedCheckoutUrl } from '@/lib/payments/hostedCheckout';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
@@ -3358,13 +3359,11 @@ export const PublishWizard: React.FC = () => {
                             <Ruler className="h-3.5 w-3.5" />
                             Length (ft) <span className="text-destructive">*</span>
                           </Label>
-                          <Input
+                          <FeetInput
                             id="length_ft"
-                            type="number"
-                            min="0"
-                            step="0.5"
-                            value={inchesToFeet(parseFloat(lengthInches) || null)}
-                            onChange={(e) => setLengthInches(String(feetToInches(e.target.value) ?? ''))}
+                            inches={lengthInches}
+                            onInchesChange={setLengthInches}
+                            maxPlausibleFeet={60}
                             placeholder="e.g., 20"
                           />
                         </div>
@@ -3373,13 +3372,11 @@ export const PublishWizard: React.FC = () => {
                             <Ruler className="h-3.5 w-3.5" />
                             Width (ft) <span className="text-muted-foreground font-normal">(optional)</span>
                           </Label>
-                          <Input
+                          <FeetInput
                             id="width_ft"
-                            type="number"
-                            min="0"
-                            step="0.5"
-                            value={inchesToFeet(parseFloat(widthInches) || null)}
-                            onChange={(e) => setWidthInches(String(feetToInches(e.target.value) ?? ''))}
+                            inches={widthInches}
+                            onInchesChange={setWidthInches}
+                            maxPlausibleFeet={10}
                             placeholder="e.g., 8"
                           />
                         </div>
@@ -3388,13 +3385,11 @@ export const PublishWizard: React.FC = () => {
                             <Ruler className="h-3.5 w-3.5" />
                             Height (ft) <span className="text-destructive">*</span>
                           </Label>
-                          <Input
+                          <FeetInput
                             id="height_ft"
-                            type="number"
-                            min="0"
-                            step="0.5"
-                            value={inchesToFeet(parseFloat(heightInches) || null)}
-                            onChange={(e) => setHeightInches(String(feetToInches(e.target.value) ?? ''))}
+                            inches={heightInches}
+                            onInchesChange={setHeightInches}
+                            maxPlausibleFeet={16}
                             placeholder="e.g., 10"
                           />
                         </div>
@@ -4331,13 +4326,11 @@ export const PublishWizard: React.FC = () => {
                             <Ruler className="h-3.5 w-3.5" />
                             Length (ft) <span className="text-destructive">*</span>
                           </Label>
-                          <Input
+                          <FeetInput
                             id="length_ft"
-                            type="number"
-                            min="0"
-                            step="0.5"
-                            value={inchesToFeet(parseFloat(lengthInches) || null)}
-                            onChange={(e) => setLengthInches(String(feetToInches(e.target.value) ?? ''))}
+                            inches={lengthInches}
+                            onInchesChange={setLengthInches}
+                            maxPlausibleFeet={60}
                             placeholder="e.g., 20"
                           />
                         </div>
@@ -4348,13 +4341,11 @@ export const PublishWizard: React.FC = () => {
                             <Ruler className="h-3.5 w-3.5" />
                             Width (ft) <span className="text-muted-foreground font-normal">(optional)</span>
                           </Label>
-                          <Input
+                          <FeetInput
                             id="width_ft"
-                            type="number"
-                            min="0"
-                            step="0.5"
-                            value={inchesToFeet(parseFloat(widthInches) || null)}
-                            onChange={(e) => setWidthInches(String(feetToInches(e.target.value) ?? ''))}
+                            inches={widthInches}
+                            onInchesChange={setWidthInches}
+                            maxPlausibleFeet={10}
                             placeholder="e.g., 8"
                           />
                         </div>
@@ -4365,13 +4356,11 @@ export const PublishWizard: React.FC = () => {
                             <Ruler className="h-3.5 w-3.5" />
                             Height (ft) <span className="text-destructive">*</span>
                           </Label>
-                          <Input
+                          <FeetInput
                             id="height_ft"
-                            type="number"
-                            min="0"
-                            step="0.5"
-                            value={inchesToFeet(parseFloat(heightInches) || null)}
-                            onChange={(e) => setHeightInches(String(feetToInches(e.target.value) ?? ''))}
+                            inches={heightInches}
+                            onInchesChange={setHeightInches}
+                            maxPlausibleFeet={16}
                             placeholder="e.g., 10"
                           />
                         </div>
