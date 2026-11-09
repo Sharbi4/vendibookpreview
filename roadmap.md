@@ -86,3 +86,5 @@
 
 - [done] Guest checkout reminders: signed-out buyers/renters can leave just an email on checkout step 1 (guest_checkout_drafts via save-guest-checkout-draft); the 2h/24h sweep now emails them unless they unsubscribed, sent a guest request, signed in and continued, or bought/booked. Save flow verified in preview for a sale and a rental; guest reminder send not yet exercised end-to-end (needs a 2h-old draft). Frontend not published.
 - [done] Financing contacts saved after the 2026-11-05 APPROVE switch now say "approve" (1 record relabeled; 8 older Equinox-era records kept as history); new contacts default to APPROVE.
+
+- [done] Texted Nicole Jacoby (VB-931D779D) as Alison: publish issue fixed, thanks for patience. Atlas follow-up tickets now save the caller's phone so Admin → Support call/text buttons work.
