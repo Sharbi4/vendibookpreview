@@ -61,7 +61,7 @@ export const FeaturedListingCard: React.FC<FeaturedListingCardProps> = ({
                 </Badge>
               </div>
               <p className="text-sm text-muted-foreground mt-0.5">
-                Premium placement for {durationDays} days · up to 3× more views
+                Premium placement in 30-day periods · up to 3× more views
               </p>
             </div>
           </div>
