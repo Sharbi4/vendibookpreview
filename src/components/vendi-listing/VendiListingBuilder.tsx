@@ -27,6 +27,7 @@ import { capturedFacts } from '@/lib/vendi-listing/summary';
 import type { DocumentType } from '@/types/documents';
 import { isHelpRequest, isSkip } from '@/lib/vendi-listing/extract';
 import { publishVendiListing } from '@/lib/vendi-listing/publishVendiListing';
+import { listingPublishError } from '@/lib/listings/publishError';
 import {
   ActiveVendiDraft, adoptVendiSessionKey, createOrResumeVendiDraft, resolveVendiResume,
   loadRequiredDocuments, getVendiSessionKey, rotateVendiSessionKey, VendiSessionRetiredError,
@@ -1114,7 +1115,7 @@ const VendiListingBuilder: React.FC = () => {
       });
       navigate(verified.publicPath);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Something went wrong.';
+      const { message } = listingPublishError(error);
       const id = draftId;
       noteTrouble();
       trackVendi('vendi_publish_failed', { userId: user?.id, listingId: id, metadata: { reason: message.slice(0, 80) } });
