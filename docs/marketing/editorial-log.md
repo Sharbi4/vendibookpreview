@@ -1,5 +1,23 @@
 # Vendibook Editorial Log
 
+## 2026-11-10 — Food Truck Commissary Rules for Renters (2026)
+
+- **Primary keyword:** food truck rental commissary requirements
+- **Slug:** `food-truck-rental-commissary-requirements-2026`
+- **Canonical:** https://vendibook.com/blog/food-truck-rental-commissary-requirements-2026
+- **Category / byline:** Permits & Regulations / Vendibook Editorial Team
+- **Angle:** national regulatory explainer (Texas, California, Washington, NYC). Distinct from Nov 7 long-term rentals, Nov 8 insurance and Nov 9 truck-vs-trailer costs.
+- **Duplicate check:** the slug did not exist before, and no existing article is about commissaries (the word only appears inside other articles). No other article was changed.
+- **Factual nuance kept:** Texas statewide licensing started July 1, 2026 (confirmed on the DSHS June 4, 2026 announcement). The Texas commissary exemption is described as conditional for qualifying self-sufficient units, not universal. The $896 figure is labelled as an illustrative calculation, not market pricing.
+- **Internal links (checked 2026-11-10):** `https://vendibook.com/search` loads (real search page).
+- **External sources (all opened 2026-11-10):** FDA Food Code 2022 page and full PDF; Texas DSHS Mobile Food Vendors page and June 4, 2026 announcement; California HSC §114295 on Justia (blocks plain bots, but loads in a browser and the text matches); WAC 246-215-09127; Snohomish Health Mobile Food Units; NYC Health Mobile Food Vendors. All are clickable in the sources list and inline.
+- **Images (both checked on their Unsplash pages on 2026-11-10, both marked "Free to use under the Unsplash License", neither is Unsplash+):**
+  - Main photo `public/images/blog/texas-food-truck-night-service-woodlands.jpg`: Austin Hervias (@ahervias77), https://unsplash.com/photos/a-group-of-people-standing-in-front-of-a-food-truck-zE8fier3ORc. Donut truck at night, The Woodlands, TX.
+  - Inline photo `public/images/blog/burger-food-truck-prep-station.jpg`: wu yi (@takeshi2), https://unsplash.com/photos/a-couple-of-people-that-are-standing-in-a-food-truck-kx90pEjTmbE. Workers cooking burgers inside an orange food truck.
+  - Both credited in the article with descriptive alt text; both resized to 1600px wide (about 320–350 KB).
+- **Status:** added to the project preview. It reaches vendibook.com only after the owner clicks Publish. Nothing was force-deployed.
+- **Next angle (2026-11-11):** how to vet a food truck rental agreement, plus a pre-rental inspection checklist.
+
 ## 2026-11-09 — Food Truck vs. Food Trailer Rental Costs (2026)
 
 - **Primary keyword:** food truck vs food trailer rental (secondary: food trailer rental costs; rent food truck or trailer)
