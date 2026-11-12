@@ -21,7 +21,7 @@ export function isMarkdownContent(content: string): boolean {
 }
 
 const PROSE_CLASSES = [
-  'prose prose-lg max-w-none',
+  'article-body prose prose-lg max-w-none',
   'prose-headings:text-foreground prose-headings:font-bold prose-headings:break-words',
   'prose-h1:text-3xl md:prose-h1:text-4xl prose-h1:leading-tight',
   'prose-h2:text-2xl md:prose-h2:text-3xl prose-h2:mt-10 prose-h2:mb-4 prose-h2:leading-snug',
