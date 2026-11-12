@@ -35,6 +35,7 @@ import RequestCallCard from '@/components/support/RequestCallCard';
 import PricingFaqSection from '@/components/shared/PricingFaqSection';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { trackEventToDb } from '@/hooks/useAnalyticsEvents';
+import { startAllison } from '@/lib/atlas/allisonConfig';
 
 // Popular search chips → deep-link into the FAQ search
 const popularSearches = [
@@ -222,7 +223,8 @@ const HelpCenter = () => {
 
   const openSupportChat = () => {
     trackEventToDb('help_chat_click', 'engagement', { source: 'help_center' });
-    window.dispatchEvent(new CustomEvent('open-vendi-chat', { detail: { prefill: '' } }));
+    // The old Vendi chat window is no longer mounted, so this event opened nothing.
+    startAllison('text');
   };
 
   return (
