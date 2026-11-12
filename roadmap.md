@@ -91,3 +91,5 @@
 - [done] Nicole's draft "26' Mobile Kitchen" size corrected to 26' L × 7' W × 7'6" H (was 3,612 × 84 × 90 ft). Cause: listing-editor feet boxes turned a first "1/2/3" into 12/24/36 while typing; fixed with a dedicated feet field + "did you mean" hint. Height 7'6" likely interior — confirm with her.
 - [ ] 19 published + 7 draft + 1 archived listings have impossible sizes from the same typing bug (needs owner go-ahead to correct each one)
 - [done] 2026-11-09 blog article food-truck-vs-food-trailer-rental-costs-2026 added (preview; needs Publish). Next: Nov 10 commissary requirements article.
+
+- [x] 2026-11-12 Passion Empanadas (VB-30690E24): Featured checkout picks a live listing instead of dead-ending; Help Center "Start a chat" opens Allison. Live callback to Gabe still owed by the team. Needs Publish.
