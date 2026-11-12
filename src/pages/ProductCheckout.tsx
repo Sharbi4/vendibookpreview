@@ -16,7 +16,7 @@ import { effectivePriceCents } from '@/lib/monetization/products';
  * listing is selected automatically.
  */
 function FeaturedListingPicker() {
-  const { user, loading: authLoading } = useAuth() as { user: { id: string } | null; loading?: boolean };
+  const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const q = useQuery({
