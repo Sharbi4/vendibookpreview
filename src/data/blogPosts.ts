@@ -40,7 +40,7 @@ export const BLOG_POSTS: BlogPost[] = [
     description: "Renting out a food truck? Learn contribution margin, break-even booked days, seasonal utilization, damage risk and tax basics before counting on rental income.",
     excerpt: "A $250-a-day listing does not earn $250 a day. Work out contribution per booked day, the booked days you need to break even, and how seasonality, damage and idle time change what renting out a food truck or trailer really pays.",
     image: "/images/blog/food-truck-street-service-window-new-york.jpg",
-    imageAlt: "Two people wait at the lit service window of a red food truck with a menu board, parked on a Manhattan sidewalk between tall office buildings.",
+    imageAlt: "Two people stand by the lit service window of a red food truck with a menu board, parked on a Manhattan sidewalk between tall office buildings.",
     author: "Vendibook Editorial Team",
     authorRole: "Business Tips",
     datePublished: "2026-11-15",
