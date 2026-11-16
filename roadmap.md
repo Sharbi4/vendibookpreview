@@ -94,5 +94,5 @@
 
 - [x] 2026-11-12 Passion Empanadas (VB-30690E24): Featured checkout picks a live listing instead of dead-ending; Help Center "Start a chat" opens Allison. Live callback to Gabe still owed by the team. Needs Publish.
 
-- [open] First Square rental (Nikola Dujmovic, booking ecb9fbb8): confirm renter gets a working payment link after host approval, total includes rental + service fee + FL tax + $3,000 deposit; fix rental end time never being set (needed for completion/payout); stop automatic deposit refunds (owner refunds manually in Square).
+- [done] First Square rental (Nikola, ecb9fbb8): approval email now lists FL tax and the exact $3,647.35 due; payment screen itemizes rental, fee, deposit, tax (needs Publish); rental end time now saved so completion/payout review works; deposit refunds stay manual.
 - [done] Answered: rental length is 6 days, Dec 28 2026 – Jan 2 2027.
