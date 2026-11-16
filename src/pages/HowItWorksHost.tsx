@@ -236,7 +236,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: 'When and how do I get paid?',
-    a: 'Save a payout destination in your dashboard — PayPal, Venmo, or ACH. For completed online bookings, payouts are typically released within 24 hours of the booking start, and we always strive for 24–48 hours.',
+    a: 'Save a payout destination in your dashboard — PayPal, Venmo, or ACH. Vendibook holds the rental payment and deposit until the rental is successfully completed, then releases your payout — we always strive for 24–48 hours after completion.',
   },
   {
     q: 'Can I ask renters for documents?',

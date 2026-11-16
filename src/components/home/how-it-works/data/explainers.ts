@@ -211,7 +211,7 @@ export const explainers: Explainer[] = [
     title: 'Hosting on Vendibook',
     tileHeadline: 'How Hosting Works',
     description:
-      'Open your calendar, approve real requests, and get paid after the booking starts.',
+      'Open your calendar, approve real requests, and get paid once the rental is completed.',
     durationSeconds: 26,
     accessory: 'none',
     heroImage: hostingHero,
