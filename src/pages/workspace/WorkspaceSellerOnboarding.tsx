@@ -265,8 +265,8 @@ export default function WorkspaceSellerOnboarding() {
             <p>
               Vendibook records what you&apos;re owed on every completed transaction. Payouts are
               reviewed and released by our team — typically within 24 hours of delivery
-              confirmation, and we always strive for 24–48 hours. Rental payouts release 24 hours
-              after the booking start.
+              confirmation, and we always strive for 24–48 hours. Rental payouts are held until the
+              rental is successfully completed, then released.
             </p>
             <Link to="/dashboard/payments" className="v2-btn-quiet w-fit">
               Go to Payments
