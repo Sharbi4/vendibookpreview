@@ -287,6 +287,17 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/251b49bb-af59-46f5-a383-851031795c80</loc>
+    <lastmod>2026-11-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/7b4eb190-b60c-4098-ba08-789f8918e319/251b49bb-af59-46f5-a383-851031795c80/1794862050546-wx0qkf.jpeg</image:loc>
+      <image:title>Food trailer </image:title>
+      <image:caption>Food trailer  in Boynton Beach, FL on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/254e64f0-863b-4442-ad71-d01ca49f4156</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
@@ -1047,7 +1058,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/8dd4955f-d5fe-47ac-b260-ce86d15fd1f4</loc>
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1839,7 +1850,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/e822783b-ad03-4695-96b9-fae7e8697de2</loc>
-    <lastmod>2026-10-04</lastmod>
+    <lastmod>2026-11-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
