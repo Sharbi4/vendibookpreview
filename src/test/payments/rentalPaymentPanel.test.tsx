@@ -49,4 +49,25 @@ describe('RentalPaymentPanel', () => {
     expect(await screen.findByText(/Card payment is temporarily unavailable/)).toBeTruthy();
     expect(screen.queryByRole('button', { name: /Pay/ })).toBeNull();
   });
+
+  it('itemizes rental, service fee, sales tax and refundable deposit before the renter pays', async () => {
+    state.config = { provider: 'square', environment: 'production', application_id: 'app', location_id: 'loc',
+      amount_cents: 364_735, currency: 'USD', host_business_name: null, tax_cents: 3_769,
+      breakdown: [
+        { label: 'Rental subtotal', amountCents: 54_000 },
+        { label: 'Service fee', amountCents: 6_966, kind: 'fee' },
+        { label: 'Refundable deposit', amountCents: 300_000 },
+        { label: 'Florida sales tax', amountCents: 3_769, kind: 'tax' },
+      ] };
+    mount();
+    const amountDue = await screen.findByLabelText('Amount due');
+    const text = amountDue.textContent ?? '';
+    expect(text).toContain('Rental subtotal$540.00');
+    expect(text).toContain('Service fee$69.66');
+    expect(text).toContain('Florida sales tax$37.69');
+    expect(text).toContain('Refundable deposit$3,000.00');
+    expect(text).toContain('Total due today$3,647.35');
+    expect(text).toMatch(/refundable deposit is returned after the rental is completed/);
+    expect(screen.getByRole('button', { name: 'Pay $3,647.35' })).toBeTruthy();
+  });
 });
