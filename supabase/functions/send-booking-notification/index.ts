@@ -5,6 +5,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 import { maskContactDetails } from "../_shared/contactPatterns.ts";
+import { quoteRentalAmountDue } from "../_shared/rentalQuote.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -94,7 +95,7 @@ serve(async (req) => {
       await assertRentalCheckoutReady(supabase, booking, req.headers.get("Authorization") ?? "");
     }
     const { data: listing } = await supabase
-      .from("listings").select("title, address, fulfillment_type").eq("id", booking.listing_id).single();
+      .from("listings").select("title, address, city, state, fulfillment_type").eq("id", booking.listing_id).single();
     const { data: shopper } = await supabase
       .from("profiles").select("email, full_name").eq("id", booking.shopper_id).single();
     const { data: host } = await supabase
@@ -174,7 +175,20 @@ serve(async (req) => {
       }
     } else if (event_type === "approved") {
       const depositAmount = booking.deposit_amount || 0;
-      const totalDue = Number(booking.total_price) + Number(depositAmount);
+      // Quote exactly what the Square charge will be (rental + service fee +
+      // sales tax + refundable deposit). Fall back to the pre-tax figures only
+      // if the quote can't be built, and say tax is added at payment.
+      let taxCents: number | null = null;
+      let taxLabel = "Sales tax";
+      let totalDue = Number(booking.total_price) + Number(depositAmount);
+      try {
+        const { quote } = await quoteRentalAmountDue(supabase, { ...booking, listing });
+        taxCents = quote.taxCents;
+        taxLabel = quote.breakdown.find((line) => line.kind === "tax")?.label ?? "Sales tax";
+        totalDue = quote.grossCents / 100;
+      } catch (quoteError) {
+        logStep("Approved email: amount quote unavailable", { message: (quoteError as Error).message });
+      }
       if (shopper?.email) {
         emails.push({
           to: shopper.email,
@@ -187,14 +201,15 @@ serve(async (req) => {
             paragraphs: [`The host approved ${listingTitle}. Complete payment now to lock in your dates.`],
             details: [
               ...baseDetails,
-              { label: "Rental total", value: `$${Number(booking.total_price).toFixed(2)}` },
+              { label: "Rental + service fee", value: `$${Number(booking.total_price).toFixed(2)}` },
+              ...(taxCents && taxCents > 0 ? [{ label: taxLabel, value: `$${(taxCents / 100).toFixed(2)}` }] : []),
               ...(depositAmount > 0 ? [{ label: "Refundable deposit", value: `$${Number(depositAmount).toFixed(2)}` }] : []),
-              { label: "Due now", value: `$${totalDue.toFixed(2)}` },
+              { label: "Due now", value: taxCents === null ? `$${totalDue.toFixed(2)} + sales tax` : `$${totalDue.toFixed(2)}` },
             ],
             alert: host_response
               ? { tone: "info", title: "Message from host", body: host_response }
               : { tone: "warning", title: "Action required", body: "Your dates are not held until payment is received." },
-            ctaLabel: `Complete payment · $${totalDue.toFixed(2)}`,
+            ctaLabel: taxCents === null ? "Complete payment" : `Complete payment · $${totalDue.toFixed(2)}`,
             ctaUrl: `${SITE_URL}/dashboard/bookings/${booking_id}?step=payment`,
           },
           idempotencyKey: `booking-${booking_id}-approved-guest`,

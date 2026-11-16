@@ -21,10 +21,7 @@ import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_
 import { hasCurrentLegalAcceptance } from "../_shared/legalVersions.ts";
 import { assertRentalCheckoutReady } from "../_shared/rentalCheckoutReady.ts";
 import { getListingPurchaseState, LISTING_UNAVAILABLE_MESSAGE } from "../_shared/listingGuard.ts";
-import { resolveProStatus } from "../_shared/proEligibility.ts";
-import { applyTaxToQuote, quoteBookingRequest, type QuoteResult } from "../_shared/paypalAccounting.ts";
-import { parseStateZipFromAddress, quoteSalesTax } from "../_shared/tax.ts";
-import { findActiveExemption } from "../_shared/taxExemption.ts";
+import { quoteRentalAmountDue } from "../_shared/rentalQuote.ts";
 import { CaptureRejectedError, finalizeCapture } from "../_shared/paypalFinalize.ts";
 import { safeLog } from "../_shared/paypal.ts";
 import {
@@ -58,20 +55,7 @@ type Admin = any;
 
 /** Server-side quote: trusted booking row + Pro fee + sales tax (+ Campus Partner credit). */
 async function rentalQuote(admin: Admin, booking: any, partnerCode = "", userId = "") {
-  const locked = booking.host_platform_fee !== null && booking.host_platform_fee !== undefined;
-  const hostPro = locked ? { isPro: !!booking.pro_fee_applied } : { isPro: (await resolveProStatus(admin, booking.host_id)).isPro };
-  const quote: QuoteResult = quoteBookingRequest(booking, booking.listing?.title ?? "Listing", hostPro);
-  const loc = parseStateZipFromAddress(booking.listing?.address);
-  const state = booking.listing?.state || loc.state;
-  const tax = await quoteSalesTax({
-    amountCents: quote.taxableBaseCents,
-    destination: { state, zip: loc.zip ?? null, city: booking.listing?.city ?? null },
-    kind: "rental",
-    requireDestination: true,
-    // The renter's own certificate for the state the rental happens in.
-    exemption: await findActiveExemption(admin, booking.shopper_id, state),
-  });
-  applyTaxToQuote(quote, tax);
+  const { quote, tax } = await quoteRentalAmountDue(admin, booking);
   let partner: PartnerResolution | null = null;
   if (partnerCode && userId) {
     partner = await resolvePartnerCredit(admin, {

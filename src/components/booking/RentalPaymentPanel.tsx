@@ -22,6 +22,7 @@ import { hasMarketingConsent } from '@/lib/cookieConsent';
 type Config =
   | { provider: 'square'; environment: 'sandbox' | 'production'; application_id: string; location_id: string;
       amount_cents: number; currency: string; host_business_name?: string | null;
+      breakdown?: Array<{ label: string; amountCents: number; kind?: 'fee' | 'credit' | 'tax' }>;
       partner?: { valid: true; code: string; partner_name: string; credit_cents: number }
         | { valid: false; reason?: string; message?: string } | null }
   | { provider: 'unavailable'; reason?: string };
@@ -292,7 +293,25 @@ export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
         externalError={partnerError}
         disabled={busy || verifying}
       />
-      {partner && partner.creditCents && !onQuoteChange ? (
+      {!onQuoteChange && config.breakdown?.length ? (
+        <dl className="rounded-lg border border-border px-3 py-2 text-sm space-y-1" aria-label="Amount due">
+          {config.breakdown.map((line) => (
+            <div key={line.label} className="flex justify-between gap-3">
+              <dt className="text-muted-foreground">{line.label}</dt>
+              <dd className={line.kind === 'credit' ? 'font-medium text-emerald-700 dark:text-emerald-400' : 'font-medium text-foreground'}>
+                {line.amountCents < 0 ? '-' : ''}{formatCurrency(Math.abs(line.amountCents) / 100)}
+              </dd>
+            </div>
+          ))}
+          <div className="flex justify-between gap-3 border-t border-border pt-1">
+            <dt className="font-semibold text-foreground">Total due today</dt>
+            <dd className="font-semibold text-foreground">{quoting ? '…' : formatCurrency(config.amount_cents / 100)}</dd>
+          </div>
+          {config.breakdown.some((line) => /deposit/i.test(line.label)) ? (
+            <p className="pt-1 text-xs text-muted-foreground">The refundable deposit is returned after the rental is completed.</p>
+          ) : null}
+        </dl>
+      ) : partner && partner.creditCents && !onQuoteChange ? (
         <dl className="rounded-lg border border-border px-3 py-2 text-sm space-y-1" aria-label="Amount due">
           <div className="flex justify-between gap-3">
             <dt className="text-muted-foreground">Campus Partner credit</dt>
