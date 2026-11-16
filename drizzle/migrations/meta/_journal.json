@@ -309,6 +309,13 @@
       "when": 1794847183249,
       "tag": "0043_set_booking_end_timestamp",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1794861203731,
+      "tag": "0044_booking_approval_watches",
+      "breakpoints": true
     }
   ]
 }

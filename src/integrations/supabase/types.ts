@@ -514,6 +514,53 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_approval_watches: {
+        Row: {
+          admin_notified_at: string | null
+          admin_user_id: string
+          booking_id: string
+          closed_at: string | null
+          created_at: string
+          host_reminded_at: string | null
+          id: string
+          last_result: string | null
+          remind_host_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_notified_at?: string | null
+          admin_user_id: string
+          booking_id: string
+          closed_at?: string | null
+          created_at?: string
+          host_reminded_at?: string | null
+          id?: string
+          last_result?: string | null
+          remind_host_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_notified_at?: string | null
+          admin_user_id?: string
+          booking_id?: string
+          closed_at?: string | null
+          created_at?: string
+          host_reminded_at?: string | null
+          id?: string
+          last_result?: string | null
+          remind_host_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_approval_watches_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "booking_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       booking_documents: {
         Row: {
           booking_id: string
