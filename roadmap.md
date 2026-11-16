@@ -98,4 +98,5 @@
 - [done] Answered: rental length is 6 days, Dec 28 2026 – Jan 2 2027.
 - [done] Texted Miguel (host, booking ecb9fbb8) the approve-request link after the owner confirmed he agreed to texts (consent recorded as given to the support team)
 - [done] Booking ecb9fbb8 watch: admin (…1113) gets one text the moment Miguel approves/declines; Miguel gets one reminder at 8:55 PM ET Nov 16 if still pending (booking-approval-watch)
-- [done] 2026-11-16 blog article long-term-food-trailer-rental-pricing-2026 added (preview; needs Publish). Pro 10.9% copy on host pages conflicts with 12.9% rule — owner to decide
+- [done] 2026-11-16 blog article long-term-food-trailer-rental-pricing-2026 added (preview; needs Publish). Owner confirmed 2026-11-16: Pro does NOT discount the rental host fee — 12.9% only; article uses 12.9%.
+- [ ] Stale 10.9% "Pro host fee" copy in 3 places (HowItWorksHost.tsx:200,227 — where /become-a-host lands, HomeExplainer.tsx:113, helpArticles.ts:2511) contradicts the confirmed 12.9% rule; owner to decide whether to correct
