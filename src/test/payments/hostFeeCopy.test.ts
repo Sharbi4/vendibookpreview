@@ -25,7 +25,7 @@ describe('host fee copy matches the 12.9% rule', () => {
 
   it('the host explainer states the fee is the same on Pro and the free plan', () => {
     const src = readFileSync('src/pages/HowItWorksHost.tsx', 'utf8');
-    expect(src).toMatch(/same (rate|12\.9% )on Vendibook Pro and the free plan/);
+    expect(src).toMatch(/same (rate )?on Vendibook Pro and the free plan/);
   });
 
   it('the fee-breakdown article does not claim a Pro host discount', () => {
