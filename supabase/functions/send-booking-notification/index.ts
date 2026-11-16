@@ -201,7 +201,7 @@ serve(async (req) => {
             paragraphs: [`The host approved ${listingTitle}. Complete payment now to lock in your dates.`],
             details: [
               ...baseDetails,
-              { label: "Rental total", value: `$${Number(booking.total_price).toFixed(2)}` },
+              { label: "Rental + service fee", value: `$${Number(booking.total_price).toFixed(2)}` },
               ...(taxCents && taxCents > 0 ? [{ label: taxLabel, value: `$${(taxCents / 100).toFixed(2)}` }] : []),
               ...(depositAmount > 0 ? [{ label: "Refundable deposit", value: `$${Number(depositAmount).toFixed(2)}` }] : []),
               { label: "Due now", value: taxCents === null ? `$${totalDue.toFixed(2)} + sales tax` : `$${totalDue.toFixed(2)}` },
