@@ -110,7 +110,7 @@ export default function HomeExplainer({ sellerHref }: { sellerHref: string }) {
           )}
           {audience === 'sell' && (
             <p className="hx-fineprint">
-              New online equipment sales carry an 8.7% seller commission on Standard and Pro. Rental hosts pay 12.9% (10.9% with Pro). Renters pay a
+              New online equipment sales carry an 8.7% seller commission on Standard and Pro. Rental hosts pay 12.9% on both plans. Renters pay a
               12.9% service fee shown at checkout; buyers pay no Vendibook fee. <Link to="/pricing">Full pricing</Link>
             </p>
           )}

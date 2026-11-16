@@ -197,7 +197,7 @@ const COST_ROWS: { label: string; value: string; note: string }[] = [
   {
     label: 'A completed online booking',
     value: '12.9% host fee',
-    note: 'Deducted from the booking total when a rental completes. Vendibook Pro members pay 10.9% instead, up to $500 saved per transaction.',
+    note: 'Deducted from the booking total when a rental completes. The rate is the same on Vendibook Pro and the free plan.',
   },
   {
     label: 'Everything else',
@@ -224,7 +224,7 @@ const HOST_TOOLS: { icon: LucideIcon; name: string; note: string; to: string }[]
 const FAQS: { q: string; a: string }[] = [
   {
     q: 'How much does it cost to host?',
-    a: 'Listing is free. A 12.9% host fee is deducted when a booking completes through online checkout — 10.9% for active Vendibook Pro members, up to $500 saved per transaction. No subscriptions required to list.',
+    a: 'Listing is free. A 12.9% host fee is deducted when a booking completes through online checkout — the same rate on Vendibook Pro and the free plan. No subscriptions required to list.',
   },
   {
     q: 'Do I have to accept every booking?',

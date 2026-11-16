@@ -2508,11 +2508,11 @@ Payouts are sent to the payout destination saved in your account (PayPal, Venmo,
         title: 'Fee Breakdown',
         content: `**Seller / Host Commission**
 - New online equipment sales: 8.7% of the equipment price for Standard and Pro sellers, excluding tax and separately priced transport
-- Rentals: 12.9% host commission; 10.9% for active Pro hosts, with savings capped at $500 per completed rental
+- Rentals: 12.9% host commission on Standard and Pro (Vendibook Pro does not reduce the rental host fee)
 - Deducted from your payout
 
 **Renter Service Fee**
-- Rentals also add a 12.9% renter service fee on top of the booking subtotal (the Pro discount applies to the host side only)
+- Rentals also add a 12.9% renter service fee on top of the booking subtotal
 
 **Pay in Person**
 - Equipment sales settled in person: $0 Vendibook commission
