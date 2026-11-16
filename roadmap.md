@@ -96,3 +96,4 @@
 
 - [done] First Square rental (Nikola, ecb9fbb8): approval email now lists FL tax and the exact $3,647.35 due; payment screen itemizes rental, fee, deposit, tax (needs Publish); rental end time now saved so completion/payout review works; deposit refunds stay manual.
 - [done] Answered: rental length is 6 days, Dec 28 2026 – Jan 2 2027.
+- [ ] Text Miguel (host, booking ecb9fbb8) with the approve-request link — blocked until his text consent is confirmed
