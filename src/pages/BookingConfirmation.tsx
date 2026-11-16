@@ -368,10 +368,16 @@ const BookingConfirmation = ({
                       <span className="text-foreground">{money(taxAmount)}</span>
                     </div>
                   ) : null}
+                  {booking.payment_status !== 'paid' && taxAmount <= 0 && booking.total_price ? (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Sales tax</span>
+                      <span className="text-muted-foreground">Shown before you pay</span>
+                    </div>
+                  ) : null}
                   {booking.total_price ? (
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">
-                        {booking.payment_status === 'paid' ? 'Charged today' : 'Booking total'}
+                        {booking.payment_status === 'paid' ? 'Charged today' : 'Rental + service fee'}
                       </span>
                       <span className="font-semibold text-foreground">
                         {money(Number(booking.total_price))}
