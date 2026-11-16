@@ -97,5 +97,5 @@
 - [done] First Square rental (Nikola, ecb9fbb8): approval email now lists FL tax and the exact $3,647.35 due; payment screen itemizes rental, fee, deposit, tax (needs Publish); rental end time now saved so completion/payout review works; deposit refunds stay manual.
 - [done] Answered: rental length is 6 days, Dec 28 2026 – Jan 2 2027.
 - [done] Texted Miguel (host, booking ecb9fbb8) the approve-request link after the owner confirmed he agreed to texts (consent recorded as given to the support team)
-- [ ] Text admin (number ending 1113) when Miguel approves booking ecb9fbb8; text Miguel one reminder if not approved within ~6h
+- [done] Booking ecb9fbb8 watch: admin (…1113) gets one text the moment Miguel approves/declines; Miguel gets one reminder at 8:55 PM ET Nov 16 if still pending (booking-approval-watch)
 - [ ] 2026-11-16 blog article long-term-food-trailer-rental-pricing-2026 (one article, editorial log, no deploy)
