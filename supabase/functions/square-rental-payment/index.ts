@@ -4,11 +4,11 @@
  * Actions (all require the renter's session; the browser sends identifiers
  * and a Square card token only, never an amount):
  *   config  -> which processor this booking pays with, plus the public Web
- *              Payments SDK ids (application id + the HOST's location id)
- *   pay     -> charges the card through Square: on the host's own Square
- *              account (Vendibook's share as app_fee_money) when connected,
- *              otherwise on Vendibook's live Square account (host paid via a
- *              seller payable), then finalises from Square's response
+ *              Payments SDK ids (application id + Vendibook's location id)
+ *   pay     -> charges the card on Vendibook's live Square account (owner
+ *              decision 2026-10-26: never a host's connected account); the
+ *              host is paid manually from a seller payable after the rental,
+ *              then finalises from Square's response
  *   status  -> server-verified payment state; reconciles a pending payment by
  *              asking Square directly
  *
@@ -36,6 +36,7 @@ import {
 } from "../_shared/campusPartner.ts";
 import {
   recordSquareContext,
+  recoverRentalSquarePayment,
   rentalSquareContext,
   squareApi,
   SquareApiError,
@@ -148,6 +149,18 @@ Deno.serve(async (req) => {
       let { data: record } = await admin.from("payment_records").select("*")
         .eq("booking_request_id", booking.id).eq("provider", "square")
         .order("created_at", { ascending: false }).limit(1).maybeSingle();
+      if (record && !record.square_payment_id && record.payment_status === "pending") {
+        // Square timed out after a charge attempt: look the payment up by reference.
+        try {
+          const recovered = await recoverRentalSquarePayment(admin, record);
+          if (recovered) {
+            record = recovered.record;
+            safeLog("square_rental_payment_relinked", { reference: record.reference, source: "status" });
+          }
+        } catch (err) {
+          safeLog("square_status_relink_failed", { reference: record.reference, code: (err as Error).message });
+        }
+      }
       if (record && record.square_payment_id && ["created", "pending", "approved", "authorized"].includes(record.payment_status)) {
         try {
           record = await reconcileSquareRecord(admin, record, "capture_endpoint");

@@ -321,3 +321,44 @@ export async function recordSquareContext(admin: any, record: Record<string, any
   const account = record?.seller_id ? await activeSellerAccount(admin, record.seller_id) : null;
   return account ? hostContext(admin, account) : null;
 }
+
+/**
+ * Links a rental payment record to the Square payment it produced when the
+ * payment id was never saved (Square timed out or errored after charging).
+ * The payment is always read from Square's API and must match the record's
+ * location and Vendibook reference; finalizeCapture still checks the amount.
+ * Pass paymentId when a signed webhook names it, otherwise Square's payment
+ * list is searched from shortly before the record was created.
+ */
+export async function recoverRentalSquarePayment(admin: any, record: Record<string, any>, paymentId?: string) {
+  if (!record?.id || !record?.reference || record.square_payment_id) return null;
+  const ctx = await recordSquareContext(admin, record);
+  if (!ctx) return null;
+  const token = await ctx.token();
+  const locationId = record.square_location_id || ctx.locationId;
+  const reference = String(record.reference).slice(0, 40);
+  const matches = (p: any) => p && p.location_id === locationId && p.reference_id === reference;
+  let payment: any = null;
+  if (paymentId) {
+    const data = await squareApi(`/v2/payments/${encodeURIComponent(paymentId)}`, { token, base: ctx.base });
+    payment = matches(data?.payment) ? data.payment : null;
+  } else {
+    const created = new Date(record.created_at || Date.now()).getTime();
+    const begin = new Date(created - 5 * 60_000).toISOString();
+    let cursor = '';
+    for (let page = 0; page < 5 && !payment; page++) {
+      const qs = new URLSearchParams({ begin_time: begin, location_id: locationId, sort_order: 'ASC', limit: '100' });
+      if (cursor) qs.set('cursor', cursor);
+      const data = await squareApi(`/v2/payments?${qs}`, { token, base: ctx.base });
+      payment = (data?.payments || []).find(matches) ?? null;
+      cursor = data?.cursor || '';
+      if (!cursor) break;
+    }
+  }
+  if (!payment?.id) return null;
+  await admin.from('payment_records').update({ square_payment_id: payment.id })
+    .eq('id', record.id).is('square_payment_id', null);
+  const { data: fresh } = await admin.from('payment_records').select('*').eq('id', record.id).maybeSingle();
+  if (!fresh || fresh.square_payment_id !== payment.id) return null;
+  return { record: fresh, payment };
+}

@@ -1,18 +1,19 @@
 /**
- * Square webhooks for rental payments made on hosts' Square accounts.
+ * Square webhooks for rental payments. New rentals are charged on Vendibook's
+ * own Square account; older records may belong to a host's connected account.
  *
  * Subscribe this URL (SQUARE_RENTAL_WEBHOOK_URL) to payment.updated,
  * refund.created, refund.updated and oauth.authorization.revoked. The
  * signature key is SQUARE_RENTAL_WEBHOOK_SIGNATURE_KEY.
  *
  * Event bodies are never trusted for money: payments and refunds are
- * re-fetched from Square with the host's token before anything is written.
+ * re-fetched from Square with the account's token before anything is written.
  * Events that don't belong to a Vendibook rental are acknowledged and ignored.
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { reconcileSquareAddonByPaymentId } from '../_shared/squareAddonReconciliation.ts';
 import { verifySquareSignature } from "../_shared/square.ts";
-import { recordSquareContext, squareApi } from "../_shared/squareMarketplace.ts";
+import { recordSquareContext, recoverRentalSquarePayment, squareApi } from "../_shared/squareMarketplace.ts";
 import { safeLog } from "../_shared/paypal.ts";
 import { applySquareRefund } from "../_shared/squareRentalRefund.ts";
 import { CaptureRejectedError, finalizeCapture } from "../_shared/paypalFinalize.ts";
@@ -27,13 +28,31 @@ async function squareAccess(admin: any, record: any) {
 }
 
 async function handlePayment(admin: any, paymentId: string, hint: any) {
-  const { data: record, error: lookupError } = await admin.from("payment_records").select("*")
+  let { data: record, error: lookupError } = await admin.from("payment_records").select("*")
     .eq("square_payment_id", paymentId).maybeSingle();
   if (lookupError) throw lookupError;
   if (record?.monetization_purchase_id) {
     return (await reconcileSquareAddonByPaymentId(admin, paymentId, 'rental_webhook_billing_route')).outcome;
   }
-  if (!record) {
+  let rentalRecord = record;
+  let payment: any = null;
+  if (!rentalRecord && hint?.reference_id) {
+    // A rental charge whose payment id was never saved (Square timed out after
+    // charging). The hint only selects the record; Square's API must confirm it.
+    const { data: unlinked, error: unlinkedError } = await admin.from("payment_records").select("*")
+      .eq("reference", String(hint.reference_id)).eq("provider", "square")
+      .not("booking_request_id", "is", null).is("square_payment_id", null).maybeSingle();
+    if (unlinkedError) throw unlinkedError;
+    if (unlinked) {
+      const recovered = await recoverRentalSquarePayment(admin, unlinked, paymentId);
+      if (recovered) {
+        rentalRecord = recovered.record;
+        payment = recovered.payment;
+        safeLog("square_rental_payment_relinked", { reference: rentalRecord.reference, source: "webhook" });
+      }
+    }
+  }
+  if (!rentalRecord) {
     const { data: attempt, error } = await admin.from("square_billing_attempts").select("id")
       .eq("payment_id", paymentId).eq("kind", "addon").maybeSingle();
     if (error) throw error;
@@ -43,9 +62,12 @@ async function handlePayment(admin: any, paymentId: string, hint: any) {
     }
     return "ignored_unknown_payment";
   }
-  const access = await squareAccess(admin, record);
-  if (!access) return "square_account_unavailable";
-  const { payment } = await squareApi(`/v2/payments/${encodeURIComponent(paymentId)}`, access);
+  record = rentalRecord;
+  if (!payment) {
+    const access = await squareAccess(admin, record);
+    if (!access) return "square_account_unavailable";
+    ({ payment } = await squareApi(`/v2/payments/${encodeURIComponent(paymentId)}`, access));
+  }
   if (!payment || payment.location_id !== record.square_location_id) return "ignored_location";
   try {
     const updated = await finalizeCapture(admin, record, squarePaymentFacts(payment), "webhook");
