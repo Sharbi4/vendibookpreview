@@ -1,15 +1,17 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { squareConfig, squareRequest } from '../_shared/square.ts';
 import { validateSquarePlan, squarePlanCadence } from '../_shared/squarePlan.ts';
+import { isAdminOrInternalCaller } from '../_shared/internalAuth.ts';
 
 // Operator-only provisioning. Never creates customers, cards, subscriptions or charges.
 Deno.serve(async req => {
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   const operatorToken = Deno.env.get('SQUARE_SETUP_TOKEN');
   const presented = req.headers.get('X-Operator-Token') || '';
+  // Service role, operator token, or a signed-in Vendibook admin.
   const authorized =
-    (Boolean(serviceKey) && req.headers.get('Authorization') === `Bearer ${serviceKey}`) ||
-    (Boolean(operatorToken) && presented === operatorToken);
+    (Boolean(operatorToken) && presented === operatorToken) ||
+    await isAdminOrInternalCaller(req);
   if (!authorized) return new Response('Unauthorized', { status: 401 });
   if (req.method !== 'POST') return new Response('POST required', { status: 405 });
   try {

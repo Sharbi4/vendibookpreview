@@ -17,3 +17,6 @@ Sale transaction paid/confirmed/completed states and paid/completed sale invoice
 ## Verification
 
 Targeted Vitest covers annual classification, membership isolation, unpaid invoice refusal, sale cancellation and retry, popup period controls and BuyerMatch overview. Live charge tests have not been performed.
+
+## 30-day cadence switch (completed 2026-11-19)
+New Featured checkouts use the THIRTY_DAYS variation `V6N46O3IY6PLTYIWVBFNE4EG` ($49). It was provisioned with square-setup `{"apply":true,"product_slugs":["featured_listing_monthly"],"replace_featured_monthly":true}`. Existing subscriptions keep the MONTHLY variation `EQOLEUUKNNRRNVFBIY3C3WWY` stored on their attempt. square-setup accepts the service role, `X-Operator-Token`, or a signed-in admin. Until this ran, checkout rejected every Featured purchase with "Square plan pricing does not match the catalog."
