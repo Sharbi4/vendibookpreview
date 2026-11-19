@@ -16,6 +16,7 @@ import {
 import { FilterTabs, type FilterTab } from '@/components/workspace/selling/FilterTabs';
 import ListingRowMenu from '@/components/workspace/selling/ListingRowMenu';
 import { LoadError, Thumb } from '@/components/workspace/selling/sellingUi';
+import DifferentAccountNotice from '@/components/workspace/selling/DifferentAccountNotice';
 import { btn } from '@/components/workspace/selling/buttons';
 import { dollars } from '@/components/workspace/selling/format';
 import { canBoostListing } from '@/lib/listings/publicVisibility';
@@ -244,6 +245,8 @@ export default function WorkspaceListings() {
 
           <section aria-label="Your listings" className="flex flex-col gap-5">
             {hasListings && <FilterTabs label="Filter listings" tabs={tabs} value={filter} onChange={setFilter} />}
+
+            {!firstLoad && !failed && counts.published === 0 && counts.paused === 0 && <DifferentAccountNotice />}
 
             {showPaymentsNotice && (
               <div className="flex flex-col gap-3 rounded-xl bg-[#FBF1DC] px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">

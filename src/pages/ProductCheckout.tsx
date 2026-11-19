@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useMonetizationProducts } from '@/hooks/useMonetizationProducts';
 import SubscriptionConsentDialog from '@/components/monetization/SubscriptionConsentDialog';
 import { effectivePriceCents } from '@/lib/monetization/products';
+import DifferentAccountNotice from '@/components/workspace/selling/DifferentAccountNotice';
 
 /**
  * Featured checkout opened without a listing (e.g. from a shared link): let the
@@ -39,7 +40,7 @@ function FeaturedListingPicker() {
   if (!user) return <p><Link className="underline" to={`/auth?redirect=${encodeURIComponent('/checkout/product/featured_listing_monthly')}`}>Sign in</Link> to choose which listing to feature.</p>;
   if (q.isLoading || only) return <p>Finding your live listings…</p>;
   if (q.isError) return <p role="alert">We couldn’t load your listings. <button className="underline" onClick={() => q.refetch()}>Try again</button></p>;
-  if (!q.data?.length) return <p>Featured applies to a live listing. Publish a listing from <Link className="underline" to="/dashboard/listings">your dashboard</Link>, then come back to feature it.</p>;
+  if (!q.data?.length) return <div className="mx-auto max-w-xl space-y-4"><p>Featured applies to a live listing. Publish a listing from <Link className="underline" to="/dashboard/listings">your dashboard</Link>, then come back to feature it.</p><DifferentAccountNotice returnTo="/checkout/product/featured_listing_monthly" /></div>;
   return <section className="mx-auto max-w-xl space-y-3">
     <h1 className="text-xl font-semibold">Which listing do you want to feature?</h1>
     <ul className="space-y-2">{q.data.map(l => <li key={l.id}><button type="button" onClick={() => choose(l.id)} className="w-full rounded-xl border border-border bg-card px-4 py-3 text-left hover:border-foreground/30"><span className="block font-medium">{l.title}</span>{(l.city || l.state) && <span className="text-sm text-muted-foreground">{[l.city, l.state].filter(Boolean).join(', ')}</span>}</button></li>)}</ul>
