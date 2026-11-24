@@ -1,5 +1,19 @@
 # Vendibook Editorial Log
 
+## 2026-11-24 — Food Truck Rental Refrigeration: Budget for the Cold Chain, Not Just the Truck
+
+- **Primary keyword:** food truck rental refrigeration (secondary: food truck cold storage; commissary cold storage). No Semrush volume pulled; long-tail renter topic.
+- **Slug / URL:** `food-truck-rental-refrigeration-costs` → https://vendibook.com/blog/food-truck-rental-refrigeration-costs (canonical confirmed in preview).
+- **SEO title / meta:** "Food Truck Rental Refrigeration: Budget the Cold Chain" (54 chars) / 154-char description. Category Business Tips; byline Vendibook Editorial Team; dated 2026-11-24 (actual date). ~1,780 body words, one table, five FAQs, one CTA to /search.
+- **Hypothetical (labelled, not market rates, excludes all other expenses):** A $2,400 + $350 + $180 + $120 = $3,050; B $2,700 + $100 + $100 + $50 = $2,950; B $100 cheaper despite $300 higher rent.
+- **Sources (all opened 2026-11-24):** FDA 2026 Food Code release (Sept 17, 2026: model code "not required"; alternative cooling process; new mobile food establishment definition). FDA Food Code 2022 page ("offered for adoption") and PDF text read for 3-501.14 (135→70°F in 2 h; to 41°F within 6 h total) and 3-501.16 (135°F hot / 41°F cold). Washington DOH outage guidance (≤2 h not hazardous if held safely; 45/46–50/51°F table; dry-ice CO2 caution). Rhode Island DOH outage guidance (different recool windows; ≥4 h and >45°F cannot be sold; document discards "for insurance and regulatory purposes"). Reuters Nov 5, 2026 (FBI/CISA warning on industrial refrigeration; article states food trucks were not said to be targeted). Presented as examples; no universal grace period claimed.
+- **Image:** `public/images/blog/food-truck-cold-prep-containers-counter.jpg`, Tima Miroshnichenko, https://www.pexels.com/photo/plastic-containers-inside-a-food-truck-5793768/ — page shows "Free download" (Pexels License https://www.pexels.com/license/), Sony ILCE-7M3, taken Oct 28, 2020; real photo, not AI. Cropped 1600×1066, ~185 KB; credited with not-affiliated note.
+- **Internal links (verified live 2026-11-24, correct headlines):** /blog/food-truck-rental-commissary-requirements-2026, /blog/food-truck-rental-maintenance-inspection-checklist-2026, /blog/food-truck-rental-agreement-contract-clauses-2026, /search.
+- **Duplicate check:** slug absent; Nov 18 maintenance article mentions refrigeration only as a handoff check. No other files changed.
+- **Prior queued outcomes:** Nov 14 — no entry in log (no article). Nov 15–18 live on vendibook.com. Nov 19 winterizing article remains a draft only (`docs/marketing/drafts/2026-11-19-…`, over word cap), not in the blog.
+- **Status:** in preview (headline, canonical, image verified). Not published: the last publish after the database restore was never confirmed, so per instructions no deploy. Public URL currently redirects to the blog index.
+- **Next angle:** rental menu–equipment fit (matching a menu to a rental's installed equipment before booking).
+
 ## 2026-11-18 — Food Truck Rental Maintenance: The Inspection Schedule That Prevents Mid-Rental Breakdowns
 
 - **Primary keyword:** food truck rental maintenance (secondary: food truck inspection checklist; food truck rental handoff inspection). No Semrush volume was pulled for this run; treat it as a long-tail owner/renter topic.
