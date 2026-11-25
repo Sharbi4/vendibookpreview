@@ -1,5 +1,20 @@
 # Vendibook Editorial Log
 
+## 2026-11-25 — Food Truck Rental Equipment: Match the Kitchen to Your Menu Before You Sign
+
+- **Primary keyword:** food truck rental equipment (secondary: food truck kitchen equipment checklist; menu throughput). No Semrush volume pulled.
+- **Slug / URL:** `food-truck-rental-equipment-menu-checklist` → https://vendibook.com/blog/food-truck-rental-equipment-menu-checklist (canonical confirmed in preview).
+- **SEO title / meta:** "Food Truck Rental Equipment: Match the Kitchen to Your Menu" (59 chars) / 159-char description. Business Tips; Vendibook Editorial Team; dated 2026-11-25 (actual date, no dateModified). ~1,580 body words (excl. photo credit and sources), one matrix table, four FAQs, checklist.
+- **Angle:** menu-to-equipment matrix (fryer/griddle/coffee/prepackaged/open assembly), bottleneck station, hood/suppression, data plates and sanitation certification, sinks, simultaneous loads checked by qualified professionals, menu-change approval, written inventory, conditional rent start. Cold chain and maintenance only linked, not repeated.
+- **Hypothetical (labelled, not market data):** cooking 12/10 min = 72/h; assembly 8/10 min = 48/h bottleneck before downtime; 60/h demand → 12/h unserved.
+- **Sources (opened 2026-11-25):** FDA Food Code 2026 page ("a model"; FDA "encourages" adoption). Anne Arundel County DOH mobile units (structural + HACCP plan review before opening new/remodeled units; floor plan, equipment name/type, menu, hand and three-compartment sink locations; hoods/ventilation over all cooking, grilling, steaming; Fire Marshal approval of hoods/Ansul). LA County plan check guidelines (list all menu items incl. condiments/ice/beverages and display/dispensing method; manufacturer spec sheets; ANSI-accredited sanitation certification; annual certification inspection/sticker). Fresno County mobile food vendors (plan approval before new construction/remodel; initial review within 20 business days). Jurisdictions presented as examples only. No industry news cited; nothing dated found that was needed for the angle.
+- **Image:** `public/images/blog/chef-cooking-food-truck-kitchen.jpg` (1400×933, ~150 KB), RDNE Stock project, https://www.pexels.com/photo/a-chef-preparing-food-5779821/ — page shows "Free download"; Pexels License (https://www.pexels.com/license/) checked 2026-11-25: free to use, attribution not required, no implied endorsement. Credited with a non-affiliation note.
+- **Internal links (verified live 2026-11-25, correct headlines):** /blog/food-truck-rental-maintenance-inspection-checklist-2026, /blog/food-truck-rental-commissary-requirements-2026, /blog/food-truck-rental-agreement-contract-clauses-2026, /search. Nov 24 refrigeration article not linked because it is not live. No editorial contact link added (none verified).
+- **Duplicate check:** slug absent; no other article covers menu-to-equipment fit. Branch fix/paypal-webhook-config, working tree clean before edit.
+- **Nov 24 status:** vendibook.com/blog/food-truck-rental-refrigeration-costs still redirects to another article on 2026-11-25 → not live; Nov 24 and this article await an owner Publish.
+- **Status:** in preview (headline, canonical, image, calculation verified). Not published: unpublished Nov 24 work and the unconfirmed post-restore publish are pending, so no deploy.
+- **Next angle:** rental permit timing and rent commencement.
+
 ## 2026-11-24 — Food Truck Rental Refrigeration: Budget for the Cold Chain, Not Just the Truck
 
 - **Primary keyword:** food truck rental refrigeration (secondary: food truck cold storage; commissary cold storage). No Semrush volume pulled; long-tail renter topic.
