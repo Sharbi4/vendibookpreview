@@ -486,7 +486,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/3b6f1f77-fafc-4122-8e3d-80ba69e47ef3</loc>
-    <lastmod>2026-11-22</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -508,7 +508,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/3c5c4943-dca5-40cd-bfef-547446077f46</loc>
-    <lastmod>2026-11-12</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -530,7 +530,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/3eea8fe1-3afe-4a92-a688-226927a8522d</loc>
-    <lastmod>2026-11-09</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -717,7 +717,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/572957bb-9ba7-4c4f-b4fa-9cd85a16cddc</loc>
-    <lastmod>2026-11-25</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1080,7 +1080,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/8735c75b-9a4a-4650-a56c-aae5f91d7083</loc>
-    <lastmod>2026-11-25</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1124,7 +1124,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/8dd4955f-d5fe-47ac-b260-ce86d15fd1f4</loc>
-    <lastmod>2026-11-16</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1134,8 +1134,19 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/8e8e3aee-ee78-41d9-9a7b-44e0bd480092</loc>
+    <loc>https://vendibook.com/listing/8e2378a5-51da-483a-8563-a7aa0acbec56</loc>
     <lastmod>2026-11-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/d1dcf3e8-3eae-434a-996a-0f0cdba0c0a4/8e2378a5-51da-483a-8563-a7aa0acbec56/1795639193780-8lundki.jpg</image:loc>
+      <image:title>Food Trailer ALLI &amp; LUXX — Se renta o se vende</image:title>
+      <image:caption>Food Trailer ALLI &amp; LUXX — Se renta o se vende in Jurupa Valley, CA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/8e8e3aee-ee78-41d9-9a7b-44e0bd480092</loc>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1278,7 +1289,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/9fa1aac0-10d3-4c75-8e60-d8e16f7a0a47</loc>
-    <lastmod>2026-11-05</lastmod>
+    <lastmod>2026-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1432,7 +1443,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/b3278aec-9f29-4d95-b145-a14c31cbae76</loc>
-    <lastmod>2026-11-25</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1509,7 +1520,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/be901aba-936f-4322-b004-07f41c0ff086</loc>
-    <lastmod>2026-11-22</lastmod>
+    <lastmod>2026-11-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1520,7 +1531,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/bf6cf3f3-3d35-4bb6-87d9-3667c9461d96</loc>
-    <lastmod>2026-11-22</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1542,7 +1553,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/c001129e-dfb8-42e2-bb4f-cf83dc0a2027</loc>
-    <lastmod>2026-11-25</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -2015,7 +2026,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/f13ba587-0d95-48f3-9a18-3bb92e540e05</loc>
-    <lastmod>2026-11-18</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
