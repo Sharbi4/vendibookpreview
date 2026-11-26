@@ -1,5 +1,7 @@
 # Roadmap
 
+- [done] Nov 26 article (permit delays → rent start) in preview with log; awaits owner Publish with Nov 24/25.
+
 - [done] Charlotte 2024 food trailer (3b6f1f77) featured free until 2026-12-07 (hourly expiry job ends it); branded email with 3.7x views highlight sent to the seller.
 - [done] Homepage BuyerMatch band: animation centred in the right half, side-by-side from tablet width up, band shorter. Preview only.
 

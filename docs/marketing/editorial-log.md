@@ -1,5 +1,19 @@
 # Vendibook Editorial Log
 
+## 2026-11-26 — Food Truck Rental Permit Delays: When Should Rent Start?
+
+- **Primary keyword:** food truck rental permit delays (related: food truck permit wait times; when does food truck rent start). No Semrush volume pulled.
+- **Slug / URL:** `food-truck-rental-permit-delays` → https://vendibook.com/blog/food-truck-rental-permit-delays.
+- **SEO title / meta:** same as H1, 56 chars / 159-char description. Permits & Regulations; Vendibook Editorial Team; prepared and dated 2026-11-26 (no dateModified). ~1,645 body words (excl. photo credit and sources), five FAQs, related searches, one /search CTA. No platform fee or payment claims.
+- **Angle:** five milestones (reservation, possession, inspection access, rent commencement, legal opening); owner/renter/neither delay control; contingency, outside deadline, cure/reinspection, refundable vs non-refundable money; explicitly no automatic rent relief.
+- **Hypothetical (labelled):** $3,000/30 days = $100/day; 21-day delay = $2,100 rent before revenue vs $500 reservation credited toward rent with delayed start; cash exposure vs expense, other costs, owner opportunity cost (up to $2,100).
+- **Sources (opened 2026-11-26):** King County mobile permit page (8–10 week initial review warning; separate operating fee; pre-op inspection booked ≥1 week ahead; permits not transferable to new ownership). Seattle OED mobile vending guide (L&I approval before King County pre-op/permit approval; plan review applications non-refundable) — the supplied cityofseattle.org URL failed DNS, so the official seattle.gov URL is cited. WA L&I food trucks page (inspection before business starts). Texas DSHS HB 2844 update 8/12/2026 (7,011 applications as of 8/6/2026; no current license → cannot operate until pre-licensing inspection) — additional official source. NYC Health mobile vendors page (license vs permit; ≥2,200 supervisory license applications/year for five years from July 1, 2026, waitlists from 2022 first). No quotes beyond verbatim official text.
+- **Image:** `public/images/blog/food-truck-opening-counter-park.jpg` (1400×933, ~190 KB), Kampus Production, https://www.pexels.com/photo/waiter-opening-food-truck-parked-in-green-park-5920626/ — "Free download"; Pexels License checked 2026-11-26 (free to use, attribution not required, no implied endorsement). Credited with a non-affiliation note.
+- **Internal links:** /blog/food-truck-rental-agreement-contract-clauses-2026, /blog/food-truck-rental-commissary-requirements-2026 (both live), /blog/food-truck-rental-equipment-menu-checklist (in project; goes live with the same Publish), /search.
+- **Backlog:** Nov 24 (refrigeration) and Nov 25 (equipment) still redirect to other articles on vendibook.com on 2026-11-26 (rendered fetch) → not live. Nov 19 winterizing remains a draft only.
+- **Status:** in preview. Not published: Nov 24/25 plus other preview-only work are unpublished, so a normal deploy would release unrelated changes.
+- **Next angle:** rental insurance downtime exclusions.
+
 ## 2026-11-25 — Food Truck Rental Equipment: Match the Kitchen to Your Menu Before You Sign
 
 - **Primary keyword:** food truck rental equipment (secondary: food truck kitchen equipment checklist; menu throughput). No Semrush volume pulled.
