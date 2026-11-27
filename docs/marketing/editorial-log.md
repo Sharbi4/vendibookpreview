@@ -1,5 +1,20 @@
 # Vendibook Editorial Log
 
+## 2026-11-27 — Food Truck Rental Insurance: Who Pays When You Can't Open?
+
+- **Primary keyword:** food truck rental insurance (focus: downtime). No Semrush volume pulled.
+- **Slug / URL:** `food-truck-rental-insurance-downtime` → https://vendibook.com/blog/food-truck-rental-insurance-downtime.
+- **SEO title / meta:** same as H1, 58 chars / 153-char description. Business Tips; Vendibook Editorial Team; prepared and dated 2026-11-27 (no dateModified). ~1,635 body words (excl. photo credit and sources), four FAQs, checklist, one /search CTA.
+- **Duplicate check:** slug absent; no insurance article exists in the blog data (the earlier owner/renter insurance slug was never added and still redirects). Angle limited to downtime triggers, rented property and owner/renter allocation.
+- **Hypothetical (labelled, no payout predicted):** 5 days × $800 = $4,000 sales − 5 × $300 avoided variable = $2,500 lost contribution before continuing fixed costs (explicitly not double counted); $600 emergency generator kept separate as extra expense. Contrasted contract rent abatement vs insurance.
+- **Sources (opened 2026-11-27):** NAIC BI/BOP page (covered event + physical damage; offsite operating costs; exclusions for losses unrelated to property damage; one direct quote copied verbatim). California DOI Commercial Insurance Guide (property vs casualty; inland marine equipment floaters; boiler & machinery; time element = BI, extra expense, loss of rents). Nationwide equipment breakdown page (insurer explanation: power surge, motor burnout, refrigeration, business income from covered breakdown, spoiled stock). SBA launch-your-business insurance section. The Telegraph Nov 27, 2026 (Caldera fire Nov 1, food truck service from Nov 20; Net Community Church commissary statement Nov 18 as quoted by the paper — church/business Facebook posts not opened directly). No insurance, rental or Vendibook involvement inferred. Chron Porky's Backyard vandalism story read but not cited (article date not shown in fetched text).
+- **Dropped:** Oregon DFR certificate quote — page body did not render on 2026-11-27, so replaced with an unquoted plain statement.
+- **Image:** `public/images/blog/idle-food-truck-parked-lot.jpg` (1400×1039, ~305 KB), David McElwee, https://www.pexels.com/photo/abandoned-food-truck-parked-at-a-park-9908705/ — page shows "Free download" and License: Free (https://www.pexels.com/license/), checked 2026-11-27. Credited with non-affiliation note.
+- **Internal links (verified live 2026-11-27, correct headlines):** /blog/food-truck-rental-maintenance-inspection-checklist-2026, /blog/food-truck-rental-agreement-contract-clauses-2026, /blog/food-truck-rental-commissary-requirements-2026, /search.
+- **Backlog:** rendered fetch 2026-11-27 — Nov 24 refrigeration redirects to the truck-vs-trailer article; Nov 25 equipment and Nov 26 permit-delay redirect to the maintenance article → none live. Nov 19 winterizing still draft only.
+- **Status:** in preview only. Not published: Nov 24–26 and other preview-only work are unpublished, so a normal deploy would release unrelated changes.
+- **Next angle:** rental extension/renewal economics.
+
 ## 2026-11-26 — Food Truck Rental Permit Delays: When Should Rent Start?
 
 - **Primary keyword:** food truck rental permit delays (related: food truck permit wait times; when does food truck rent start). No Semrush volume pulled.
